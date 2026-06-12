@@ -11,6 +11,7 @@ import {
   type Category,
   type Tag
 } from "@/lib/content";
+import { estimateReadTime } from "@/lib/utils";
 
 export type StoredStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
 
@@ -71,6 +72,7 @@ export type StoredTestimonial = {
   rating: number;
   published: boolean;
   order: number;
+  createdAt?: string;
 };
 
 export type StoredActionLink = {
@@ -79,6 +81,10 @@ export type StoredActionLink = {
   slug: string;
   url: string;
   type: "CONTACT" | "FORMATION" | "AFFILIATE" | "SOCIAL" | "OTHER";
+  description?: string;
+  ctaLabel?: string;
+  brandColor?: string;
+  placement?: "ARTICLE_TOP" | "ARTICLE_BOTTOM" | "ARTICLE_BOTH";
   noFollow: boolean;
   sponsored: boolean;
   active: boolean;
@@ -124,6 +130,7 @@ export type StoredUser = {
   id: string;
   name: string;
   email: string;
+  passwordHash?: string;
   role: "ADMIN" | "EDITOR" | "AUTHOR";
   status: "ACTIVE" | "DISABLED";
 };
@@ -256,7 +263,8 @@ export function defaultData(): BlogData {
       ...testimonial,
       rating: 5,
       published: false,
-      order: index + 1
+      order: index + 1,
+      createdAt: now()
     })),
     actionLinks: [
       {
@@ -373,7 +381,12 @@ export async function getPublicData() {
 
   return {
     ...data,
-    posts: data.posts.filter((post) => post.status === "PUBLISHED"),
+    posts: data.posts
+      .filter((post) => post.status === "PUBLISHED")
+      .map((post) => ({
+        ...post,
+        readTime: estimateReadTime(post.content)
+      })),
     services: data.services.filter((service) => service.published).sort((a, b) => a.order - b.order),
     testimonials: data.testimonials.filter((testimonial) => testimonial.published).sort((a, b) => a.order - b.order),
     actionLinks: data.actionLinks.filter((link) => link.active)

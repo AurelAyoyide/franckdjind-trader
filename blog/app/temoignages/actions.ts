@@ -31,8 +31,9 @@ export async function submitTestimonialAction(formData: FormData) {
     role: parsed.data.role ?? "Apprenant",
     quote: parsed.data.quote,
     rating: parsed.data.rating,
-    published: false,
-    order: data.testimonials.length + 1
+    published: true,
+    order: data.testimonials.length + 1,
+    createdAt: new Date().toISOString()
   });
 
   data.activityLogs.unshift({

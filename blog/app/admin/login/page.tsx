@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LockKeyhole } from "lucide-react";
 import { loginAction } from "@/app/admin/login/actions";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -39,15 +40,15 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
           <input name="next" type="hidden" value={next ?? ""} />
           <label className="grid gap-2 text-sm font-semibold text-muted">
             Email
-            <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market" name="email" type="email" />
+            <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market" name="email" required type="email" />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-muted">
             Mot de passe
-            <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market" name="password" type="password" />
+            <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market" name="password" required type="password" />
           </label>
-          <button className="min-h-12 rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+          <PendingSubmitButton className="min-h-12 rounded-md bg-market text-on-market hover:bg-market-strong" pendingLabel="Connexion...">
             Se connecter
-          </button>
+          </PendingSubmitButton>
         </form>
         {process.env.NODE_ENV !== "production" ? (
           <p className="mt-5 text-xs leading-6 text-muted-strong">

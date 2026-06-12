@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Clock } from "lucide-react";
+import { AffiliateCarousel } from "@/components/affiliate-carousel";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { RichContent } from "@/components/rich-content";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -49,12 +50,16 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const { posts } = await getPublicData();
+  const { posts, actionLinks } = await getPublicData();
   const article = posts.find((entry) => entry.slug === slug);
 
   if (!article) {
     notFound();
   }
+
+  const affiliateLinks = actionLinks.filter((link) => link.type === "AFFILIATE");
+  const topAffiliateLinks = affiliateLinks.filter((link) => link.placement !== "ARTICLE_BOTTOM");
+  const bottomAffiliateLinks = affiliateLinks.filter((link) => link.placement !== "ARTICLE_TOP");
 
   return (
     <>
@@ -100,8 +105,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="site-shell grid gap-10 py-12 md:grid-cols-[minmax(0,760px)_280px] md:py-16">
           <div>
             <DisclaimerBanner />
+            <div className="mt-6">
+              <AffiliateCarousel links={topAffiliateLinks} title="Brokers partenaires a comparer" />
+            </div>
             <div className="mt-10">
               <RichContent content={article.content} />
+            </div>
+            <div className="mt-10">
+              <AffiliateCarousel links={bottomAffiliateLinks} title="Passer a l'action avec un partenaire" />
             </div>
           </div>
 

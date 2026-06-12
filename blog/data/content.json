@@ -7,20 +7,27 @@
       "category": {
         "title": "Debuter",
         "slug": "debuter",
-        "description": "Les bases pour comprendre le marche sans se perdre dans le bruit."
+        "description": "Les bases pour comprendre le marche sans se perdre dans le bruit.",
+        "id": "category_debuter"
       },
       "tags": [
         {
           "title": "Plan de trading",
-          "slug": "plan-de-trading"
+          "slug": "plan-de-trading",
+          "id": "tag_plan-de-trading",
+          "description": "Articles lies au sujet Plan de trading."
         },
         {
           "title": "Routine",
-          "slug": "routine"
+          "slug": "routine",
+          "id": "tag_routine",
+          "description": "Articles lies au sujet Routine."
         },
         {
           "title": "Formation",
-          "slug": "formation"
+          "slug": "formation",
+          "id": "tag_formation",
+          "description": "Articles lies au sujet Formation."
         }
       ],
       "publishedAt": "2026-05-18",
@@ -30,23 +37,17 @@
       "author": "Bono Trading",
       "sections": [
         {
-          "heading": "Commencer par le contexte",
-          "body": "Avant de chercher une entree, le trader doit savoir dans quel type de session il se trouve. Marche nerveux, range lent, impulsion claire ou simple bruit : le contexte evite beaucoup de trades inutiles."
-        },
-        {
-          "heading": "Limiter le nombre de decisions",
-          "body": "Une bonne journee ne se mesure pas au nombre d'ordres passes. Elle se mesure a la qualite des decisions prises et a la capacite de rester hors du marche lorsque les conditions ne sont pas reunies."
-        },
-        {
-          "heading": "Journaliser sans se mentir",
-          "body": "Le journal de trading ne sert pas a decorer une strategie. Il sert a identifier les erreurs repetitives, les horaires faibles et les setups qui meritent vraiment d'etre conserves."
+          "heading": "<img src=\"/hero-trading-desk.png\" alt=\"\" /><h2>Commencer par le contexte</h2><p>Avant de chercher une entree, le trader doit savoir dans quel type de session il se trouve. Marche nerveux, range lent, impulsion claire ou simple bruit : le contexte evite beaucoup de trades inutiles.</p><h2>Limiter le nombre de decisions</h2><p>Une bonne journee ne se mesure pas au nombre d'ordres passes. Elle se mesure a la qualite des decisions prises et a la capacite de rester hors du marche lorsque les conditions ne sont pas reunies.</p><h2>Journaliser sans se mentir</h2><p>Le journal de trading ne sert pas a decorer une strategie. Il sert a identifier les erreurs repetitives, les horaires faibles et les setups qui meritent vraiment d'etre conserves.</p>",
+          "body": "<img src=\"/hero-trading-desk.png\" alt=\"\" /><h2>Commencer par le contexte</h2><p>Avant de chercher une entree, le trader doit savoir dans quel type de session il se trouve. Marche nerveux, range lent, impulsion claire ou simple bruit : le contexte evite beaucoup de trades inutiles.</p><h2>Limiter le nombre de decisions</h2><p>Une bonne journee ne se mesure pas au nombre d'ordres passes. Elle se mesure a la qualite des decisions prises et a la capacite de rester hors du marche lorsque les conditions ne sont pas reunies.</p><h2>Journaliser sans se mentir</h2><p>Le journal de trading ne sert pas a decorer une strategie. Il sert a identifier les erreurs repetitives, les horaires faibles et les setups qui meritent vraiment d'etre conserves.</p>"
         }
       ],
       "id": "post_structurer-journee-trading",
       "status": "PUBLISHED",
-      "content": "## Commencer par le contexte\n\nAvant de chercher une entree, le trader doit savoir dans quel type de session il se trouve. Marche nerveux, range lent, impulsion claire ou simple bruit : le contexte evite beaucoup de trades inutiles.\n\n## Limiter le nombre de decisions\n\nUne bonne journee ne se mesure pas au nombre d'ordres passes. Elle se mesure a la qualite des decisions prises et a la capacite de rester hors du marche lorsque les conditions ne sont pas reunies.\n\n## Journaliser sans se mentir\n\nLe journal de trading ne sert pas a decorer une strategie. Il sert a identifier les erreurs repetitives, les horaires faibles et les setups qui meritent vraiment d'etre conserves.",
+      "content": "<img src=\"/hero-trading-desk.png\" alt=\"\" /><h2>Commencer par le contexte</h2><p>Avant de chercher une entree, le trader doit savoir dans quel type de session il se trouve. Marche nerveux, range lent, impulsion claire ou simple bruit : le contexte evite beaucoup de trades inutiles.</p><h2>Limiter le nombre de decisions</h2><p>Une bonne journee ne se mesure pas au nombre d'ordres passes. Elle se mesure a la qualite des decisions prises et a la capacite de rester hors du marche lorsque les conditions ne sont pas reunies.</p><h2>Journaliser sans se mentir</h2><p>Le journal de trading ne sert pas a decorer une strategie. Il sert a identifier les erreurs repetitives, les horaires faibles et les setups qui meritent vraiment d'etre conserves.</p>",
       "robotsIndex": true,
-      "robotsFollow": true
+      "robotsFollow": true,
+      "seoTitle": "",
+      "seoDescription": ""
     },
     {
       "title": "Risk management : la regle qui change la lecture d'une perte",
@@ -309,7 +310,7 @@
       "role": "Membre communaute",
       "quote": "Le contenu m'aide a relire mes erreurs sans me chercher d'excuses. C'est sobre et utile.",
       "rating": 5,
-      "published": false,
+      "published": true,
       "order": 3
     }
   ],
@@ -345,8 +346,39 @@
       "createdAt": "2026-06-12T01:10:36.554Z"
     }
   ],
-  "contactMessages": [],
-  "redirects": [],
+  "contactMessages": [
+    {
+      "id": "message_mqavq20u_qe6dgw",
+      "name": "Aurel AYOYIDE",
+      "email": "aurelaime89@gmail.com",
+      "subject": "Formation",
+      "message": "Je test ce",
+      "status": "UNREAD",
+      "ipHash": "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0",
+      "createdAt": "2026-06-12T12:04:56.382Z"
+    },
+    {
+      "id": "message_mqavplx8_cdtjlk",
+      "name": "Aurel AYOYIDE",
+      "email": "aurelaime89@gmail.com",
+      "subject": "Formation",
+      "message": "Je test ce",
+      "status": "UNREAD",
+      "ipHash": "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0",
+      "createdAt": "2026-06-12T12:04:35.516Z"
+    }
+  ],
+  "redirects": [
+    {
+      "id": "redirects_mqavvbbx_p7tkhi",
+      "source": "administration",
+      "destination": "test",
+      "permanent": true,
+      "active": true
+    }
+  ],
   "settings": [
     {
       "id": "setting_site_name",
@@ -375,6 +407,13 @@
   ],
   "users": [
     {
+      "id": "users_mqaw11b6_zlgthe",
+      "name": "Aurel",
+      "email": "aurelaime89@gmail.com",
+      "role": "ADMIN",
+      "status": "ACTIVE"
+    },
+    {
       "id": "user_admin",
       "name": "Administrateur",
       "email": "admin@example.com",
@@ -383,6 +422,81 @@
     }
   ],
   "activityLogs": [
+    {
+      "id": "log_mqaw4cqm_phx7li",
+      "action": "newsletter_subscribed",
+      "entity": "subscriber",
+      "entityId": "aurelaime89@gmail.com",
+      "createdAt": "2026-06-12T12:16:03.454Z"
+    },
+    {
+      "id": "log_mqaw11b6_wy7er9",
+      "action": "resource_created",
+      "entity": "users",
+      "entityId": "users_mqaw11b6_zlgthe",
+      "createdAt": "2026-06-12T12:13:28.674Z"
+    },
+    {
+      "id": "log_mqavxu41_67591f",
+      "action": "resource_deleted",
+      "entity": "redirects",
+      "entityId": "redirects_mqavvrda_fsyd0v",
+      "createdAt": "2026-06-12T12:10:59.377Z"
+    },
+    {
+      "id": "log_mqavxpzs_fsnlwm",
+      "action": "resource_deleted",
+      "entity": "redirects",
+      "entityId": "redirects_mqavvrda_fsyd0v",
+      "createdAt": "2026-06-12T12:10:54.040Z"
+    },
+    {
+      "id": "log_mqavvrda_7y196f",
+      "action": "resource_created",
+      "entity": "redirects",
+      "entityId": "redirects_mqavvrda_fsyd0v",
+      "createdAt": "2026-06-12T12:09:22.510Z"
+    },
+    {
+      "id": "log_mqavvbc1_2zg912",
+      "action": "resource_created",
+      "entity": "redirects",
+      "entityId": "redirects_mqavvbbx_p7tkhi",
+      "createdAt": "2026-06-12T12:09:01.729Z"
+    },
+    {
+      "id": "log_mqavq20u_gh13n8",
+      "action": "contact_message_created",
+      "entity": "contactMessage",
+      "createdAt": "2026-06-12T12:04:56.382Z"
+    },
+    {
+      "id": "log_mqavplx8_7blhy9",
+      "action": "contact_message_created",
+      "entity": "contactMessage",
+      "createdAt": "2026-06-12T12:04:35.516Z"
+    },
+    {
+      "id": "log_mqauyv6e_cq07i2",
+      "action": "resource_updated",
+      "entity": "testimonials",
+      "entityId": "testimonial_3",
+      "createdAt": "2026-06-12T11:43:47.798Z"
+    },
+    {
+      "id": "log_mqau82ka_cu6lxe",
+      "action": "resource_updated",
+      "entity": "posts",
+      "entityId": "post_structurer-journee-trading",
+      "createdAt": "2026-06-12T11:22:57.659Z"
+    },
+    {
+      "id": "log_mqau5co9_jp1qbs",
+      "action": "resource_updated",
+      "entity": "posts",
+      "entityId": "post_structurer-journee-trading",
+      "createdAt": "2026-06-12T11:20:50.793Z"
+    },
     {
       "id": "log_mqajrloj_l23nmh",
       "action": "resource_deleted",
@@ -443,5 +557,14 @@
       "createdAt": "2026-06-12T01:41:21.341Z"
     }
   ],
-  "subscribers": []
+  "subscribers": [
+    {
+      "id": "subscriber_mqaw4cqm_oopj9o",
+      "email": "aurelaime89@gmail.com",
+      "name": "Aurel AYOYIDE",
+      "active": true,
+      "consent": true,
+      "createdAt": "2026-06-12T12:16:03.454Z"
+    }
+  ]
 }

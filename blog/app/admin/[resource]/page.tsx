@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Download, Eye, Pencil, Plus, Search } from "lucide-react";
 import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
 import { getAdminResource, getResourceTitle } from "@/lib/admin-resources";
 import { readData } from "@/lib/data-store";
@@ -97,6 +97,12 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
             Nouveau
           </Link>
         )}
+        {config.slug === "subscribers" ? (
+          <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-4 text-sm font-semibold text-foreground" href="/admin/subscribers/export">
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Export CSV
+          </Link>
+        ) : null}
       </div>
 
       <form className="mt-8 rounded-lg border border-line bg-surface p-3" action={`/admin/${config.slug}`}>
@@ -143,9 +149,20 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-foreground/[0.06] px-3 text-sm font-semibold" href={`/admin/${config.slug}/${String(item.id)}/edit`}>
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
-                    Modifier
+                  <Link
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-foreground/[0.06] px-3 text-sm font-semibold"
+                    href={
+                      config.slug === "contact-messages"
+                        ? `/admin/contact-messages/${String(item.id)}`
+                        : `/admin/${config.slug}/${String(item.id)}/edit`
+                    }
+                  >
+                    {config.slug === "contact-messages" ? (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {config.slug === "contact-messages" ? "Ouvrir" : "Modifier"}
                   </Link>
                   {config.allowDelete === false ? null : (
                     <DeleteConfirmation

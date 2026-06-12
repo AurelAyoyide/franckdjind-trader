@@ -1,11 +1,15 @@
 "use server";
 
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAdminResource } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
 import { createId, readData, writeData, type BlogData, type StoredArticle } from "@/lib/data-store";
 import { sanitizeRichHtml, markdownLikeToHtml } from "@/lib/sanitize";
+import { estimateReadTime, stripHtml, truncateText } from "@/lib/utils";
 import type { AdminSession } from "@/lib/auth-edge";
 
 function markdownToSections(content: string) {
@@ -36,6 +40,48 @@ function parseFieldValue(type: string, formData: FormData, name: string) {
   }
 
   return String(formData.get(name) ?? "").trim();
+}
+
+function slugifyFileName(value: string) {
+  const extension = path.extname(value).toLowerCase();
+  const base = path
+    .basename(value, extension)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 80);
+
+  return `${base || "media"}-${Date.now()}${extension}`;
+}
+
+async function saveUploadedMedia(file: File) {
+  if (!file.size) {
+    return "";
+  }
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+    "video/mp4",
+    "application/pdf"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    return "";
+  }
+
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(uploadsDir, { recursive: true });
+  const fileName = slugifyFileName(file.name);
+  const bytes = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(uploadsDir, fileName), bytes);
+
+  return `/uploads/${fileName}`;
 }
 
 function getCollection(data: BlogData, collection: keyof BlogData) {
@@ -76,9 +122,51 @@ function normalizePost(item: Record<string, unknown>, data: BlogData) {
     sections: markdownToSections(content),
     image: typeof item.image === "string" && item.image ? item.image : "/hero-trading-desk.png",
     featured: Boolean(item.featured),
+    readTime: estimateReadTime(content),
+    seoTitle: typeof item.seoTitle === "string" && item.seoTitle ? item.seoTitle : String(item.title ?? ""),
+    seoDescription:
+      typeof item.seoDescription === "string" && item.seoDescription
+        ? item.seoDescription
+        : truncateText(String(item.excerpt || stripHtml(content))),
     robotsIndex: item.robotsIndex !== false,
     robotsFollow: item.robotsFollow !== false
   } as unknown as StoredArticle;
+}
+
+function normalizeGenericSeo(item: Record<string, unknown>) {
+  if ("seoTitle" in item && (!item.seoTitle || item.seoTitle === "")) {
+    item.seoTitle = String(item.title || item.name || "");
+  }
+
+  if ("seoDescription" in item && (!item.seoDescription || item.seoDescription === "")) {
+    item.seoDescription = truncateText(String(item.excerpt || item.description || item.content || ""));
+  }
+}
+
+function normalizeTestimonial(item: Record<string, unknown>, data: BlogData, existingIndex: number) {
+  const currentOrder =
+    typeof item.order === "number" && item.order > 0
+      ? item.order
+      : Math.max(0, ...data.testimonials.map((testimonial) => testimonial.order || 0)) + 1;
+
+  return {
+    ...item,
+    rating: Math.min(5, Math.max(1, Number(item.rating || 5))),
+    published: true,
+    order: existingIndex >= 0 ? currentOrder : data.testimonials.length + 1,
+    createdAt: typeof item.createdAt === "string" ? item.createdAt : new Date().toISOString()
+  };
+}
+
+async function normalizeUser(item: Record<string, unknown>) {
+  const password = String(item.password ?? "").trim();
+  delete item.password;
+
+  if (password) {
+    item.passwordHash = await bcrypt.hash(password, 12);
+  }
+
+  return item;
 }
 
 export async function saveResourceAction(formData: FormData) {
@@ -109,11 +197,50 @@ export async function saveResourceAction(formData: FormData) {
   };
 
   for (const field of config.fields) {
+    if (field.type === "file") {
+      continue;
+    }
+
     const value = parseFieldValue(field.type, formData, field.name);
     nextItem[field.name] =
       field.name === "content" && typeof value === "string"
         ? sanitizeRichHtml(markdownLikeToHtml(value))
         : value;
+  }
+
+  if (resource === "media") {
+    const file = formData.get("file");
+    if (file instanceof File) {
+      const uploadedUrl = await saveUploadedMedia(file);
+      if (uploadedUrl) {
+        nextItem.url = uploadedUrl;
+      }
+    }
+
+    nextItem.createdAt = typeof nextItem.createdAt === "string" ? nextItem.createdAt : new Date().toISOString();
+  }
+
+  if (resource === "links") {
+    nextItem.placement =
+      typeof nextItem.placement === "string" && nextItem.placement
+        ? nextItem.placement
+        : "ARTICLE_BOTH";
+  }
+
+  if (resource === "redirects") {
+    const source = String(nextItem.source ?? "").trim();
+    const destination = String(nextItem.destination ?? "").trim();
+    nextItem.source = source.startsWith("/") ? source : `/${source}`;
+    nextItem.destination =
+      destination.startsWith("http") || destination.startsWith("/")
+        ? destination
+        : `/${destination}`;
+  }
+
+  normalizeGenericSeo(nextItem);
+
+  if (resource === "users") {
+    await normalizeUser(nextItem);
   }
 
   if (resource === "posts") {
@@ -122,6 +249,13 @@ export async function saveResourceAction(formData: FormData) {
       collection[existingIndex] = normalized as unknown as Record<string, unknown>;
     } else {
       collection.unshift(normalized as unknown as Record<string, unknown>);
+    }
+  } else if (resource === "testimonials") {
+    const normalized = normalizeTestimonial(nextItem, data, existingIndex);
+    if (existingIndex >= 0) {
+      collection[existingIndex] = normalized;
+    } else {
+      collection.push(normalized);
     }
   } else {
     if (existingIndex >= 0) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { saveResourceAction } from "@/app/admin/resource-actions";
 import { RichEditor } from "@/components/admin/rich-editor";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import type { AdminResourceConfig } from "@/lib/admin-resources";
 
 type ResourceFormProps = {
@@ -62,12 +63,23 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
 
         return (
           <label className="grid gap-2 text-sm font-semibold text-muted" htmlFor={id} key={field.name}>
-            {field.label}
+            <span>
+              {field.label}
+              {field.required ? <span className="ml-1 text-danger">*</span> : null}
+            </span>
             {field.name === "content" ? (
               <RichEditor
                 initialValue={fieldValue(item, field.name)}
                 name={field.name}
                 placeholder={`Redige le contenu de ce ${config.singular}...`}
+              />
+            ) : null}
+            {field.type === "file" ? (
+              <input
+                className="min-h-12 rounded-md border border-dashed border-line bg-background px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market"
+                id={id}
+                name={field.name}
+                type="file"
               />
             ) : null}
             {field.type === "textarea" && field.name !== "content" ? (
@@ -94,7 +106,7 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 ))}
               </select>
             ) : null}
-            {!["textarea", "select"].includes(field.type) ? (
+            {!["textarea", "select", "file"].includes(field.type) ? (
               <input
                 className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market"
                 defaultValue={fieldValue(item, field.name)}
@@ -104,15 +116,16 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 type={field.type}
               />
             ) : null}
+            {field.required ? <span className="text-xs font-normal leading-5 text-muted-strong">Champ obligatoire.</span> : null}
             {field.help ? <span className="text-xs font-normal leading-5 text-muted-strong">{field.help}</span> : null}
           </label>
         );
       })}
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button className="min-h-11 rounded-lg bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+        <PendingSubmitButton className="bg-market text-on-market hover:bg-market-strong" pendingLabel="Enregistrement...">
           Enregistrer
-        </button>
+        </PendingSubmitButton>
         <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line bg-foreground/[0.06] px-5 text-sm font-semibold text-foreground" href={`/admin/${config.slug}`}>
           Annuler
         </Link>

@@ -15,8 +15,7 @@ const variants = {
     "border border-line bg-foreground/[0.06] text-foreground hover:border-line-strong hover:bg-foreground/[0.1]",
   ghost:
     "text-muted hover:bg-foreground/[0.06] hover:text-foreground",
-  hero:
-    "border border-white/80 bg-white text-[#07100b] shadow-[0_18px_50px_rgba(0,0,0,0.25)] hover:bg-white/90"
+  hero: "hero-action-secondary"
 };
 
 export function ButtonLink({

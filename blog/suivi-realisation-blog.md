@@ -148,6 +148,23 @@ Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
 - [x] Suppression du voile blanc en bas de l'image hero en mode clair.
 - [x] Suppression du voile blanc sur les images des cartes articles.
 - [x] Verification navigateur des styles calcules du badge hero, du bouton hero et de l'overlay article en mode clair.
+- [x] Correction robuste du bouton hero `Voir les formations` en mode sombre via CSS lie au theme.
+- [x] Ajout d'icones et d'un etat actif visible dans la navigation admin.
+- [x] Reprise visuelle du bouton de deconnexion admin en action destructive explicite.
+- [x] Ajout d'un etat de chargement bloquant sur les principales actions de formulaire.
+- [x] Ajout d'indications de champs obligatoires dans les formulaires admin.
+- [x] Suppression du champ manuel de temps de lecture et calcul automatique depuis le contenu article.
+- [x] Ajout de valeurs SEO automatiques pour les articles si le titre ou la description SEO sont vides.
+- [x] Ajout de l'import media local vers `public/uploads` en plus des URL externes.
+- [x] Autorisation des images HTTPS externes dans la configuration Next.
+- [x] Ajout de positions pour les liens d'affiliation sur les pages articles.
+- [x] Ajout d'un carousel d'affiliation sur les pages articles.
+- [x] Publication automatique des temoignages publics avec ordre gere automatiquement.
+- [x] Ajout d'une page detail pour les messages contact admin avec passage automatique en lu.
+- [x] Ajout de l'export CSV des abonnes newsletter.
+- [x] Ajout d'un mot de passe temporaire hashable pour les utilisateurs admin crees.
+- [x] Clarification des champs SEO `indexable` et `follow` dans l'admin.
+- [x] Clarification de l'usage concret des redirections dans l'admin.
 
 ## Prochaine etape
 
@@ -163,5 +180,7 @@ Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
 - [x] Faire une passe UI/UX suite aux retours sur mode clair, mobile, temoignages, recherche et navigation.
 - [ ] Faire une passe UI/UX finale apres nouveaux retours client reels.
 - [ ] Implementer une vraie internationalisation SEO `fr/en` avec contenus traduits.
+- [ ] Brancher un service SMTP ou transactionnel pour envoyer les messages contact par email.
+- [ ] Brancher l'envoi automatique des mots de passe temporaires si le client le souhaite.
 - [x] Ajouter une premiere couche de permissions simples par role sur les actions admin.
 - [ ] Affiner les permissions par permission granulaire si le client veut plusieurs profils admin actifs.

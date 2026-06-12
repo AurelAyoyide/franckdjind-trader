@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import { submitTestimonialAction } from "@/app/temoignages/actions";
 import { PageHero } from "@/components/page-hero";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { getPublicData } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
 
@@ -49,7 +50,7 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
             <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
             <h2 className="mt-4 text-2xl font-black">Aucun temoignage public valide pour le moment.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-              Les avis proposes restent en attente et doivent etre approuves dans l&apos;admin avant publication.
+              Les avis soumis apparaitront ici automatiquement et resteront moderables dans l&apos;admin.
             </p>
           </div>
         )}
@@ -60,14 +61,14 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
             Donner un avis
           </p>
           <h2 className="mt-4 text-3xl font-black leading-tight text-balance">
-            Proposer un temoignage a valider.
+            Proposer un temoignage.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
-            Les avis soumis ici restent en attente dans l&apos;admin et doivent etre valides avant publication.
+            Les avis soumis ici sont publies automatiquement. L&apos;admin peut ensuite les modifier ou les retirer.
           </p>
           {status === "sent" ? (
             <p className="mt-5 rounded-md border border-market/30 bg-market/10 px-3 py-2 text-sm font-semibold text-market">
-              Avis recu. Il sera relu avant publication.
+              Avis recu et publie.
             </p>
           ) : null}
           {status === "invalid" ? (
@@ -88,9 +89,9 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
               <option value="1">1/5</option>
             </select>
             <textarea className="min-h-36 rounded-md border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-market" name="quote" placeholder="Ton retour d'experience..." required />
-            <button className="min-h-12 cursor-pointer rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+            <PendingSubmitButton className="min-h-12 rounded-md bg-market text-on-market hover:bg-market-strong" pendingLabel="Envoi...">
               Envoyer l&apos;avis
-            </button>
+            </PendingSubmitButton>
           </form>
         </div>
       </section>

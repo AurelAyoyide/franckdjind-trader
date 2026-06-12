@@ -288,7 +288,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
             <h3 className="mt-4 text-2xl font-black">Aucun avis public valide pour le moment.</h3>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-              Les temoignages reels valides depuis l&apos;admin apparaitront ici. Les visiteurs peuvent proposer un avis.
+              Les temoignages soumis apparaitront ici automatiquement. L&apos;admin peut ensuite les moderer.
             </p>
             <div className="mt-6">
               <ButtonLink href="/temoignages#donner-avis" variant="secondary">

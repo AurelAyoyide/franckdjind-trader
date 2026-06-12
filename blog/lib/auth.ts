@@ -6,6 +6,7 @@ import {
   verifyAdminToken,
   type AdminSession
 } from "@/lib/auth-edge";
+import { readData } from "@/lib/data-store";
 
 const sessionMaxAge = 60 * 60 * 8;
 
@@ -35,6 +36,24 @@ async function isValidPassword(password: string) {
 
 export async function validateAdminCredentials(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
+  const data = await readData();
+  const user = data.users.find(
+    (entry) => entry.email.toLowerCase() === normalizedEmail && entry.status === "ACTIVE"
+  );
+
+  if (user?.passwordHash) {
+    const valid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!valid) {
+      return null;
+    }
+
+    return {
+      email: normalizedEmail,
+      role: user.role,
+      name: user.name
+    };
+  }
 
   if (normalizedEmail !== getAdminEmail().toLowerCase()) {
     return null;

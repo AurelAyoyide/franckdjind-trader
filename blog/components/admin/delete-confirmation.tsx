@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 import { deleteResourceAction } from "@/app/admin/resource-actions";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 
 type DeleteConfirmationProps = {
   resource: string;
@@ -31,7 +32,7 @@ export function DeleteConfirmation({ resource, id, title }: DeleteConfirmationPr
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 text-danger">
                 <AlertTriangle className="h-5 w-5" aria-hidden="true" />
               </span>
-              <div>
+              <div className="flex-1 text-center">
                 <h2 className="text-xl font-black">Confirmer la suppression</h2>
                 <p className="mt-2 text-sm leading-7 text-muted">
                   Tu vas supprimer <span className="font-black text-foreground">{title}</span>.
@@ -40,7 +41,7 @@ export function DeleteConfirmation({ resource, id, title }: DeleteConfirmationPr
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
               <button
                 className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-4 text-sm font-semibold text-foreground"
                 type="button"
@@ -52,10 +53,10 @@ export function DeleteConfirmation({ resource, id, title }: DeleteConfirmationPr
               <form action={deleteResourceAction}>
                 <input name="resource" type="hidden" value={resource} />
                 <input name="id" type="hidden" value={id} />
-                <button className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-danger px-4 text-sm font-black text-white" type="submit">
+                <PendingSubmitButton className="w-full bg-danger text-white" pendingLabel="Suppression...">
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                   Oui, supprimer
-                </button>
+                </PendingSubmitButton>
               </form>
             </div>
           </div>

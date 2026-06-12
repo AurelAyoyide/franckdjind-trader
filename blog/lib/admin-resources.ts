@@ -3,7 +3,7 @@ import type { BlogData } from "@/lib/data-store";
 export type AdminField = {
   name: string;
   label: string;
-  type: "text" | "textarea" | "select" | "checkbox" | "number" | "date" | "email" | "url";
+  type: "text" | "textarea" | "select" | "checkbox" | "number" | "date" | "email" | "url" | "password" | "file";
   required?: boolean;
   options?: Array<{ label: string; value: string }>;
   help?: string;
@@ -43,15 +43,14 @@ export const adminResources = {
       { name: "excerpt", label: "Extrait", type: "textarea", required: true },
       { name: "content", label: "Contenu visuel", type: "textarea", required: true },
       { name: "status", label: "Statut", type: "select", options: statusOptions, required: true },
-      { name: "readTime", label: "Temps de lecture", type: "text" },
       { name: "author", label: "Auteur", type: "text" },
       { name: "publishedAt", label: "Date de publication", type: "date" },
       { name: "image", label: "Image", type: "text", help: "Chemin media ou URL, par exemple /hero-trading-desk.png." },
       { name: "tagSlugs", label: "Tags", type: "text", help: "Slugs separes par des virgules." },
-      { name: "seoTitle", label: "SEO title", type: "text" },
-      { name: "seoDescription", label: "SEO description", type: "textarea" },
-      { name: "robotsIndex", label: "Indexable", type: "checkbox" },
-      { name: "robotsFollow", label: "Follow", type: "checkbox" }
+      { name: "seoTitle", label: "SEO title", type: "text", help: "Optionnel : si vide, genere automatiquement depuis le titre." },
+      { name: "seoDescription", label: "SEO description", type: "textarea", help: "Optionnel : si vide, genere automatiquement depuis l'extrait." },
+      { name: "robotsIndex", label: "Autoriser l'indexation Google", type: "checkbox", help: "Decoche pour demander aux moteurs de ne pas indexer cette page." },
+      { name: "robotsFollow", label: "Autoriser le suivi des liens", type: "checkbox", help: "Decoche pour demander aux moteurs de ne pas suivre les liens de cette page." }
     ]
   },
   categories: {
@@ -112,7 +111,8 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "url", label: "URL", type: "text", required: true },
+      { name: "url", label: "URL externe ou chemin interne", type: "text", help: "Exemple externe https://... ou interne /uploads/image.png." },
+      { name: "file", label: "Importer un fichier local", type: "file", help: "Optionnel : image, video ou document enregistre dans /public/uploads." },
       { name: "alt", label: "Texte alternatif", type: "text" },
       {
         name: "type",
@@ -133,9 +133,7 @@ export const adminResources = {
       { name: "name", label: "Nom", type: "text", required: true },
       { name: "role", label: "Role", type: "text" },
       { name: "quote", label: "Temoignage", type: "textarea", required: true },
-      { name: "rating", label: "Note", type: "number" },
-      { name: "published", label: "Publie", type: "checkbox" },
-      { name: "order", label: "Ordre", type: "number" }
+      { name: "rating", label: "Note", type: "number", help: "Publie automatiquement. L'ordre est gere automatiquement." }
     ]
   },
   services: {
@@ -168,6 +166,19 @@ export const adminResources = {
       { name: "label", label: "Label", type: "text", required: true },
       { name: "slug", label: "Slug de tracking", type: "text", required: true },
       { name: "url", label: "URL destination", type: "url", required: true },
+      { name: "description", label: "Accroche", type: "textarea", help: "Texte court affiche sur les cartes partenaires." },
+      { name: "ctaLabel", label: "Libelle CTA", type: "text", help: "Exemple : Ouvrir un compte." },
+      { name: "brandColor", label: "Couleur marque", type: "text", help: "Hexadecimal, par exemple #ff6b00." },
+      {
+        name: "placement",
+        label: "Position",
+        type: "select",
+        options: [
+          { label: "Article haut et bas", value: "ARTICLE_BOTH" },
+          { label: "Article haut", value: "ARTICLE_TOP" },
+          { label: "Article bas", value: "ARTICLE_BOTTOM" }
+        ]
+      },
       {
         name: "type",
         label: "Type",
@@ -205,7 +216,7 @@ export const adminResources = {
     label: "Redirections",
     singular: "redirection",
     collection: "redirects",
-    description: "Redirections editoriales et SEO.",
+    description: "Redirige une ancienne URL vers une nouvelle pour eviter les erreurs 404 et garder le SEO.",
     titleField: "source",
     fields: [
       { name: "source", label: "Source", type: "text", required: true },
@@ -242,6 +253,7 @@ export const adminResources = {
     fields: [
       { name: "name", label: "Nom", type: "text", required: true },
       { name: "email", label: "Email", type: "email", required: true },
+      { name: "password", label: "Mot de passe temporaire", type: "password", help: "A renseigner a la creation ou pour changer le mot de passe." },
       {
         name: "role",
         label: "Role",

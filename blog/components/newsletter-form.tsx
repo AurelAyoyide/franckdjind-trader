@@ -1,4 +1,5 @@
 import { subscribeNewsletterAction } from "@/app/newsletter/actions";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 
 export function NewsletterForm({ status }: { status?: string }) {
   return (
@@ -35,9 +36,9 @@ export function NewsletterForm({ status }: { status?: string }) {
               <input className="mt-1 h-4 w-4 accent-market" name="consent" required type="checkbox" />
               J&apos;accepte que mon email soit conserve pour recevoir de futurs contenus.
             </label>
-            <button className="min-h-12 cursor-pointer rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+            <PendingSubmitButton className="min-h-12 rounded-md bg-market text-on-market hover:bg-market-strong" pendingLabel="Inscription...">
               S&apos;inscrire
-            </button>
+            </PendingSubmitButton>
           </form>
         </div>
       </div>

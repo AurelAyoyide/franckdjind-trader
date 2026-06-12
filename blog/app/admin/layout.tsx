@@ -1,23 +1,25 @@
-import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { logoutAction } from "@/app/admin/actions";
+import { AdminNavLink } from "@/components/admin/admin-nav-link";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { getAdminSession } from "@/lib/auth";
 
 const adminLinks = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/posts", label: "Articles" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/tags", label: "Tags" },
-  { href: "/admin/pages", label: "Pages" },
-  { href: "/admin/media", label: "Medias" },
-  { href: "/admin/testimonials", label: "Temoignages" },
-  { href: "/admin/services", label: "Services" },
-  { href: "/admin/links", label: "Liens" },
-  { href: "/admin/contact-messages", label: "Messages" },
-  { href: "/admin/redirects", label: "Redirections" },
-  { href: "/admin/settings", label: "Parametres" },
-  { href: "/admin/users", label: "Utilisateurs" },
-  { href: "/admin/subscribers", label: "Newsletter" }
-];
+  { href: "/admin", label: "Dashboard", icon: "dashboard" },
+  { href: "/admin/posts", label: "Articles", icon: "posts" },
+  { href: "/admin/categories", label: "Categories", icon: "categories" },
+  { href: "/admin/tags", label: "Tags", icon: "tags" },
+  { href: "/admin/pages", label: "Pages", icon: "pages" },
+  { href: "/admin/media", label: "Medias", icon: "media" },
+  { href: "/admin/testimonials", label: "Temoignages", icon: "testimonials" },
+  { href: "/admin/services", label: "Services", icon: "services" },
+  { href: "/admin/links", label: "Liens", icon: "links" },
+  { href: "/admin/contact-messages", label: "Messages", icon: "messages" },
+  { href: "/admin/redirects", label: "Redirections", icon: "redirects" },
+  { href: "/admin/settings", label: "Parametres", icon: "settings" },
+  { href: "/admin/users", label: "Utilisateurs", icon: "users" },
+  { href: "/admin/subscribers", label: "Newsletter", icon: "subscribers" }
+] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getAdminSession();
@@ -36,19 +38,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
           <nav className="mt-2 grid gap-1">
             {adminLinks.map((link) => (
-              <Link
-                className="rounded-md px-3 py-2 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
-                href={link.href}
-                key={link.href}
-              >
-                {link.label}
-              </Link>
+              <AdminNavLink href={link.href} icon={link.icon} key={link.href} label={link.label} />
             ))}
           </nav>
           <form action={logoutAction} className="mt-4 border-t border-line pt-3">
-            <button className="w-full rounded-md bg-foreground/[0.06] px-3 py-2 text-left text-sm font-semibold text-muted transition hover:text-foreground" type="submit">
+            <PendingSubmitButton
+              className="w-full justify-start border border-danger/30 bg-danger/10 px-3 py-2 text-left font-semibold text-danger hover:bg-danger/15"
+              pendingLabel="Deconnexion..."
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
               Deconnexion
-            </button>
+            </PendingSubmitButton>
           </form>
         </aside>
         <div>{children}</div>

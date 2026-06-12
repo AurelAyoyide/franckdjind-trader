@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import { submitContactAction } from "@/app/contact/actions";
 import { PageHero } from "@/components/page-hero";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { siteConfig } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
@@ -70,10 +71,10 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
             Message
             <textarea className="min-h-40 rounded-md border border-line bg-background px-4 py-3 text-foreground outline-none transition focus:border-market" minLength={10} name="message" required />
           </label>
-          <button className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+          <PendingSubmitButton className="mt-5 w-full rounded-md bg-market text-on-market hover:bg-market-strong" pendingLabel="Envoi...">
             <Send className="h-4 w-4" aria-hidden="true" />
             Envoyer
-          </button>
+          </PendingSubmitButton>
         </form>
 
         <aside className="grid gap-4 self-start">
