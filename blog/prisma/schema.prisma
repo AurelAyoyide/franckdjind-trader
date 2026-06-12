@@ -1,0 +1,363 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum PostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
+enum ContactStatus {
+  UNREAD
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum LinkType {
+  CONTACT
+  FORMATION
+  AFFILIATE
+  SOCIAL
+  OTHER
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String        @unique
+  passwordHash String
+  status       UserStatus    @default(ACTIVE)
+  roleId       String?
+  role         Role?         @relation(fields: [roleId], references: [id])
+  posts        Post[]        @relation("PostAuthor")
+  pages        Page[]        @relation("PageAuthor")
+  activityLogs ActivityLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([roleId])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  label       String
+  users       User[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  label       String
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model SeoMetadata {
+  id               String   @id @default(cuid())
+  title            String?
+  description      String?
+  canonicalUrl     String?
+  ogTitle          String?
+  ogDescription    String?
+  ogImage          String?
+  robotsIndex      Boolean  @default(true)
+  robotsFollow     Boolean  @default(true)
+  structuredData   Json?
+  post             Post?
+  page             Page?
+  category         Category?
+  tag              Tag?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Media {
+  id          String      @id @default(cuid())
+  type        MediaType   @default(IMAGE)
+  url         String
+  alt         String?
+  caption     String?
+  mimeType    String?
+  size        Int?
+  width       Int?
+  height      Int?
+  posts       PostMedia[]
+  coverPosts  Post[]      @relation("PostCover")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Category {
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  description   String?
+  parentId      String?
+  parent        Category?    @relation("CategoryTree", fields: [parentId], references: [id])
+  children      Category[]   @relation("CategoryTree")
+  seoMetadataId String?      @unique
+  seoMetadata   SeoMetadata? @relation(fields: [seoMetadataId], references: [id])
+  posts         Post[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+model Tag {
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  description   String?
+  seoMetadataId String?      @unique
+  seoMetadata   SeoMetadata? @relation(fields: [seoMetadataId], references: [id])
+  posts         PostTag[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Post {
+  id             String         @id @default(cuid())
+  title          String
+  slug           String         @unique
+  excerpt        String?
+  content        String
+  status         PostStatus     @default(DRAFT)
+  featured       Boolean        @default(false)
+  publishedAt    DateTime?
+  authorId       String
+  author         User           @relation("PostAuthor", fields: [authorId], references: [id])
+  categoryId     String?
+  category       Category?      @relation(fields: [categoryId], references: [id])
+  coverMediaId   String?
+  coverMedia     Media?         @relation("PostCover", fields: [coverMediaId], references: [id])
+  seoMetadataId  String?        @unique
+  seoMetadata    SeoMetadata?   @relation(fields: [seoMetadataId], references: [id])
+  tags           PostTag[]
+  revisions      PostRevision[]
+  media          PostMedia[]
+  views          PostView[]
+  reactions      PostReaction[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([deletedAt])
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+model PostRevision {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model PostMedia {
+  postId  String
+  mediaId String
+  order   Int     @default(0)
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([postId, mediaId])
+}
+
+model Page {
+  id            String       @id @default(cuid())
+  title         String
+  slug          String       @unique
+  content       String
+  status        PageStatus   @default(DRAFT)
+  authorId      String?
+  author        User?        @relation("PageAuthor", fields: [authorId], references: [id])
+  seoMetadataId String?      @unique
+  seoMetadata   SeoMetadata? @relation(fields: [seoMetadataId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+}
+
+model Service {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String
+  content     String?
+  priceLabel  String?
+  ctaLabel    String?
+  ctaUrl      String?
+  order       Int        @default(0)
+  published   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  quote     String
+  rating    Int?
+  published Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActionLink {
+  id          String      @id @default(cuid())
+  label       String
+  slug        String      @unique
+  url         String
+  type        LinkType    @default(OTHER)
+  noFollow    Boolean     @default(true)
+  sponsored   Boolean     @default(false)
+  active      Boolean     @default(true)
+  clicks      LinkClick[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model LinkClick {
+  id           String     @id @default(cuid())
+  actionLinkId String
+  actionLink   ActionLink @relation(fields: [actionLinkId], references: [id], onDelete: Cascade)
+  ipHash       String?
+  userAgent    String?
+  referrer     String?
+  createdAt    DateTime   @default(now())
+
+  @@index([actionLinkId, createdAt])
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    ContactStatus @default(UNREAD)
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Redirect {
+  id          String   @id @default(cuid())
+  source      String   @unique
+  destination String
+  permanent   Boolean  @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entity, entityId])
+}
+
+model PostView {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  type      String
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([postId, type])
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

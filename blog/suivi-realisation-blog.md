@@ -1,0 +1,167 @@
+# Suivi de realisation - Blog Trader
+
+Ce fichier sert de journal de suivi pour le travail effectue autour du blog.
+Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
+
+## Regles de travail
+
+- [x] Travailler le projet blog directement dans le dossier `blog/`.
+- [x] Garder les fichiers Markdown de reference a la racine du dossier `blog/`.
+- [x] Ne pas creer de sous-dossier supplementaire pour initialiser le projet applicatif.
+
+## Taches effectuees
+
+- [x] Creation du dossier `blog/` a la racine du depot.
+- [x] Creation du dossier `school/` a la racine du depot.
+- [x] Creation d'un fichier `README.md` vide a la racine du depot.
+- [x] Copie du cahier technique dans `blog/cahier-technique-blog-trader-nextjs-prisma-v2-complet.md`.
+- [x] Creation de ce fichier de suivi dans `blog/suivi-realisation-blog.md`.
+- [x] Lecture du cahier technique pour extraire le perimetre Next.js, Prisma, SEO, admin et mobile-first.
+- [x] Lecture de la reference `bono` pour capter l'ambiance visuelle trading, sombre, verte, data et animee.
+- [x] Generation d'un visuel hero local pour le site.
+- [x] Copie du visuel hero dans `blog/public/hero-trading-desk.png`.
+- [x] Initialisation manuelle du projet Next.js directement a la racine du dossier `blog/`, sans sous-dossier applicatif.
+- [x] Creation de `package.json` avec scripts `dev`, `build`, `lint`, `typecheck` et commandes Prisma.
+- [x] Creation de `.gitignore`, `.env.example`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs` et `eslint.config.mjs`.
+- [x] Installation des dependances npm et generation de `package-lock.json`.
+- [x] Pin des versions compatibles avec Node 20.12.0 : Next 15.5.19, React 19.2.7, Prisma 6.19.3, ESLint 9.39.4.
+- [x] Creation du design system global dans `app/globals.css`.
+- [x] Creation des helpers `lib/utils.ts`, `lib/content.ts`, `lib/seo.ts` et `lib/prisma.ts`.
+- [x] Creation des composants `SiteHeader`, `SiteFooter`, `MobileMenu`, `MarketTicker`, `ArticleCard`, `PageHero`, `DisclaimerBanner`, `ButtonLink` et `Reveal`.
+- [x] Creation de la page d'accueil mobile-first avec hero image, CTA, articles, categories, services, temoignages et disclaimer.
+- [x] Creation de la page blog `/blog`.
+- [x] Creation de la page article dynamique `/blog/[slug]`.
+- [x] Ajout du JSON-LD `BlogPosting` sur les pages articles.
+- [x] Creation de la page categorie dynamique `/categorie/[slug]`.
+- [x] Creation de la page tag dynamique `/tag/[slug]`.
+- [x] Creation de la page recherche `/recherche`.
+- [x] Creation de la page a propos `/a-propos`.
+- [x] Creation de la page formations `/formations`.
+- [x] Creation de la page temoignages `/temoignages`.
+- [x] Creation de la page contact `/contact`.
+- [x] Creation des pages legales `/disclaimer`, `/politique-confidentialite` et `/conditions-utilisation`.
+- [x] Creation de la page 404 `app/not-found.tsx`.
+- [x] Creation de `app/sitemap.ts`.
+- [x] Creation de `app/robots.ts`.
+- [x] Creation du socle admin visuel `/admin`.
+- [x] Creation du socle login admin `/admin/login`.
+- [x] Creation du schema Prisma initial dans `prisma/schema.prisma`.
+- [x] Verification TypeScript avec `npm run typecheck`.
+- [x] Verification ESLint avec `npm run lint`.
+- [x] Verification du build production avec `npm run build`.
+- [x] Validation du schema Prisma avec `npx prisma validate`.
+- [x] Lancement du serveur dev local sur `http://127.0.0.1:3000`.
+- [x] Verification navigateur desktop de la page d'accueil.
+- [x] Verification navigateur mobile 390x844 de la page d'accueil.
+- [x] Verification navigateur de l'ouverture du menu mobile.
+- [x] Verification navigateur d'une page article et de la recherche.
+- [x] Ajout d'un override `postcss@8.5.10` pour supprimer les alertes npm audit liees a Next/PostCSS.
+- [x] Verification `npm audit --audit-level=moderate` avec zero vulnerabilite.
+- [x] Re-verification du build production apres l'override PostCSS.
+- [x] Relance du serveur dev local sur `http://127.0.0.1:3000`.
+- [x] Passage du site en mode clair par defaut.
+- [x] Ajout d'un switch clair/sombre dans le header desktop et mobile.
+- [x] Reprise du contraste du hero pour que les CTA restent lisibles en mode clair.
+- [x] Remplacement des liens Telegram/WhatsApp directs par des routes internes de tracking `/go/telegram` et `/go/whatsapp`.
+- [x] Ajout de la route de tracking `/go/[slug]` avec enregistrement des clics.
+- [x] Correction du footer : liens contact cliquables, categories cliquables et suppression de l'encodage casse.
+- [x] Creation d'une couche de donnees locale modifiable dans `data/content.json`.
+- [x] Raccordement des pages publiques a la source de donnees modifiable.
+- [x] Creation de l'auth admin avec session signee HMAC compatible middleware Edge.
+- [x] Protection des routes `/admin/*` par middleware.
+- [x] Branchement du formulaire de connexion admin.
+- [x] Branchement de la deconnexion admin.
+- [x] Creation du layout admin avec navigation vers tous les modules.
+- [x] Creation du dashboard admin avec statistiques et activite.
+- [x] Creation des pages CRUD generiques admin pour articles, categories, tags, pages, medias, temoignages, services, liens, messages, redirections, parametres et utilisateurs.
+- [x] Branchement du formulaire contact avec validation serveur Zod.
+- [x] Ajout d'un honeypot anti-spam sur le formulaire contact.
+- [x] Ajout d'une limite simple de 5 messages par IP et par heure.
+- [x] Stockage des messages contact dans la source de donnees locale.
+- [x] Raccordement des champs SEO admin aux metadata publiques articles/categories/tags.
+- [x] Ajout du seed Prisma `prisma/seed.ts` pour role admin, permissions et utilisateur admin.
+- [x] Retrait de `jose` apres remplacement par HMAC Web Crypto.
+- [x] Verification de la redirection `/admin` vers `/admin/login` sans session.
+- [x] Verification du login admin local et de l'acces dashboard.
+- [x] Verification de la page CRUD `/admin/posts`.
+- [x] Verification HTTP de la route `/go/telegram`.
+- [x] Verification navigateur du mode clair desktop.
+- [x] Verification navigateur du mode clair mobile 390x844.
+- [x] Ajout de l'application effective des redirections admin via route catch-all.
+- [x] Ajout des donnees structurees `Organization` et `Person` sur l'accueil.
+- [x] Verification finale `npm run typecheck`.
+- [x] Verification finale `npm run lint`.
+- [x] Verification finale `npm run build`.
+- [x] Relance finale du serveur dev local sur `http://127.0.0.1:3000`.
+- [x] Installation de TipTap pour ajouter un editeur WYSIWYG dans l'admin.
+- [x] Installation de `sanitize-html` pour filtrer le contenu riche avant affichage.
+- [x] Creation du composant admin `RichEditor`.
+- [x] Remplacement du champ `content` brut par l'editeur WYSIWYG pour articles, pages et services.
+- [x] Affichage public des articles via contenu riche sanitise.
+- [x] Raccordement de la page `a-propos` au contenu riche administrable.
+- [x] Ajout des styles `.rich-content` et `.rich-editor-content`.
+- [x] Ajout de `cursor-pointer` sur les elements interactifs.
+- [x] Reprise de la section temoignages de l'accueil avec titre clair et alignement propre des auteurs.
+- [x] Reprise des cartes temoignages pour aligner les noms en bas.
+- [x] Transformation de `/blog` en page avec recherche, filtres categories, compteur de resultats, reset et pagination.
+- [x] Ajout d'une modale de confirmation personnalisee avant suppression admin.
+- [x] Ajout d'un formulaire public de proposition de temoignage.
+- [x] Stockage des temoignages publics en statut non publie avant validation admin.
+- [x] Ajout d'un formulaire newsletter sans envoi email.
+- [x] Stockage des abonnes newsletter dans la source de donnees locale.
+- [x] Ajout du module admin `Newsletter`.
+- [x] Verification build apres ajout WYSIWYG, filtres blog, modale delete, newsletter et avis publics.
+- [x] Reprise du contraste des boutons principaux en mode clair avec une couleur dediee `on-market`.
+- [x] Ajout du lien `Recherche` dans le header desktop, le menu mobile et le footer.
+- [x] Passage du header complet au breakpoint `lg` pour eviter une navigation trop serree sur tablette.
+- [x] Transformation des tags des cartes articles en liens cliquables vers `/tag/[slug]`.
+- [x] Extension de la recherche blog et de la page recherche au contenu complet des articles.
+- [x] Ajout de la pagination sur `/recherche`.
+- [x] Ajout de la pagination sur les pages categories `/categorie/[slug]`.
+- [x] Ajout de la pagination sur les pages tags `/tag/[slug]`.
+- [x] Ajout de la recherche et de la pagination dans les listes admin generiques.
+- [x] Ajout des champs admin article `categorySlug` et `image`.
+- [x] Correction de la normalisation admin des articles pour conserver la vraie categorie selectionnee.
+- [x] Ajout d'une verification de session directement dans les server actions admin.
+- [x] Ajout d'une premiere couche de permissions simples par role dans les server actions admin.
+- [x] Extension de la revalidation apres action admin aux pages recherche, categories et tags.
+- [x] Reprise de la page formations pour afficher prix, contenu riche administrable et CTA configure.
+- [x] Correction d'un texte corrompu sur la page formations.
+- [x] Passage des temoignages de demo en non publies pour respecter la consigne de ne pas inventer d'avis.
+- [x] Ajout d'un etat public propre quand aucun temoignage reel n'est valide.
+- [x] Ajout des attributs requis cote navigateur sur le formulaire contact.
+- [x] Mise a jour du dashboard admin avec module Newsletter, statistiques et texte exact.
+- [x] Ajout des titres natifs sur les boutons de l'editeur WYSIWYG.
+- [x] Verification `npm run typecheck` apres la passe UI/UX et securite.
+- [x] Verification `npm run lint` apres la passe UI/UX et securite.
+- [x] Verification `npm run build` apres arret des anciens process Next qui bloquaient le build.
+- [x] Verification `npm audit --audit-level=moderate` avec zero vulnerabilite.
+- [x] Relance du serveur dev local sur `http://127.0.0.1:3000`.
+- [x] Verification navigateur de l'accueil en mode clair : newsletter, section temoignages vide, liens non vides, pas d'overflow horizontal.
+- [x] Verification navigateur mobile : menu visible, curseurs interactifs et pas d'overflow horizontal.
+- [x] Verification navigateur de `/blog?q=risk&categorie=risk-management` : recherche, filtres, reset, tags cliquables.
+- [x] Verification navigateur de `/recherche?q=contexte`, `/categorie/debuter`, `/formations` et `/temoignages`.
+- [x] Verification HTTP de `/admin` sans session avec redirection 307.
+- [x] Verification HTTP de `/blog?q=risk` avec statut 200.
+- [x] Correction du badge hero en mode clair avec fond sombre lisible et sans blur.
+- [x] Correction du bouton hero `Voir les formations` avec variante dediee a fort contraste.
+- [x] Suppression du voile blanc en bas de l'image hero en mode clair.
+- [x] Suppression du voile blanc sur les images des cartes articles.
+- [x] Verification navigateur des styles calcules du badge hero, du bouton hero et de l'overlay article en mode clair.
+
+## Prochaine etape
+
+- [ ] Brancher la vraie persistance PostgreSQL en production via `DATABASE_URL` et migrations Prisma.
+- [x] Creer le seed admin.
+- [x] Implementer l'authentification admin securisee.
+- [x] Proteger les routes `/admin`.
+- [x] Implementer les CRUD articles, categories, tags, pages, temoignages, services et liens.
+- [x] Brancher le formulaire contact avec validation serveur, anti-spam et stockage.
+- [x] Ajouter la gestion media.
+- [ ] Finaliser les textes legaux avec les informations reelles du client.
+- [ ] Remplacer les contenus de demo par les contenus client.
+- [x] Faire une passe UI/UX suite aux retours sur mode clair, mobile, temoignages, recherche et navigation.
+- [ ] Faire une passe UI/UX finale apres nouveaux retours client reels.
+- [ ] Implementer une vraie internationalisation SEO `fr/en` avec contenus traduits.
+- [x] Ajouter une premiere couche de permissions simples par role sur les actions admin.
+- [ ] Affiner les permissions par permission granulaire si le client veut plusieurs profils admin actifs.
