@@ -1,0 +1,131 @@
+"use server";
+
+import { AccountStatus, TrainingRequestType } from "@prisma/client";
+import { getAuthorizedSession } from "@/lib/authorization";
+import { accessChoiceSchema } from "@/lib/validation";
+import { buildTrainingRequestMessage, buildWhatsAppLink } from "@/lib/whatsapp";
+import { prisma } from "@/lib/prisma";
+
+export type AccessChoiceState = {
+  ok: boolean;
+  message: string;
+  whatsappUrl?: string;
+  errors?: Record<string, string[] | undefined>;
+};
+
+export async function requestAccessAction(
+  _state: AccessChoiceState,
+  formData: FormData,
+): Promise<AccessChoiceState> {
+  const parsed = accessChoiceSchema.safeParse({
+    kind: formData.get("kind"),
+    name: formData.get("name"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Complete les champs avant de preparer le message WhatsApp.",
+      errors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const session = await getAuthorizedSession(["student"]);
+
+  if (!session) {
+    return {
+      ok: false,
+      message: "Connecte-toi avec ton compte apprenant avant de demander l'acces.",
+    };
+  }
+
+  if (parsed.data.email !== session.email) {
+    return {
+      ok: false,
+      message: "Utilise l'email de ton compte connecte.",
+      errors: { email: ["Email different du compte connecte"] },
+    };
+  }
+
+  const message = buildTrainingRequestMessage(
+    parsed.data.kind,
+    parsed.data.name,
+    parsed.data.email,
+    parsed.data.phone,
+  );
+  const requestType =
+    parsed.data.kind === "free"
+      ? TrainingRequestType.FREE
+      : TrainingRequestType.PAID_ALREADY_PAID;
+
+  const learner = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, status: true },
+  });
+
+  if (!learner) {
+    return {
+      ok: false,
+      message: "Cree d'abord ton compte puis valide ton email avant la demande.",
+      errors: { email: ["Compte introuvable"] },
+    };
+  }
+
+  if (learner.status === AccountStatus.EMAIL_PENDING) {
+    return {
+      ok: false,
+      message: "Valide ton email avant de demander l'acces.",
+      errors: { email: ["Email non valide"] },
+    };
+  }
+
+  if (learner.status === AccountStatus.SUSPENDED) {
+    return {
+      ok: false,
+      message: "Ce compte est suspendu. Contacte l'administrateur.",
+    };
+  }
+
+  const recentPendingRequest = await prisma.trainingRequest.findFirst({
+    where: {
+      learnerId: learner.id,
+      type: requestType,
+      status: "PENDING",
+      createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) },
+    },
+    select: { id: true },
+  });
+
+  if (recentPendingRequest) {
+    return {
+      ok: true,
+      message: "Une demande recente est deja en attente. Tu peux rouvrir WhatsApp avec le meme message.",
+      whatsappUrl: buildWhatsAppLink(message),
+    };
+  }
+
+  await prisma.trainingRequest.create({
+    data: {
+      learnerId: learner.id,
+      type: requestType,
+      whatsappText: message,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: learner.id,
+      action: "TRAINING_REQUEST_CREATED",
+      target: parsed.data.kind,
+      metadata: { email: parsed.data.email, phone: parsed.data.phone },
+    },
+  });
+
+  return {
+    ok: true,
+    message: "Demande enregistree. Le clic WhatsApp garde le paiement hors plateforme.",
+    whatsappUrl: buildWhatsAppLink(message),
+  };
+}

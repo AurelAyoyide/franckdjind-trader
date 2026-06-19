@@ -4,13 +4,23 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAdminResource } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
 import { createId, readData, writeData, type BlogData, type StoredArticle } from "@/lib/data-store";
+import { canManageResource } from "@/lib/permissions";
 import { sanitizeRichHtml, markdownLikeToHtml } from "@/lib/sanitize";
+import {
+  isSafeActionUrl,
+  isSafeHttpUrl,
+  isSafeInternalPath,
+  isSafeMediaUrl,
+  isSameOriginRequest,
+  normalizeHexColor,
+  normalizeSlug
+} from "@/lib/security";
 import { estimateReadTime, stripHtml, truncateText } from "@/lib/utils";
-import type { AdminSession } from "@/lib/auth-edge";
 
 function markdownToSections(content: string) {
   const chunks = content
@@ -53,7 +63,7 @@ function slugifyFileName(value: string) {
     .replace(/(^-|-$)/g, "")
     .slice(0, 80);
 
-  return `${base || "media"}-${Date.now()}${extension}`;
+  return `${base || "media"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extension}`;
 }
 
 async function saveUploadedMedia(file: File) {
@@ -61,17 +71,19 @@ async function saveUploadedMedia(file: File) {
     return "";
   }
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-    "image/svg+xml",
-    "video/mp4",
-    "application/pdf"
-  ];
+  const maxUploadBytes = 15 * 1024 * 1024;
+  const allowedTypes = new Map<string, string[]>([
+    ["image/jpeg", [".jpg", ".jpeg"]],
+    ["image/png", [".png"]],
+    ["image/webp", [".webp"]],
+    ["image/gif", [".gif"]],
+    ["video/mp4", [".mp4"]],
+    ["application/pdf", [".pdf"]]
+  ]);
+  const extension = path.extname(file.name).toLowerCase();
+  const allowedExtensions = allowedTypes.get(file.type);
 
-  if (!allowedTypes.includes(file.type)) {
+  if (file.size > maxUploadBytes || !allowedExtensions?.includes(extension)) {
     return "";
   }
 
@@ -88,16 +100,32 @@ function getCollection(data: BlogData, collection: keyof BlogData) {
   return data[collection] as Array<Record<string, unknown>>;
 }
 
-function canManageResource(session: AdminSession, resource: string, action: "save" | "delete") {
-  if (session.role === "ADMIN") {
-    return true;
+function normalizeFieldValue(name: string, type: string, value: string) {
+  if (name === "slug" || name === "categorySlug") {
+    return normalizeSlug(value);
   }
 
-  if (session.role === "EDITOR") {
-    return !["users", "settings"].includes(resource);
+  if (name === "tagSlugs") {
+    return value
+      .split(",")
+      .map((tag) => normalizeSlug(tag))
+      .filter(Boolean)
+      .join(", ");
   }
 
-  return resource === "posts" && action === "save";
+  if (name === "brandColor") {
+    return normalizeHexColor(value);
+  }
+
+  if (type === "url" && value && !isSafeActionUrl(value)) {
+    return "";
+  }
+
+  return value;
+}
+
+function hasRequiredValue(value: unknown) {
+  return typeof value === "boolean" || (typeof value === "number" ? Number.isFinite(value) : String(value ?? "").trim().length > 0);
 }
 
 function normalizePost(item: Record<string, unknown>, data: BlogData) {
@@ -120,7 +148,7 @@ function normalizePost(item: Record<string, unknown>, data: BlogData) {
     category,
     tags,
     sections: markdownToSections(content),
-    image: typeof item.image === "string" && item.image ? item.image : "/hero-trading-desk.png",
+    image: typeof item.image === "string" && isSafeMediaUrl(item.image) ? item.image : "/hero-trading-desk.png",
     featured: Boolean(item.featured),
     readTime: estimateReadTime(content),
     seoTitle: typeof item.seoTitle === "string" && item.seoTitle ? item.seoTitle : String(item.title ?? ""),
@@ -170,10 +198,15 @@ async function normalizeUser(item: Record<string, unknown>) {
 }
 
 export async function saveResourceAction(formData: FormData) {
+  const requestHeaders = await headers();
   const resource = String(formData.get("resource") ?? "");
   const id = String(formData.get("id") ?? "");
   const config = getAdminResource(resource);
   const session = await getAdminSession();
+
+  if (!isSameOriginRequest(requestHeaders)) {
+    redirect("/admin");
+  }
 
   if (!config) {
     redirect("/admin");
@@ -201,11 +234,23 @@ export async function saveResourceAction(formData: FormData) {
       continue;
     }
 
-    const value = parseFieldValue(field.type, formData, field.name);
+    const parsedValue = parseFieldValue(field.type, formData, field.name);
+    const value =
+      typeof parsedValue === "string"
+        ? normalizeFieldValue(field.name, field.type, parsedValue)
+        : parsedValue;
     nextItem[field.name] =
       field.name === "content" && typeof value === "string"
         ? sanitizeRichHtml(markdownLikeToHtml(value))
         : value;
+  }
+
+  const missingRequiredField = config.fields.some(
+    (field) => field.required && field.type !== "file" && !hasRequiredValue(nextItem[field.name])
+  );
+
+  if (missingRequiredField) {
+    redirect(`/admin/${resource}`);
   }
 
   if (resource === "media") {
@@ -217,30 +262,63 @@ export async function saveResourceAction(formData: FormData) {
       }
     }
 
+    if (typeof nextItem.url === "string" && nextItem.url && !isSafeMediaUrl(nextItem.url)) {
+      nextItem.url = "";
+    }
+
     nextItem.createdAt = typeof nextItem.createdAt === "string" ? nextItem.createdAt : new Date().toISOString();
   }
 
   if (resource === "links") {
+    if (typeof nextItem.url !== "string" || !isSafeActionUrl(nextItem.url)) {
+      redirect(`/admin/${resource}`);
+    }
+
     nextItem.placement =
       typeof nextItem.placement === "string" && nextItem.placement
         ? nextItem.placement
         : "ARTICLE_BOTH";
+    nextItem.brandColor = normalizeHexColor(nextItem.brandColor);
+  }
+
+  if (resource === "services") {
+    const ctaUrl = String(nextItem.ctaUrl ?? "").trim();
+    nextItem.ctaUrl = ctaUrl && isSafeActionUrl(ctaUrl) ? ctaUrl : "/contact";
   }
 
   if (resource === "redirects") {
     const source = String(nextItem.source ?? "").trim();
     const destination = String(nextItem.destination ?? "").trim();
-    nextItem.source = source.startsWith("/") ? source : `/${source}`;
-    nextItem.destination =
-      destination.startsWith("http") || destination.startsWith("/")
-        ? destination
-        : `/${destination}`;
+    const normalizedSource = source.startsWith("/") ? source : `/${source}`;
+    const normalizedDestination =
+      destination.startsWith("/") || isSafeHttpUrl(destination) ? destination : `/${destination}`;
+
+    if (!isSafeInternalPath(normalizedSource) || normalizedSource.startsWith("/admin")) {
+      redirect(`/admin/${resource}`);
+    }
+
+    if (!isSafeInternalPath(normalizedDestination) && !isSafeHttpUrl(normalizedDestination)) {
+      redirect(`/admin/${resource}`);
+    }
+
+    nextItem.source = normalizedSource;
+    nextItem.destination = normalizedDestination;
   }
 
   normalizeGenericSeo(nextItem);
 
   if (resource === "users") {
+    const submittedPassword = String(formData.get("password") ?? "").trim();
+
+    if (submittedPassword && submittedPassword.length < 10) {
+      redirect(`/admin/${resource}`);
+    }
+
     await normalizeUser(nextItem);
+
+    if (existingIndex < 0 && !nextItem.passwordHash) {
+      redirect(`/admin/${resource}`);
+    }
   }
 
   if (resource === "posts") {
@@ -288,10 +366,15 @@ export async function saveResourceAction(formData: FormData) {
 }
 
 export async function deleteResourceAction(formData: FormData) {
+  const requestHeaders = await headers();
   const resource = String(formData.get("resource") ?? "");
   const id = String(formData.get("id") ?? "");
   const config = getAdminResource(resource);
   const session = await getAdminSession();
+
+  if (!isSameOriginRequest(requestHeaders)) {
+    redirect("/admin");
+  }
 
   if (!config || !id || config.allowDelete === false) {
     redirect(config ? `/admin/${config.slug}` : "/admin");

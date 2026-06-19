@@ -1,0 +1,218 @@
+import { z } from "zod";
+
+export const registrationSchema = z
+  .object({
+    firstName: z.string().min(2, "Prenom trop court").trim(),
+    lastName: z.string().min(2, "Nom trop court").trim(),
+    email: z.string().email("Email invalide").trim().toLowerCase(),
+    phone: z.string().min(8, "Telephone WhatsApp invalide").trim(),
+    password: z
+      .string()
+      .min(8, "Minimum 8 caracteres")
+      .regex(/[A-Za-z]/, "Au moins une lettre")
+      .regex(/[0-9]/, "Au moins un chiffre"),
+    confirmPassword: z.string().min(8, "Confirmation requise"),
+    acceptedTerms: z.literal("on", { error: "Conditions requises" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
+export const loginSchema = z.object({
+  email: z.string().email("Email invalide").trim().toLowerCase(),
+  password: z.string().min(1, "Mot de passe requis"),
+  next: z.string().optional(),
+  rememberMe: z.string().optional(),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email invalide").trim().toLowerCase(),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(20, "Token invalide"),
+    password: z
+      .string()
+      .min(8, "Minimum 8 caracteres")
+      .regex(/[A-Za-z]/, "Au moins une lettre")
+      .regex(/[0-9]/, "Au moins un chiffre"),
+    confirmPassword: z.string().min(8, "Confirmation requise"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
+export const profileSchema = z.object({
+  firstName: z.string().min(2, "Prenom trop court").trim(),
+  lastName: z.string().min(2, "Nom trop court").trim(),
+  phone: z.string().min(8, "WhatsApp requis").trim(),
+});
+
+export const trainerAccountSchema = z.object({
+  firstName: z.string().min(2, "Prenom trop court").trim(),
+  lastName: z.string().min(2, "Nom trop court").trim(),
+  email: z.string().email("Email invalide").trim().toLowerCase(),
+  phone: z.string().min(8, "WhatsApp requis").trim(),
+  role: z.enum(["MAIN_TRAINER", "ASSISTANT_TRAINER"]),
+});
+
+export const liveAnnouncementSchema = z.object({
+  title: z.string().min(4, "Titre trop court").trim(),
+  body: z.string().min(10, "Description trop courte").trim(),
+  externalUrl: z.string().url("Lien invalide").trim(),
+  scheduledAt: z.coerce.date(),
+  courseId: z.string().optional(),
+});
+
+export const courseUpdateSchema = z.object({
+  courseId: z.string().min(1),
+  title: z.string().min(4, "Titre trop court").trim(),
+  type: z.enum(["FREE", "PAID"]),
+  priceLabel: z.string().trim().optional(),
+  duration: z.string().min(2, "Duree requise").trim(),
+  description: z.string().min(20, "Description trop courte").trim(),
+});
+
+export const courseStatusSchema = z.object({
+  courseId: z.string().min(1),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+});
+
+export const moduleCreateSchema = z.object({
+  courseId: z.string().min(1),
+  title: z.string().min(3, "Titre de module requis").trim(),
+  description: z.string().trim().optional(),
+});
+
+export const lessonCreateSchema = z.object({
+  moduleId: z.string().min(1),
+  title: z.string().min(3, "Titre de lecon requis").trim(),
+  type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "QUIZ"]),
+  content: z.string().trim().optional(),
+  videoPath: z.string().trim().optional(),
+  documentPath: z.string().trim().optional(),
+});
+
+export const quizCreateSchema = z.object({
+  lessonId: z.string().min(1),
+  title: z.string().min(3, "Titre requis").trim(),
+  minimumScore: z.coerce.number().min(0).max(100),
+  maxAttempts: z.coerce.number().min(1).max(10),
+  blocking: z.coerce.boolean().optional(),
+  questionText: z.string().min(3, "Question requise").trim(),
+  optionA: z.string().min(1, "Option A requise").trim(),
+  optionB: z.string().min(1, "Option B requise").trim(),
+  optionC: z.string().trim().optional(),
+  correctOption: z.enum(["A", "B", "C"]),
+});
+
+export const enrollmentStatusSchema = z.object({
+  enrollmentId: z.string().min(1),
+  status: z.enum(["ACTIVE", "REVOKED", "COMPLETED"]),
+});
+
+export const communityPostSchema = z.object({
+  title: z.string().min(4, "Titre trop court").trim(),
+  body: z.string().min(10, "Message trop court").trim(),
+  courseId: z.string().optional(),
+  pinned: z.coerce.boolean().optional(),
+  commentsEnabled: z.coerce.boolean().optional(),
+});
+
+export const communityCommentSchema = z.object({
+  postId: z.string().min(1),
+  body: z.string().min(2, "Commentaire trop court").max(1000).trim(),
+});
+
+export const communityPostStatusSchema = z.object({
+  postId: z.string().min(1),
+  status: z.enum(["PUBLISHED", "HIDDEN"]),
+});
+
+export const communityCommentDeleteSchema = z.object({
+  commentId: z.string().min(1),
+});
+
+export const callScheduleSchema = z.object({
+  learnerId: z.string().min(1),
+  title: z.string().min(3, "Titre requis").trim(),
+  notes: z.string().trim().optional(),
+  scheduledAt: z.coerce.date(),
+});
+
+export const callStatusSchema = z.object({
+  callId: z.string().min(1),
+  status: z.enum(["SCHEDULED", "DONE", "MISSED", "CANCELLED"]),
+});
+
+export const learnerAssignmentSchema = z.object({
+  courseId: z.string().min(1),
+  learnerId: z.string().min(1),
+});
+
+export const accessChoiceSchema = z.object({
+  kind: z.enum(["free", "paid"]),
+  name: z.string().min(3, "Nom complet requis").trim(),
+  email: z.string().email("Email invalide").trim().toLowerCase(),
+  phone: z.string().min(8, "WhatsApp requis").trim(),
+});
+
+export const courseSchema = z.object({
+  title: z.string().min(4, "Titre trop court").trim(),
+  type: z.enum(["FREE", "PAID"]),
+  priceLabel: z.string().trim().optional(),
+  duration: z.string().min(2, "Duree requise").trim(),
+  description: z.string().min(20, "Description trop courte").trim(),
+});
+
+export const notificationSchema = z.object({
+  target: z.string().min(2, "Cible requise").trim(),
+  channel: z.enum(["INTERNAL", "EMAIL", "BOTH"]),
+  message: z.string().min(10, "Message trop court").trim(),
+});
+
+export const settingsSchema = z.object({
+  platformName: z.string().min(2).max(80).trim(),
+  platformLogoUrl: z.string().url("URL logo invalide").optional().or(z.literal("")),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur hexadecimale attendue"),
+  smtpHost: z.string().trim().optional(),
+  smtpFrom: z.string().email("Email expediteur invalide").optional().or(z.literal("")),
+  whatsappNumber: z.string().min(8, "Numero WhatsApp invalide").trim(),
+  emailTokenTtlHours: z.coerce.number().min(1).max(168),
+  resetPasswordTokenTtlHours: z.coerce.number().min(1).max(24),
+  remindersEnabled: z.enum(["true", "false"]),
+  reminderCooldownDays: z.coerce.number().min(1).max(90),
+  reminderMaxEmailsPerWeek: z.coerce.number().min(1).max(20),
+  certificatePrefix: z.string().min(2).max(12).regex(/^[A-Z0-9_-]+$/i, "Prefixe invalide").trim(),
+  maxPrivateUploadMb: z.coerce.number().min(1).max(2048),
+  securityMaxLoginAttempts: z.coerce.number().min(1).max(20),
+  securityLoginWindowMinutes: z.coerce.number().min(1).max(120),
+});
+
+export type RegistrationInput = z.infer<typeof registrationSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ProfileInput = z.infer<typeof profileSchema>;
+export type TrainerAccountInput = z.infer<typeof trainerAccountSchema>;
+export type LiveAnnouncementInput = z.infer<typeof liveAnnouncementSchema>;
+export type CourseUpdateInput = z.infer<typeof courseUpdateSchema>;
+export type CourseStatusInput = z.infer<typeof courseStatusSchema>;
+export type ModuleCreateInput = z.infer<typeof moduleCreateSchema>;
+export type LessonCreateInput = z.infer<typeof lessonCreateSchema>;
+export type QuizCreateInput = z.infer<typeof quizCreateSchema>;
+export type EnrollmentStatusInput = z.infer<typeof enrollmentStatusSchema>;
+export type CommunityPostInput = z.infer<typeof communityPostSchema>;
+export type CommunityCommentInput = z.infer<typeof communityCommentSchema>;
+export type CommunityPostStatusInput = z.infer<typeof communityPostStatusSchema>;
+export type CommunityCommentDeleteInput = z.infer<typeof communityCommentDeleteSchema>;
+export type CallScheduleInput = z.infer<typeof callScheduleSchema>;
+export type CallStatusInput = z.infer<typeof callStatusSchema>;
+export type LearnerAssignmentInput = z.infer<typeof learnerAssignmentSchema>;
+export type AccessChoiceInput = z.infer<typeof accessChoiceSchema>;
+export type CourseInput = z.infer<typeof courseSchema>;
+export type NotificationInput = z.infer<typeof notificationSchema>;
+export type SettingsInput = z.infer<typeof settingsSchema>;

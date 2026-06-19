@@ -1,4 +1,5 @@
 import { siteConfig } from "@/lib/content";
+import { escapeJsonForHtml } from "@/lib/security";
 import { absoluteUrl } from "@/lib/utils";
 
 export function HomeStructuredData() {
@@ -24,7 +25,7 @@ export function HomeStructuredData() {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data)
+        __html: escapeJsonForHtml(data)
       }}
     />
   );

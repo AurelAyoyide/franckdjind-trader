@@ -11,6 +11,7 @@ import {
   type Category,
   type Tag
 } from "@/lib/content";
+import { isSafeActionUrl, isSafeMediaUrl } from "@/lib/security";
 import { estimateReadTime } from "@/lib/utils";
 
 export type StoredStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
@@ -358,7 +359,9 @@ export async function readData(): Promise<BlogData> {
 
 export async function writeData(data: BlogData) {
   await fs.mkdir(dataDir, { recursive: true });
-  await fs.writeFile(dataFile, JSON.stringify(data, null, 2), "utf8");
+  const tempFile = path.join(dataDir, `content.${process.pid}.${Date.now()}.tmp`);
+  await fs.writeFile(tempFile, JSON.stringify(data, null, 2), "utf8");
+  await fs.rename(tempFile, dataFile);
 }
 
 export async function addActivity(action: string, entity: string, entityId?: string) {
@@ -385,11 +388,18 @@ export async function getPublicData() {
       .filter((post) => post.status === "PUBLISHED")
       .map((post) => ({
         ...post,
+        image: isSafeMediaUrl(post.image) ? post.image : "/hero-trading-desk.png",
         readTime: estimateReadTime(post.content)
       })),
-    services: data.services.filter((service) => service.published).sort((a, b) => a.order - b.order),
+    services: data.services
+      .filter((service) => service.published)
+      .map((service) => ({
+        ...service,
+        ctaUrl: isSafeActionUrl(service.ctaUrl) ? service.ctaUrl : "/contact"
+      }))
+      .sort((a, b) => a.order - b.order),
     testimonials: data.testimonials.filter((testimonial) => testimonial.published).sort((a, b) => a.order - b.order),
-    actionLinks: data.actionLinks.filter((link) => link.active)
+    actionLinks: data.actionLinks.filter((link) => link.active && isSafeActionUrl(link.url))
   };
 }
 

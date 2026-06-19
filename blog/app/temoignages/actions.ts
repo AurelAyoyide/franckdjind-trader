@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createId, readData, writeData } from "@/lib/data-store";
+import { getClientIp, hashValue, isSameOriginRequest } from "@/lib/security";
 
 const testimonialSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -12,6 +14,12 @@ const testimonialSchema = z.object({
 });
 
 export async function submitTestimonialAction(formData: FormData) {
+  const requestHeaders = await headers();
+
+  if (!isSameOriginRequest(requestHeaders)) {
+    redirect("/temoignages?status=invalid#donner-avis");
+  }
+
   const parsed = testimonialSchema.safeParse({
     name: formData.get("name"),
     role: formData.get("role") || "Apprenant",
@@ -24,6 +32,18 @@ export async function submitTestimonialAction(formData: FormData) {
   }
 
   const data = await readData();
+  const ipHash = hashValue(getClientIp(requestHeaders));
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  const recentTestimonials = data.activityLogs.filter(
+    (log) =>
+      log.action === "testimonial_submitted" &&
+      log.entityId === ipHash &&
+      new Date(log.createdAt).getTime() >= oneHourAgo
+  );
+
+  if (recentTestimonials.length >= 3) {
+    redirect("/temoignages?status=invalid#donner-avis");
+  }
 
   data.testimonials.unshift({
     id: createId("testimonial"),
@@ -40,7 +60,7 @@ export async function submitTestimonialAction(formData: FormData) {
     id: createId("log"),
     action: "testimonial_submitted",
     entity: "testimonial",
-    entityId: parsed.data.name,
+    entityId: ipHash,
     createdAt: new Date().toISOString()
   });
 

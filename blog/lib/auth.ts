@@ -79,16 +79,22 @@ export async function createAdminSession(session: AdminSession) {
 
   cookieStore.set(sessionCookieName, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     maxAge: sessionMaxAge,
-    path: "/"
+    path: "/admin"
   });
 }
 
 export async function clearAdminSession() {
   const cookieStore = await cookies();
-  cookieStore.delete(sessionCookieName);
+  cookieStore.set(sessionCookieName, "", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/admin"
+  });
 }
 
 export async function getAdminSession() {

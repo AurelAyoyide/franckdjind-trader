@@ -1,0 +1,176 @@
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
+import path from "node:path";
+import { Readable } from "node:stream";
+import { EnrollmentStatus } from "@prisma/client";
+import { NextResponse, type NextRequest } from "next/server";
+import { getRequestAuthorizedSession } from "@/lib/authorization";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function resolvePrivateFile(filePath: string) {
+  const configuredUploadDir = process.env.PRIVATE_UPLOAD_DIR;
+  const privateRoot =
+    configuredUploadDir && path.isAbsolute(configuredUploadDir)
+      ? path.resolve(configuredUploadDir)
+      : path.join(/*turbopackIgnore: true*/ process.cwd(), configuredUploadDir ?? "private_uploads");
+  const resolved = path.isAbsolute(filePath)
+    ? path.resolve(filePath)
+    : path.resolve(privateRoot, filePath);
+
+  if (resolved !== privateRoot && !resolved.startsWith(`${privateRoot}${path.sep}`)) {
+    return null;
+  }
+
+  return resolved;
+}
+
+function parseRange(rangeHeader: string | null, size: number) {
+  if (!rangeHeader) {
+    return null;
+  }
+
+  const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
+  if (!match) {
+    return null;
+  }
+
+  const start = match[1] ? Number(match[1]) : 0;
+  const end = match[2] ? Number(match[2]) : size - 1;
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || end >= size) {
+    return null;
+  }
+
+  return { start, end };
+}
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ lessonId: string }> },
+) {
+  const { lessonId } = await context.params;
+  const session = await getRequestAuthorizedSession(request, ["student", "trainer", "admin"]);
+
+  if (!session) {
+    await prisma.auditLog.create({
+      data: {
+        action: "VIDEO_ACCESS_DENIED",
+        target: lessonId,
+        metadata: { reason: "NO_SESSION" },
+      },
+    });
+    return NextResponse.json({ error: "Authentification requise" }, { status: 401 });
+  }
+
+  const [user, lesson] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { id: true, email: true },
+    }),
+    prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: {
+        fileAssets: { where: { type: "VIDEO" }, take: 1 },
+        module: {
+          include: {
+            course: {
+              include: {
+                enrollments: {
+                  where: {
+                    learnerId: session.userId,
+                    status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+                    OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+                  },
+                  select: { id: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  if (!user) {
+    return NextResponse.json({ error: "Compte non autorise" }, { status: 403 });
+  }
+
+  if (!lesson || lesson.type !== "VIDEO") {
+    return NextResponse.json({ error: "Video introuvable" }, { status: 404 });
+  }
+
+  const canAccess = session.role === "trainer" || session.role === "admin" || lesson.module.course.enrollments.length > 0;
+
+  if (!canAccess) {
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "VIDEO_ACCESS_DENIED",
+        target: lessonId,
+        metadata: { reason: "NO_ENROLLMENT" },
+      },
+    });
+    return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
+  }
+
+  const asset = lesson.fileAssets[0];
+  const filePath = lesson.videoPath ?? asset?.path;
+
+  if (!filePath) {
+    return NextResponse.json({ error: "Aucun fichier video associe" }, { status: 404 });
+  }
+
+  const resolved = resolvePrivateFile(filePath);
+
+  if (!resolved) {
+    return NextResponse.json({ error: "Chemin video non autorise" }, { status: 403 });
+  }
+
+  let fileStat;
+  try {
+    fileStat = await stat(/*turbopackIgnore: true*/ resolved);
+  } catch {
+    return NextResponse.json({ error: "Fichier video introuvable" }, { status: 404 });
+  }
+
+  const range = parseRange(request.headers.get("range"), fileStat.size);
+  const mimeType = asset?.mimeType ?? "video/mp4";
+
+  if (!range || range.start === 0) {
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "VIDEO_ACCESSED",
+        target: lessonId,
+        metadata: { range: range ? `${range.start}-${range.end}` : "full" },
+      },
+    });
+  }
+
+  if (range) {
+    const stream = createReadStream(/*turbopackIgnore: true*/ resolved, { start: range.start, end: range.end });
+    return new Response(Readable.toWeb(stream) as ReadableStream, {
+      status: 206,
+      headers: {
+        "Accept-Ranges": "bytes",
+        "Content-Length": String(range.end - range.start + 1),
+        "Content-Range": `bytes ${range.start}-${range.end}/${fileStat.size}`,
+        "Content-Type": mimeType,
+        "X-Video-Watermark": user.email,
+      },
+    });
+  }
+
+  const stream = createReadStream(/*turbopackIgnore: true*/ resolved);
+  return new Response(Readable.toWeb(stream) as ReadableStream, {
+    headers: {
+      "Accept-Ranges": "bytes",
+      "Content-Length": String(fileStat.size),
+      "Content-Type": mimeType,
+      "X-Video-Watermark": user.email,
+    },
+  });
+}

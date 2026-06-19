@@ -4,7 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createId, readData, writeData } from "@/lib/data-store";
-import { hashValue } from "@/lib/security";
+import { sendContactEmail } from "@/lib/email";
+import { getClientIp, hashValue, isSameOriginRequest } from "@/lib/security";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -19,6 +20,12 @@ function oneHourAgo() {
 }
 
 export async function submitContactAction(formData: FormData) {
+  const requestHeaders = await headers();
+
+  if (!isSameOriginRequest(requestHeaders)) {
+    redirect("/contact?status=invalid");
+  }
+
   const parsed = contactSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -31,8 +38,7 @@ export async function submitContactAction(formData: FormData) {
     redirect("/contact?status=invalid");
   }
 
-  const requestHeaders = await headers();
-  const ip = requestHeaders.get("x-forwarded-for") ?? "local";
+  const ip = getClientIp(requestHeaders);
   const ipHash = hashValue(ip);
   const data = await readData();
   const recentMessages = data.contactMessages.filter(
@@ -50,8 +56,10 @@ export async function submitContactAction(formData: FormData) {
     message: parsed.data.message
   };
 
+  const messageId = createId("message");
+
   data.contactMessages.unshift({
-    id: createId("message"),
+    id: messageId,
     ...messageData,
     status: "UNREAD",
     ipHash,
@@ -67,5 +75,20 @@ export async function submitContactAction(formData: FormData) {
   });
 
   await writeData(data);
+
+  const emailResult = await sendContactEmail(messageData);
+
+  if (emailResult.reason !== "missing_config") {
+    const nextData = await readData();
+    nextData.activityLogs.unshift({
+      id: createId("log"),
+      action: emailResult.sent ? "contact_email_sent" : "contact_email_failed",
+      entity: "contactMessage",
+      entityId: messageId,
+      createdAt: new Date().toISOString()
+    });
+    await writeData(nextData);
+  }
+
   redirect("/contact?status=sent");
 }

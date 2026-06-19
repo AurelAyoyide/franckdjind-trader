@@ -20,6 +20,10 @@ type AdminLoginPageProps = {
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const { error, next } = await searchParams;
+  const errorMessage =
+    error === "limited"
+      ? "Trop de tentatives. Reessaie dans quelques minutes."
+      : "Identifiants invalides.";
 
   return (
     <section className="site-shell flex min-h-[70svh] items-center justify-center py-12">
@@ -33,7 +37,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
         </p>
         {error ? (
           <p className="mt-4 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
-            Identifiants invalides.
+            {errorMessage}
           </p>
         ) : null}
         <form action={loginAction} className="mt-6 grid gap-4">

@@ -1,0 +1,80 @@
+"use client";
+
+import { useActionState } from "react";
+import { createCourseAction, type CourseFormState } from "@/app/trainer/courses/new/actions";
+
+const initialState: CourseFormState = {
+  ok: false,
+  message: "",
+};
+
+export function CourseForm() {
+  const [state, formAction, pending] = useActionState(createCourseAction, initialState);
+
+  return (
+    <form action={formAction} className="rounded-lg border border-line bg-surface p-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="text-sm font-black">
+          Titre
+          <input
+            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
+            name="title"
+            placeholder="Fondations trading prive"
+          />
+          {state.errors?.title ? <span className="mt-2 block text-xs text-danger">{state.errors.title[0]}</span> : null}
+        </label>
+        <label className="text-sm font-black">
+          Type
+          <select
+            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
+            name="type"
+          >
+            <option value="FREE">Gratuite</option>
+            <option value="PAID">Payante hors plateforme</option>
+          </select>
+        </label>
+        <label className="text-sm font-black">
+          Prix hors plateforme
+          <input
+            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
+            name="priceLabel"
+            placeholder="Ex: 50 000 FCFA"
+          />
+        </label>
+        <label className="text-sm font-black">
+          Duree
+          <input
+            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
+            name="duration"
+            placeholder="6 semaines"
+          />
+          {state.errors?.duration ? <span className="mt-2 block text-xs text-danger">{state.errors.duration[0]}</span> : null}
+        </label>
+      </div>
+      <label className="mt-4 block text-sm font-black">
+        Description
+        <textarea
+          className="mt-2 min-h-36 w-full rounded-lg border border-line bg-background p-4 text-sm outline-none focus:border-market"
+          name="description"
+        />
+        {state.errors?.description ? <span className="mt-2 block text-xs text-danger">{state.errors.description[0]}</span> : null}
+      </label>
+      {state.message ? (
+        <p
+          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${
+            state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
+          }`}
+        >
+          {state.message}
+        </p>
+      ) : null}
+      <button
+        className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market disabled:opacity-60"
+        disabled={pending}
+        type="submit"
+      >
+        {pending ? "Validation..." : "Enregistrer en brouillon"}
+      </button>
+    </form>
+  );
+}

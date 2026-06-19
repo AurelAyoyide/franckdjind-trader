@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, Sparkles } from "lucide-react";
 import type { StoredActionLink } from "@/lib/data-store";
+import { normalizeHexColor } from "@/lib/security";
 
 type AffiliateCarouselProps = {
   links: StoredActionLink[];
@@ -28,7 +29,7 @@ export function AffiliateCarousel({
       </div>
       <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-2">
         {links.map((link) => {
-          const color = link.brandColor || "#17c985";
+          const color = normalizeHexColor(link.brandColor);
 
           return (
             <Link

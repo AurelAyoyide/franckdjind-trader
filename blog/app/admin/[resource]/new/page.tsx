@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ResourceForm } from "@/components/admin/resource-form";
 import { getAdminResource } from "@/lib/admin-resources";
+import { getAdminSession } from "@/lib/auth";
+import { canManageResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 
 type AdminNewResourcePageProps = {
@@ -27,6 +29,12 @@ export default async function AdminNewResourcePage({ params }: AdminNewResourceP
 
   if (!config || config.allowCreate === false) {
     notFound();
+  }
+
+  const session = await getAdminSession();
+
+  if (!session || !canManageResource(session, resource, "save")) {
+    redirect("/admin");
   }
 
   return (

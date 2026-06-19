@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createId, readData, writeData } from "@/lib/data-store";
+import { getClientIp, hashValue, isSameOriginRequest } from "@/lib/security";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email().max(160),
@@ -11,6 +13,12 @@ const newsletterSchema = z.object({
 });
 
 export async function subscribeNewsletterAction(formData: FormData) {
+  const requestHeaders = await headers();
+
+  if (!isSameOriginRequest(requestHeaders)) {
+    redirect("/?newsletter=invalid#newsletter");
+  }
+
   const parsed = newsletterSchema.safeParse({
     email: formData.get("email"),
     name: formData.get("name") || undefined,
@@ -22,6 +30,19 @@ export async function subscribeNewsletterAction(formData: FormData) {
   }
 
   const data = await readData();
+  const ipHash = hashValue(getClientIp(requestHeaders));
+  const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  const recentSubscriptions = data.activityLogs.filter(
+    (log) =>
+      log.action === "newsletter_subscribed" &&
+      log.entityId === ipHash &&
+      new Date(log.createdAt).getTime() >= oneHourAgo
+  );
+
+  if (recentSubscriptions.length >= 10) {
+    redirect("/?newsletter=invalid#newsletter");
+  }
+
   const existing = data.subscribers.find(
     (subscriber) => subscriber.email.toLowerCase() === parsed.data.email.toLowerCase()
   );
@@ -45,7 +66,7 @@ export async function subscribeNewsletterAction(formData: FormData) {
     id: createId("log"),
     action: "newsletter_subscribed",
     entity: "subscriber",
-    entityId: parsed.data.email,
+    entityId: ipHash,
     createdAt: new Date().toISOString()
   });
 

@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { readData } from "@/lib/data-store";
+import { isSafeHttpUrl, isSafeInternalPath } from "@/lib/security";
 
 type CatchAllPageProps = {
   params: Promise<{
@@ -13,7 +14,7 @@ export default async function CatchAllPage({ params }: CatchAllPageProps) {
   const data = await readData();
   const rule = data.redirects.find((redirectRule) => redirectRule.active && redirectRule.source === source);
 
-  if (rule) {
+  if (rule && (isSafeInternalPath(rule.destination) || isSafeHttpUrl(rule.destination))) {
     redirect(rule.destination);
   }
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Download, Eye, Pencil, Plus, Search } from "lucide-react";
 import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
 import { getAdminResource, getResourceTitle } from "@/lib/admin-resources";
+import { getAdminSession } from "@/lib/auth";
 import { readData } from "@/lib/data-store";
+import { canManageResource, canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +74,12 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
     notFound();
   }
 
+  const session = await getAdminSession();
+
+  if (!session || !canViewAdminResource(session, resource)) {
+    redirect("/admin");
+  }
+
   const data = await readData();
   const items = data[config.collection] as Array<Record<string, unknown>>;
   const normalized = q.trim().toLowerCase();
@@ -91,7 +99,7 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
           <h1 className="mt-3 text-4xl font-black leading-tight">{config.label}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">{config.description}</p>
         </div>
-        {config.allowCreate === false ? null : (
+        {config.allowCreate === false || !canManageResource(session, resource, "save") ? null : (
           <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-market px-4 text-sm font-black text-on-market" href={`/admin/${config.slug}/new`}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Nouveau
@@ -164,7 +172,7 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
                     )}
                     {config.slug === "contact-messages" ? "Ouvrir" : "Modifier"}
                   </Link>
-                  {config.allowDelete === false ? null : (
+                  {config.allowDelete === false || !canManageResource(session, resource, "delete") ? null : (
                     <DeleteConfirmation
                       id={String(item.id)}
                       resource={config.slug}

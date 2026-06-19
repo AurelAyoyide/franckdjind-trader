@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText, Inbox, LayoutDashboard, Mail, Settings, Tags, Users } from "lucide-react";
+import { getAdminSession } from "@/lib/auth";
 import { readData } from "@/lib/data-store";
+import { canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -21,14 +23,25 @@ const modules = [
 ];
 
 export default async function AdminPage() {
+  const session = await getAdminSession();
   const data = await readData();
   const stats = [
     { label: "Articles publies", value: data.posts.filter((post) => post.status === "PUBLISHED").length },
     { label: "Brouillons", value: data.posts.filter((post) => post.status === "DRAFT").length },
-    { label: "Messages non lus", value: data.contactMessages.filter((message) => message.status === "UNREAD").length },
-    { label: "Abonnes newsletter", value: data.subscribers.length },
-    { label: "Liens actifs", value: data.actionLinks.filter((link) => link.active).length }
+    ...(session && canViewAdminResource(session, "contact-messages")
+      ? [{ label: "Messages non lus", value: data.contactMessages.filter((message) => message.status === "UNREAD").length }]
+      : []),
+    ...(session && canViewAdminResource(session, "subscribers")
+      ? [{ label: "Abonnes newsletter", value: data.subscribers.length }]
+      : []),
+    ...(session && canViewAdminResource(session, "links")
+      ? [{ label: "Liens actifs", value: data.actionLinks.filter((link) => link.active).length }]
+      : [])
   ];
+  const visibleModules = modules.filter((module) => {
+    const resource = module.href.replace("/admin/", "");
+    return session ? canViewAdminResource(session, resource) : false;
+  });
 
   return (
     <section>
@@ -65,7 +78,7 @@ export default async function AdminPage() {
       </div>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {modules.map((module) => {
+        {visibleModules.map((module) => {
           const Icon = module.icon;
 
           return (

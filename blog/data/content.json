@@ -1,6 +1,36 @@
 {
   "posts": [
     {
+      "id": "posts_mqb96hyl_kwue59",
+      "title": "Test",
+      "slug": "test",
+      "excerpt": "Test test 123",
+      "content": "<h2><strong>Hdndjdjjdj</strong></h2><p></p><p><strong><em>Hzkdjbdb</em></strong></p><p></p><p></p><p></p><p></p>",
+      "status": "PUBLISHED",
+      "author": "",
+      "publishedAt": "",
+      "image": "/hero-trading-desk.png",
+      "seoTitle": "Test",
+      "seoDescription": "Test test 123",
+      "robotsIndex": true,
+      "robotsFollow": true,
+      "category": {
+        "title": "Debuter",
+        "slug": "debuter",
+        "description": "Les bases pour comprendre le marche sans se perdre dans le bruit.",
+        "id": "category_debuter"
+      },
+      "tags": [],
+      "sections": [
+        {
+          "heading": "<h2><strong>Hdndjdjjdj</strong></h2><p></p><p><strong><em>Hzkdjbdb</em></strong></p><p></p><p></p><p></p><p></p>",
+          "body": "<h2><strong>Hdndjdjjdj</strong></h2><p></p><p><strong><em>Hzkdjbdb</em></strong></p><p></p><p></p><p></p><p></p>"
+        }
+      ],
+      "featured": false,
+      "readTime": "1 min"
+    },
+    {
       "title": "Comment structurer une journee de trading sans courir apres le marche",
       "slug": "structurer-journee-trading",
       "excerpt": "Une routine simple pour analyser, attendre, executer et sortir sans transformer chaque mouvement en urgence.",
@@ -292,8 +322,9 @@
       "role": "Apprenant debutant",
       "quote": "J'ai surtout compris comment arreter de prendre des trades par impatience. La methode m'a donne un cadre simple.",
       "rating": 5,
-      "published": false,
-      "order": 1
+      "published": true,
+      "order": 1,
+      "createdAt": "2026-06-12T18:15:59.875Z"
     },
     {
       "id": "testimonial_2",
@@ -301,8 +332,9 @@
       "role": "Trader particulier",
       "quote": "Les explications sont directes. On parle de risque, de routine et de discipline, pas seulement de signaux.",
       "rating": 5,
-      "published": false,
-      "order": 2
+      "published": true,
+      "order": 2,
+      "createdAt": "2026-06-12T18:18:41.401Z"
     },
     {
       "id": "testimonial_3",
@@ -353,7 +385,7 @@
       "email": "aurelaime89@gmail.com",
       "subject": "Formation",
       "message": "Je test ce",
-      "status": "UNREAD",
+      "status": "READ",
       "ipHash": "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0",
       "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0",
       "createdAt": "2026-06-12T12:04:56.382Z"
@@ -364,13 +396,20 @@
       "email": "aurelaime89@gmail.com",
       "subject": "Formation",
       "message": "Je test ce",
-      "status": "UNREAD",
+      "status": "READ",
       "ipHash": "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0",
       "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0",
       "createdAt": "2026-06-12T12:04:35.516Z"
     }
   ],
   "redirects": [
+    {
+      "id": "redirects_mqb8nt7l_ahrbbk",
+      "source": "/192.168.100.49:3000/skr",
+      "destination": "/google.com",
+      "permanent": true,
+      "active": true
+    },
     {
       "id": "redirects_mqavvbbx_p7tkhi",
       "source": "administration",
@@ -422,6 +461,89 @@
     }
   ],
   "activityLogs": [
+    {
+      "id": "log_mqb96hzc_14sh18",
+      "action": "resource_created",
+      "entity": "posts",
+      "entityId": "posts_mqb96hyl_kwue59",
+      "createdAt": "2026-06-12T18:21:38.568Z"
+    },
+    {
+      "id": "log_mqb92pa1_kd6z5q",
+      "action": "resource_updated",
+      "entity": "testimonials",
+      "entityId": "testimonial_2",
+      "createdAt": "2026-06-12T18:18:41.401Z"
+    },
+    {
+      "id": "log_mqb91tt5_ou9kck",
+      "action": "resource_updated",
+      "entity": "testimonials",
+      "entityId": "testimonial_1",
+      "createdAt": "2026-06-12T18:18:00.617Z"
+    },
+    {
+      "id": "log_mqb8z8n7_usmocj",
+      "action": "resource_updated",
+      "entity": "testimonials",
+      "entityId": "testimonial_1",
+      "createdAt": "2026-06-12T18:15:59.875Z"
+    },
+    {
+      "id": "log_mqb8pq8i_1qa5v3",
+      "action": "resource_updated",
+      "entity": "redirects",
+      "entityId": "redirects_mqb8nt7l_ahrbbk",
+      "createdAt": "2026-06-12T18:08:36.114Z"
+    },
+    {
+      "id": "log_mqb8nt7l_9o4vxw",
+      "action": "resource_created",
+      "entity": "redirects",
+      "entityId": "redirects_mqb8nt7l_ahrbbk",
+      "createdAt": "2026-06-12T18:07:06.657Z"
+    },
+    {
+      "id": "log_mqb8l8px_svohbn",
+      "action": "contact_message_read",
+      "entity": "contactMessage",
+      "entityId": "message_mqavq20u_qe6dgw",
+      "createdAt": "2026-06-12T18:05:06.789Z"
+    },
+    {
+      "id": "log_mqb8kf0i_bs4snr",
+      "action": "login_success",
+      "entity": "auth",
+      "entityId": "admin@example.com",
+      "createdAt": "2026-06-12T18:04:28.290Z"
+    },
+    {
+      "id": "log_mqb8fxx2_ibf55o",
+      "action": "contact_message_read",
+      "entity": "contactMessage",
+      "entityId": "message_mqavplx8_cdtjlk",
+      "createdAt": "2026-06-12T18:00:59.510Z"
+    },
+    {
+      "id": "log_mqb8d9ns_gxq7j9",
+      "action": "login_success",
+      "entity": "auth",
+      "entityId": "admin@example.com",
+      "createdAt": "2026-06-12T17:58:54.760Z"
+    },
+    {
+      "id": "log_mqb8ayxa_rbrwc3",
+      "action": "logout",
+      "entity": "auth",
+      "createdAt": "2026-06-12T17:57:07.534Z"
+    },
+    {
+      "id": "log_mqb6w9hh_x8h8gn",
+      "action": "login_success",
+      "entity": "auth",
+      "entityId": "admin@example.com",
+      "createdAt": "2026-06-12T17:17:41.765Z"
+    },
     {
       "id": "log_mqaw4cqm_phx7li",
       "action": "newsletter_subscribed",

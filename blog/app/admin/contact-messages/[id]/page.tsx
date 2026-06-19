@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, UserRound } from "lucide-react";
+import { getAdminSession } from "@/lib/auth";
 import { createId, readData, writeData } from "@/lib/data-store";
+import { canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 import { formatDate } from "@/lib/utils";
 
@@ -20,6 +22,12 @@ export const metadata: Metadata = buildMetadata({
 
 export default async function ContactMessageDetailPage({ params }: ContactMessageDetailPageProps) {
   const { id } = await params;
+  const session = await getAdminSession();
+
+  if (!session || !canViewAdminResource(session, "contact-messages")) {
+    notFound();
+  }
+
   const data = await readData();
   const message = data.contactMessages.find((entry) => entry.id === id);
 

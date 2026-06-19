@@ -39,7 +39,7 @@ function defaultChecked(item: Record<string, unknown> | undefined, name: string)
 
 export function ResourceForm({ config, item }: ResourceFormProps) {
   return (
-    <form action={saveResourceAction} className="grid gap-5 rounded-lg border border-line bg-surface p-5">
+    <form action={saveResourceAction} className="grid gap-5 rounded-lg border border-line bg-surface p-5" encType="multipart/form-data">
       <input name="resource" type="hidden" value={config.slug} />
       <input name="id" type="hidden" value={typeof item?.id === "string" ? item.id : ""} />
 
@@ -79,6 +79,7 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 className="min-h-12 rounded-md border border-dashed border-line bg-background px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market"
                 id={id}
                 name={field.name}
+                accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.pdf,image/jpeg,image/png,image/webp,image/gif,video/mp4,application/pdf"
                 type="file"
               />
             ) : null}

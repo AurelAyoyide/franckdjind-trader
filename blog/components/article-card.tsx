@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Clock } from "lucide-react";
+import { SafeImage } from "@/components/safe-image";
 import type { Article } from "@/lib/content";
 import { formatDate } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ export function ArticleCard({ article, priority = false }: ArticleCardProps) {
     <article className="group overflow-hidden rounded-lg border border-line bg-surface transition hover:-translate-y-1 hover:border-line-strong">
       <Link className="block" href={`/blog/${article.slug}`} aria-label={`Lire ${article.title}`}>
         <div className="relative aspect-[16/10] overflow-hidden bg-background-soft">
-          <Image
+          <SafeImage
             src={article.image}
             alt=""
             fill

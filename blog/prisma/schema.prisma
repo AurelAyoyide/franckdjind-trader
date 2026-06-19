@@ -21,6 +21,7 @@ enum PostStatus {
 
 enum PageStatus {
   DRAFT
+  REVIEW
   PUBLISHED
   ARCHIVED
 }
@@ -45,6 +46,12 @@ enum LinkType {
   AFFILIATE
   SOCIAL
   OTHER
+}
+
+enum ActionLinkPlacement {
+  ARTICLE_TOP
+  ARTICLE_BOTTOM
+  ARTICLE_BOTH
 }
 
 model User {
@@ -222,6 +229,7 @@ model Page {
   id            String       @id @default(cuid())
   title         String
   slug          String       @unique
+  excerpt       String?
   content       String
   status        PageStatus   @default(DRAFT)
   authorId      String?
@@ -266,6 +274,10 @@ model ActionLink {
   slug        String      @unique
   url         String
   type        LinkType    @default(OTHER)
+  description String?
+  ctaLabel    String?
+  brandColor  String?
+  placement   ActionLinkPlacement @default(ARTICLE_BOTH)
   noFollow    Boolean     @default(true)
   sponsored   Boolean     @default(false)
   active      Boolean     @default(true)
@@ -358,6 +370,7 @@ model Subscriber {
   email     String   @unique
   name      String?
   active    Boolean  @default(true)
+  consent   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -27,6 +27,10 @@ export function sanitizeRichHtml(value: string) {
       img: ["src", "alt", "title", "width", "height"]
     },
     allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: {
+      a: ["http", "https", "mailto"],
+      img: ["http", "https"]
+    },
     transformTags: {
       a: (_tagName, attribs) => ({
         tagName: "a",

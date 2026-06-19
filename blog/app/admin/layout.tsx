@@ -3,6 +3,7 @@ import { logoutAction } from "@/app/admin/actions";
 import { AdminNavLink } from "@/components/admin/admin-nav-link";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { getAdminSession } from "@/lib/auth";
+import { canViewAdminResource } from "@/lib/permissions";
 
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: "dashboard" },
@@ -21,6 +22,14 @@ const adminLinks = [
   { href: "/admin/subscribers", label: "Newsletter", icon: "subscribers" }
 ] as const;
 
+function resourceFromHref(href: string) {
+  if (href === "/admin") {
+    return null;
+  }
+
+  return href.replace("/admin/", "").split("/")[0];
+}
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getAdminSession();
 
@@ -37,9 +46,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <p className="mt-2 text-sm font-semibold text-muted">{session.email}</p>
           </div>
           <nav className="mt-2 grid gap-1">
-            {adminLinks.map((link) => (
-              <AdminNavLink href={link.href} icon={link.icon} key={link.href} label={link.label} />
-            ))}
+            {adminLinks
+              .filter((link) => {
+                const resource = resourceFromHref(link.href);
+                return !resource || canViewAdminResource(session, resource);
+              })
+              .map((link) => (
+                <AdminNavLink href={link.href} icon={link.icon} key={link.href} label={link.label} />
+              ))}
           </nav>
           <form action={logoutAction} className="mt-4 border-t border-line pt-3">
             <PendingSubmitButton

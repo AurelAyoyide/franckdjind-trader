@@ -98,8 +98,8 @@ export const adminResources = {
       { name: "status", label: "Statut", type: "select", options: statusOptions, required: true },
       { name: "seoTitle", label: "SEO title", type: "text" },
       { name: "seoDescription", label: "SEO description", type: "textarea" },
-      { name: "robotsIndex", label: "Indexable", type: "checkbox" },
-      { name: "robotsFollow", label: "Follow", type: "checkbox" }
+      { name: "robotsIndex", label: "Autoriser l'indexation Google", type: "checkbox" },
+      { name: "robotsFollow", label: "Autoriser le suivi des liens", type: "checkbox" }
     ]
   },
   media: {
@@ -112,7 +112,7 @@ export const adminResources = {
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
       { name: "url", label: "URL externe ou chemin interne", type: "text", help: "Exemple externe https://... ou interne /uploads/image.png." },
-      { name: "file", label: "Importer un fichier local", type: "file", help: "Optionnel : image, video ou document enregistre dans /public/uploads." },
+      { name: "file", label: "Importer un fichier local", type: "file", help: "Optionnel : jpg, png, webp, gif, mp4 ou pdf jusqu'a 15 Mo." },
       { name: "alt", label: "Texte alternatif", type: "text" },
       {
         name: "type",

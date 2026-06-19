@@ -165,6 +165,22 @@ Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
 - [x] Ajout d'un mot de passe temporaire hashable pour les utilisateurs admin crees.
 - [x] Clarification des champs SEO `indexable` et `follow` dans l'admin.
 - [x] Clarification de l'usage concret des redirections dans l'admin.
+- [x] Audit npm avec zero vulnerabilite moderee ou plus haute.
+- [x] Ajout d'un audit securite documente dans `audit-securite.md`.
+- [x] Ajout d'une verification Origin sur les actions publiques et admin.
+- [x] Ajout d'un rate limit sur login, contact, newsletter et temoignages.
+- [x] Durcissement du cookie admin avec `sameSite=strict` et chemin `/admin`.
+- [x] Rejet silencieux des cookies de session malformes.
+- [x] Refus des SVG uploades et limitation des uploads a 15 Mo.
+- [x] Validation serveur des URLs de liens, redirections, medias et CTA.
+- [x] Protection de l'export CSV newsletter contre les formules injectees.
+- [x] Echappement des JSON-LD avant injection dans les scripts.
+- [x] Ajout de headers de securite dont CSP et HSTS en production.
+- [x] Application des permissions aux pages admin, actions serveur, navbar, dashboard et export newsletter.
+- [x] Ajout d'un envoi email contact optionnel via Resend.
+- [x] Ajout d'une ecriture atomique pour `data/content.json`.
+- [x] Alignement du schema Prisma avec les champs admin recents.
+- [x] Documentation production et securite ajoutee dans le README.
 
 ## Prochaine etape
 
@@ -180,7 +196,7 @@ Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
 - [x] Faire une passe UI/UX suite aux retours sur mode clair, mobile, temoignages, recherche et navigation.
 - [ ] Faire une passe UI/UX finale apres nouveaux retours client reels.
 - [ ] Implementer une vraie internationalisation SEO `fr/en` avec contenus traduits.
-- [ ] Brancher un service SMTP ou transactionnel pour envoyer les messages contact par email.
+- [x] Brancher un service transactionnel optionnel pour envoyer les messages contact par email.
 - [ ] Brancher l'envoi automatique des mots de passe temporaires si le client le souhaite.
 - [x] Ajouter une premiere couche de permissions simples par role sur les actions admin.
 - [ ] Affiner les permissions par permission granulaire si le client veut plusieurs profils admin actifs.

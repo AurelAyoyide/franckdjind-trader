@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { Clock } from "lucide-react";
 import { AffiliateCarousel } from "@/components/affiliate-carousel";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { RichContent } from "@/components/rich-content";
+import { SafeImage } from "@/components/safe-image";
 import { ButtonLink } from "@/components/ui/button-link";
 import { articleJsonLd } from "@/lib/content";
 import { getPublicData } from "@/lib/data-store";
+import { escapeJsonForHtml } from "@/lib/security";
 import { buildMetadata } from "@/lib/seo";
 import { formatDate } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
           <div className="site-shell pb-8 md:pb-12">
             <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-line bg-surface">
-              <Image
+              <SafeImage
                 src={article.image}
                 alt=""
                 fill
@@ -148,7 +149,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(articleJsonLd(article))
+          __html: escapeJsonForHtml(articleJsonLd(article))
         }}
       />
     </>

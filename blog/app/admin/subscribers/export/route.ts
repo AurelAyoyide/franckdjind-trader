@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { readData } from "@/lib/data-store";
+import { canViewAdminResource } from "@/lib/permissions";
 
 function csvCell(value: unknown) {
   const text = String(value ?? "");
-  return `"${text.replace(/"/g, '""')}"`;
+  const safeText = /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safeText.replace(/"/g, '""')}"`;
 }
 
 export async function GET(request: NextRequest) {
   const session = await getAdminSession();
 
-  if (!session) {
+  if (!session || !canViewAdminResource(session, "subscribers")) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
@@ -31,6 +33,7 @@ export async function GET(request: NextRequest) {
 
   return new NextResponse(csv, {
     headers: {
+      "Cache-Control": "no-store",
       "Content-Disposition": "attachment; filename=newsletter-subscribers.csv",
       "Content-Type": "text/csv; charset=utf-8"
     }
