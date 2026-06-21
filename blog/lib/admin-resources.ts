@@ -248,6 +248,7 @@ export const adminResources = {
     label: "Utilisateurs",
     singular: "utilisateur",
     collection: "users",
+    allowDelete: false,
     description: "Utilisateurs admin et roles simples.",
     titleField: "email",
     fields: [

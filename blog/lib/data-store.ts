@@ -1,5 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { createHash, randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
+import { unstable_noStore as noStore } from "next/cache";
 import {
   articles,
   categories,
@@ -11,6 +12,7 @@ import {
   type Category,
   type Tag
 } from "@/lib/content";
+import { prisma } from "@/lib/prisma";
 import { isSafeActionUrl, isSafeMediaUrl } from "@/lib/security";
 import { estimateReadTime } from "@/lib/utils";
 
@@ -180,8 +182,12 @@ export type BlogData = {
   subscribers: StoredSubscriber[];
 };
 
-const dataDir = path.join(process.cwd(), "data");
-const dataFile = path.join(dataDir, "content.json");
+const defaultImage = "/hero-trading-desk.png";
+const roleLabels = {
+  ADMIN: "Administrateur",
+  EDITOR: "Editeur",
+  AUTHOR: "Auteur"
+} as const;
 
 function now() {
   return new Date().toISOString();
@@ -204,6 +210,59 @@ function slugify(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function iso(value: Date | null | undefined) {
+  return value?.toISOString() ?? now();
+}
+
+function dateOrNull(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function toStringValue(value: unknown) {
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
+function toJsonValue(value: string) {
+  try {
+    return JSON.parse(value) as object;
+  } catch {
+    return value;
+  }
+}
+
+function mediaIdFromUrl(url: string) {
+  return `media_${createHash("sha256").update(url).digest("hex").slice(0, 24)}`;
+}
+
+function markdownToSections(content: string) {
+  const chunks = content
+    .split(/\n(?=## )/g)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean);
+
+  if (!chunks.length) {
+    return [{ heading: "Contenu", body: content }];
+  }
+
+  return chunks.map((chunk, index) => {
+    const [firstLine, ...rest] = chunk.split("\n");
+    const heading = firstLine.replace(/^##\s*/, "").trim() || `Section ${index + 1}`;
+    const body = rest.join("\n").trim() || chunk;
+    return { heading, body };
+  });
+}
+
+function assertDatabaseConfigured() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL must be configured. The application no longer uses local JSON storage.");
+  }
 }
 
 export function defaultData(): BlogData {
@@ -322,61 +381,536 @@ export function defaultData(): BlogData {
   };
 }
 
-async function ensureDataFile() {
-  await fs.mkdir(dataDir, { recursive: true });
-
-  try {
-    await fs.access(dataFile);
-  } catch {
-    await fs.writeFile(dataFile, JSON.stringify(defaultData(), null, 2), "utf8");
-  }
-}
-
 export async function readData(): Promise<BlogData> {
-  await ensureDataFile();
-  const raw = await fs.readFile(dataFile, "utf8");
-  const data = JSON.parse(raw) as Partial<BlogData>;
-  const defaults = defaultData();
+  noStore();
+  assertDatabaseConfigured();
+
+  const [posts, dbCategories, dbTags, pages, dbServices, dbTestimonials, actionLinks, media, contactMessages, redirects, settings, users, activityLogs, linkClicks, subscribers] =
+    await prisma.$transaction([
+      prisma.post.findMany({
+        include: { category: true, tags: { include: { tag: true } }, coverMedia: true, seoMetadata: true, author: { include: { role: true } } },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }]
+      }),
+      prisma.category.findMany({ include: { seoMetadata: true }, where: { deletedAt: null }, orderBy: { name: "asc" } }),
+      prisma.tag.findMany({ include: { seoMetadata: true }, orderBy: { name: "asc" } }),
+      prisma.page.findMany({ include: { seoMetadata: true }, where: { deletedAt: null }, orderBy: { title: "asc" } }),
+      prisma.service.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
+      prisma.testimonial.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
+      prisma.actionLink.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.media.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.redirect.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.setting.findMany({ where: { NOT: { key: "__system_data_version" } }, orderBy: { key: "asc" } }),
+      prisma.user.findMany({ include: { role: true }, orderBy: { createdAt: "asc" } }),
+      prisma.activityLog.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
+      prisma.linkClick.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
+      prisma.subscriber.findMany({ orderBy: { createdAt: "desc" } })
+    ]);
 
   return {
-    posts: data.posts ?? defaults.posts,
-    categories: data.categories ?? defaults.categories,
-    tags: data.tags ?? defaults.tags,
-    pages: data.pages ?? defaults.pages,
-    services: data.services ?? defaults.services,
-    testimonials: data.testimonials ?? defaults.testimonials,
-    actionLinks: data.actionLinks ?? defaults.actionLinks,
-    media: data.media ?? defaults.media,
-    contactMessages: data.contactMessages ?? defaults.contactMessages,
-    redirects: data.redirects ?? defaults.redirects,
-    settings: data.settings ?? defaults.settings,
-    users: data.users ?? defaults.users,
-    activityLogs: data.activityLogs ?? defaults.activityLogs,
-    linkClicks: data.linkClicks ?? defaults.linkClicks,
-    subscribers: data.subscribers ?? defaults.subscribers
+    posts: posts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt ?? "",
+      content: post.content,
+      status: post.status,
+      author: post.authorLabel ?? post.author.name ?? post.author.email,
+      publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
+      image: post.coverMedia?.url ?? defaultImage,
+      category: post.category
+        ? { id: post.category.id, title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
+        : { id: "uncategorized", title: "Non classe", slug: "non-classe", description: "" },
+      tags: post.tags.map(({ tag }) => ({ id: tag.id, title: tag.name, slug: tag.slug })),
+      sections: markdownToSections(post.content),
+      featured: post.featured,
+      readTime: estimateReadTime(post.content),
+      seoTitle: post.seoMetadata?.title ?? post.title,
+      seoDescription: post.seoMetadata?.description ?? post.excerpt ?? "",
+      robotsIndex: post.seoMetadata?.robotsIndex ?? true,
+      robotsFollow: post.seoMetadata?.robotsFollow ?? true
+    })),
+    categories: dbCategories.map((category) => ({
+      id: category.id,
+      title: category.name,
+      slug: category.slug,
+      description: category.description ?? "",
+      seoTitle: category.seoMetadata?.title ?? undefined,
+      seoDescription: category.seoMetadata?.description ?? undefined
+    })),
+    tags: dbTags.map((tag) => ({
+      id: tag.id,
+      title: tag.name,
+      slug: tag.slug,
+      description: tag.description ?? undefined,
+      seoTitle: tag.seoMetadata?.title ?? undefined,
+      seoDescription: tag.seoMetadata?.description ?? undefined
+    })),
+    pages: pages.map((page) => ({
+      id: page.id,
+      title: page.title,
+      slug: page.slug,
+      excerpt: page.excerpt ?? "",
+      content: page.content,
+      status: page.status,
+      seoTitle: page.seoMetadata?.title ?? undefined,
+      seoDescription: page.seoMetadata?.description ?? undefined,
+      robotsIndex: page.seoMetadata?.robotsIndex ?? true,
+      robotsFollow: page.seoMetadata?.robotsFollow ?? true
+    })),
+    services: dbServices.map((service) => ({
+      id: service.id,
+      title: service.title,
+      slug: service.slug,
+      description: service.description,
+      content: service.content ?? "",
+      priceLabel: service.priceLabel ?? "",
+      ctaLabel: service.ctaLabel ?? "",
+      ctaUrl: service.ctaUrl ?? "",
+      order: service.order,
+      published: service.published
+    })),
+    testimonials: dbTestimonials.map((testimonial) => ({
+      id: testimonial.id,
+      name: testimonial.name,
+      role: testimonial.role ?? "",
+      quote: testimonial.quote,
+      rating: testimonial.rating ?? 5,
+      published: testimonial.published,
+      order: testimonial.order,
+      createdAt: iso(testimonial.createdAt)
+    })),
+    actionLinks: actionLinks.map((link) => ({
+      id: link.id,
+      label: link.label,
+      slug: link.slug,
+      url: link.url,
+      type: link.type,
+      description: link.description ?? undefined,
+      ctaLabel: link.ctaLabel ?? undefined,
+      brandColor: link.brandColor ?? undefined,
+      placement: link.placement,
+      noFollow: link.noFollow,
+      sponsored: link.sponsored,
+      active: link.active
+    })),
+    media: media.map((item) => ({
+      id: item.id,
+      title: item.title ?? item.alt ?? "Media",
+      url: item.url,
+      alt: item.alt ?? "",
+      type: item.type,
+      createdAt: iso(item.createdAt)
+    })),
+    contactMessages: contactMessages.map((message) => ({
+      id: message.id,
+      name: message.name,
+      email: message.email,
+      subject: message.subject ?? "",
+      message: message.message,
+      status: message.status,
+      ipHash: message.ipHash ?? undefined,
+      userAgent: message.userAgent ?? undefined,
+      createdAt: iso(message.createdAt)
+    })),
+    redirects: redirects.map((item) => ({ id: item.id, source: item.source, destination: item.destination, permanent: item.permanent, active: item.active })),
+    settings: settings.map((setting) => ({
+      id: setting.id,
+      key: setting.key,
+      value: toStringValue(setting.value),
+      group: (setting.key.startsWith("defaultSeo") ? "seo" : setting.key.startsWith("contact") ? "contact" : "site") as StoredSetting["group"]
+    })),
+    users: users.map((user) => ({
+      id: user.id,
+      name: user.name ?? "",
+      email: user.email,
+      passwordHash: user.passwordHash,
+      role: (user.role?.name ?? "AUTHOR") as StoredUser["role"],
+      status: user.status
+    })),
+    activityLogs: activityLogs.map((log) => ({ id: log.id, action: log.action, entity: log.entity ?? "", entityId: log.entityId ?? undefined, createdAt: iso(log.createdAt) })),
+    linkClicks: linkClicks.map((click) => ({
+      id: click.id,
+      actionLinkId: click.actionLinkId,
+      ipHash: click.ipHash ?? undefined,
+      userAgent: click.userAgent ?? undefined,
+      referrer: click.referrer ?? undefined,
+      createdAt: iso(click.createdAt)
+    })),
+    subscribers: subscribers.map((subscriber) => ({
+      id: subscriber.id,
+      email: subscriber.email,
+      name: subscriber.name ?? undefined,
+      active: subscriber.active,
+      consent: subscriber.consent,
+      createdAt: iso(subscriber.createdAt)
+    }))
   };
 }
 
+async function passwordForUser(input: StoredUser, existingHash?: string) {
+  if (input.passwordHash) {
+    return { hash: input.passwordHash, disabled: false };
+  }
+
+  if (existingHash) {
+    return { hash: existingHash, disabled: false };
+  }
+
+  const configuredAdmin = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  if (configuredAdmin && input.email.trim().toLowerCase() === configuredAdmin) {
+    if (process.env.ADMIN_PASSWORD_HASH) {
+      return { hash: process.env.ADMIN_PASSWORD_HASH, disabled: false };
+    }
+
+    if (process.env.ADMIN_PASSWORD) {
+      return { hash: await bcrypt.hash(process.env.ADMIN_PASSWORD, 12), disabled: false };
+    }
+  }
+
+  if (process.env.NODE_ENV !== "production" && input.role === "ADMIN") {
+    return { hash: await bcrypt.hash("Admin12345!", 12), disabled: false };
+  }
+
+  return { hash: await bcrypt.hash(randomBytes(32).toString("hex"), 12), disabled: true };
+}
+
+function seoData(input: { seoTitle?: string; seoDescription?: string; title: string; excerpt?: string; robotsIndex?: boolean; robotsFollow?: boolean }) {
+  return {
+    title: input.seoTitle || input.title,
+    description: input.seoDescription || input.excerpt || input.title,
+    robotsIndex: input.robotsIndex !== false,
+    robotsFollow: input.robotsFollow !== false
+  };
+}
+
+function safePostMedia(data: BlogData) {
+  const media = new Map<string, StoredMedia>();
+
+  for (const item of data.media) {
+    if (isSafeMediaUrl(item.url)) {
+      media.set(item.url, item);
+    }
+  }
+
+  for (const post of data.posts) {
+    if (isSafeMediaUrl(post.image) && !media.has(post.image)) {
+      media.set(post.image, {
+        id: mediaIdFromUrl(post.image),
+        title: `Image ${post.title}`,
+        url: post.image,
+        alt: post.title,
+        type: "IMAGE",
+        createdAt: now()
+      });
+    }
+  }
+
+  return [...media.values()];
+}
+
 export async function writeData(data: BlogData) {
-  await fs.mkdir(dataDir, { recursive: true });
-  const tempFile = path.join(dataDir, `content.${process.pid}.${Date.now()}.tmp`);
-  await fs.writeFile(tempFile, JSON.stringify(data, null, 2), "utf8");
-  await fs.rename(tempFile, dataFile);
+  assertDatabaseConfigured();
+
+  await prisma.$transaction(async (tx) => {
+    if (!data.users.length) {
+      throw new Error("At least one administrator must remain in the database.");
+    }
+
+    const roles = new Map<string, string>();
+    for (const roleName of Object.keys(roleLabels) as Array<keyof typeof roleLabels>) {
+      const role = await tx.role.upsert({
+        where: { name: roleName },
+        update: { label: roleLabels[roleName] },
+        create: { name: roleName, label: roleLabels[roleName] }
+      });
+      roles.set(roleName, role.id);
+    }
+
+    const storedUsers = new Map<string, { id: string; name: string | null; email: string; passwordHash: string; status: "ACTIVE" | "DISABLED" }>();
+    for (const input of data.users) {
+      const email = input.email.trim().toLowerCase();
+      if (!email) {
+        continue;
+      }
+
+      const existingById = await tx.user.findUnique({ where: { id: input.id } });
+      const existingByEmail = await tx.user.findUnique({ where: { email } });
+
+      if (existingById && existingByEmail && existingById.id !== existingByEmail.id) {
+        throw new Error("An account already uses this email address.");
+      }
+
+      const existing = existingById ?? existingByEmail;
+      const password = await passwordForUser(input, existing?.passwordHash);
+      const roleName = roles.has(input.role) ? input.role : "AUTHOR";
+      const user = existing
+        ? await tx.user.update({
+            where: { id: existing.id },
+            data: {
+              name: input.name || null,
+              email,
+              passwordHash: password.hash,
+              status: password.disabled ? "DISABLED" : input.status,
+              roleId: roles.get(roleName)
+            }
+          })
+        : await tx.user.create({
+            data: {
+              id: input.id,
+              name: input.name || null,
+              email,
+              passwordHash: password.hash,
+              status: password.disabled ? "DISABLED" : input.status,
+              roleId: roles.get(roleName)
+            }
+          });
+      storedUsers.set(input.id, user);
+    }
+
+    const fallbackAuthor =
+      [...storedUsers.values()].find((user) => user.status === "ACTIVE") ?? [...storedUsers.values()][0];
+    if (!fallbackAuthor) {
+      throw new Error("No valid user is available to own the content.");
+    }
+
+    const categoryIds = new Set<string>();
+    for (const input of data.categories) {
+      categoryIds.add(input.id);
+      const seo = seoData({ title: input.title, excerpt: input.description, seoTitle: input.seoTitle, seoDescription: input.seoDescription });
+      await tx.category.upsert({
+        where: { id: input.id },
+        update: {
+          name: input.title,
+          slug: input.slug,
+          description: input.description || null,
+          seoMetadata: { upsert: { update: seo, create: seo } }
+        },
+        create: {
+          id: input.id,
+          name: input.title,
+          slug: input.slug,
+          description: input.description || null,
+          seoMetadata: { create: seo }
+        }
+      });
+    }
+
+    const tagIds = new Set<string>();
+    for (const input of data.tags) {
+      tagIds.add(input.id);
+      const seo = seoData({ title: input.title, excerpt: input.description, seoTitle: input.seoTitle, seoDescription: input.seoDescription });
+      await tx.tag.upsert({
+        where: { id: input.id },
+        update: { name: input.title, slug: input.slug, description: input.description || null, seoMetadata: { upsert: { update: seo, create: seo } } },
+        create: { id: input.id, name: input.title, slug: input.slug, description: input.description || null, seoMetadata: { create: seo } }
+      });
+    }
+
+    const mediaItems = safePostMedia(data);
+    const mediaIds = new Set<string>();
+    const mediaByUrl = new Map<string, string>();
+    for (const input of mediaItems) {
+      mediaIds.add(input.id);
+      const item = await tx.media.upsert({
+        where: { id: input.id },
+        update: { title: input.title || null, type: input.type, url: input.url, alt: input.alt || null },
+        create: { id: input.id, title: input.title || null, type: input.type, url: input.url, alt: input.alt || null }
+      });
+      mediaByUrl.set(input.url, item.id);
+    }
+
+    const categoryBySlug = new Map(data.categories.map((category) => [category.slug, category.id]));
+    const tagBySlug = new Map(data.tags.map((tag) => [tag.slug, tag.id]));
+    const postIds = new Set<string>();
+    for (const input of data.posts) {
+      postIds.add(input.id);
+      const matchingAuthor = [...storedUsers.values()].find(
+        (user) => user.name?.trim().toLowerCase() === input.author?.trim().toLowerCase() || user.email === input.author?.trim().toLowerCase()
+      );
+      const categoryId = categoryBySlug.get(input.category?.slug ?? "") ?? null;
+      const tagIdsForPost = (input.tags ?? [])
+        .map((tag) => tagBySlug.get(tag.slug))
+        .filter((tagId): tagId is string => Boolean(tagId));
+      const seo = seoData(input);
+      const baseData = {
+        title: input.title,
+        slug: input.slug,
+        excerpt: input.excerpt || null,
+        content: input.content,
+        status: input.status,
+        featured: Boolean(input.featured),
+        publishedAt: dateOrNull(input.publishedAt),
+        authorLabel: input.author || null
+      };
+      const authorId = matchingAuthor?.id ?? fallbackAuthor.id;
+      const coverMediaId = mediaByUrl.get(input.image);
+      await tx.post.upsert({
+        where: { id: input.id },
+        update: {
+          ...baseData,
+          author: { connect: { id: authorId } },
+          category: categoryId ? { connect: { id: categoryId } } : { disconnect: true },
+          coverMedia: coverMediaId ? { connect: { id: coverMediaId } } : { disconnect: true },
+          tags: { deleteMany: {}, create: tagIdsForPost.map((tagId) => ({ tagId })) },
+          seoMetadata: { upsert: { update: seo, create: seo } }
+        },
+        create: {
+          id: input.id,
+          ...baseData,
+          author: { connect: { id: authorId } },
+          ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+          ...(coverMediaId ? { coverMedia: { connect: { id: coverMediaId } } } : {}),
+          tags: { create: tagIdsForPost.map((tagId) => ({ tagId })) },
+          seoMetadata: { create: seo }
+        }
+      });
+    }
+
+    const pageIds = new Set<string>();
+    for (const input of data.pages) {
+      pageIds.add(input.id);
+      const seo = seoData(input);
+      const baseData = { title: input.title, slug: input.slug, excerpt: input.excerpt || null, content: input.content, status: input.status };
+      await tx.page.upsert({
+        where: { id: input.id },
+        update: { ...baseData, seoMetadata: { upsert: { update: seo, create: seo } } },
+        create: { id: input.id, ...baseData, seoMetadata: { create: seo } }
+      });
+    }
+
+    const serviceIds = new Set<string>();
+    for (const input of data.services) {
+      serviceIds.add(input.id);
+      const baseData = {
+        title: input.title,
+        slug: input.slug,
+        description: input.description,
+        content: input.content || null,
+        priceLabel: input.priceLabel || null,
+        ctaLabel: input.ctaLabel || null,
+        ctaUrl: isSafeActionUrl(input.ctaUrl) ? input.ctaUrl : "/contact",
+        order: input.order,
+        published: input.published
+      };
+      await tx.service.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
+    }
+
+    const testimonialIds = new Set<string>();
+    for (const input of data.testimonials) {
+      testimonialIds.add(input.id);
+      const baseData = {
+        name: input.name,
+        role: input.role || null,
+        quote: input.quote,
+        rating: Math.min(5, Math.max(1, input.rating)),
+        published: input.published,
+        order: input.order
+      };
+      await tx.testimonial.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
+    }
+
+    const actionLinkIds = new Set<string>();
+    for (const input of data.actionLinks) {
+      actionLinkIds.add(input.id);
+      if (!isSafeActionUrl(input.url)) {
+        continue;
+      }
+      const baseData = {
+        label: input.label,
+        slug: input.slug,
+        url: input.url,
+        type: input.type,
+        description: input.description || null,
+        ctaLabel: input.ctaLabel || null,
+        brandColor: input.brandColor || null,
+        placement: input.placement ?? "ARTICLE_BOTH",
+        noFollow: input.noFollow,
+        sponsored: input.sponsored,
+        active: input.active
+      };
+      await tx.actionLink.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
+    }
+
+    const messageIds = new Set<string>();
+    for (const input of data.contactMessages) {
+      messageIds.add(input.id);
+      const baseData = {
+        name: input.name,
+        email: input.email.toLowerCase(),
+        subject: input.subject || null,
+        message: input.message,
+        status: input.status,
+        ipHash: input.ipHash || null,
+        userAgent: input.userAgent || null
+      };
+      await tx.contactMessage.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
+    }
+
+    const redirectIds = new Set<string>();
+    for (const input of data.redirects) {
+      redirectIds.add(input.id);
+      const baseData = { source: input.source, destination: input.destination, permanent: input.permanent, active: input.active };
+      await tx.redirect.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
+    }
+
+    const settingKeys = new Set<string>();
+    for (const input of data.settings) {
+      settingKeys.add(input.key);
+      await tx.setting.upsert({
+        where: { key: input.key },
+        update: { value: toJsonValue(input.value) },
+        create: { id: input.id, key: input.key, value: toJsonValue(input.value) }
+      });
+    }
+
+    const activityLogIds = new Set<string>();
+    for (const input of data.activityLogs.slice(0, 500)) {
+      activityLogIds.add(input.id);
+      const baseData = { action: input.action, entity: input.entity || null, entityId: input.entityId || null };
+      await tx.activityLog.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
+    }
+
+    const linkClickIds = new Set<string>();
+    for (const input of data.linkClicks.slice(0, 500)) {
+      linkClickIds.add(input.id);
+      const baseData = { actionLinkId: input.actionLinkId, ipHash: input.ipHash || null, userAgent: input.userAgent || null, referrer: input.referrer || null };
+      await tx.linkClick.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
+    }
+
+    const subscriberEmails = new Set<string>();
+    for (const input of data.subscribers) {
+      const email = input.email.trim().toLowerCase();
+      if (!email) {
+        continue;
+      }
+      subscriberEmails.add(email);
+      const baseData = { name: input.name || null, active: input.active, consent: input.consent };
+      await tx.subscriber.upsert({ where: { email }, update: baseData, create: { id: input.id, email, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
+    }
+
+    await tx.post.updateMany({ where: { categoryId: { notIn: [...categoryIds] } }, data: { categoryId: null } });
+    await tx.post.updateMany({ where: { coverMediaId: { notIn: [...mediaIds] } }, data: { coverMediaId: null } });
+    await tx.post.deleteMany({ where: { id: { notIn: [...postIds] } } });
+    await tx.page.deleteMany({ where: { id: { notIn: [...pageIds] } } });
+    await tx.service.deleteMany({ where: { id: { notIn: [...serviceIds] } } });
+    await tx.testimonial.deleteMany({ where: { id: { notIn: [...testimonialIds] } } });
+    await tx.actionLink.deleteMany({ where: { id: { notIn: [...actionLinkIds] } } });
+    await tx.contactMessage.deleteMany({ where: { id: { notIn: [...messageIds] } } });
+    await tx.redirect.deleteMany({ where: { id: { notIn: [...redirectIds] } } });
+    await tx.setting.deleteMany({ where: { key: { notIn: [...settingKeys, "__system_data_version"] } } });
+    await tx.activityLog.deleteMany({ where: { id: { notIn: [...activityLogIds] } } });
+    await tx.linkClick.deleteMany({ where: { id: { notIn: [...linkClickIds] } } });
+    await tx.subscriber.deleteMany({ where: { email: { notIn: [...subscriberEmails] } } });
+    await tx.tag.deleteMany({ where: { id: { notIn: [...tagIds] } } });
+    await tx.category.deleteMany({ where: { id: { notIn: [...categoryIds] } } });
+    await tx.media.deleteMany({ where: { id: { notIn: [...mediaIds] } } });
+  }, { timeout: 20_000 });
 }
 
 export async function addActivity(action: string, entity: string, entityId?: string) {
-  const data = await readData();
-
-  data.activityLogs.unshift({
-    id: createId("log"),
-    action,
-    entity,
-    entityId,
-    createdAt: now()
-  });
-
-  data.activityLogs = data.activityLogs.slice(0, 200);
-  await writeData(data);
+  assertDatabaseConfigured();
+  await prisma.activityLog.create({ data: { action, entity, entityId } });
 }
 
 export async function getPublicData() {
@@ -386,17 +920,10 @@ export async function getPublicData() {
     ...data,
     posts: data.posts
       .filter((post) => post.status === "PUBLISHED")
-      .map((post) => ({
-        ...post,
-        image: isSafeMediaUrl(post.image) ? post.image : "/hero-trading-desk.png",
-        readTime: estimateReadTime(post.content)
-      })),
+      .map((post) => ({ ...post, image: isSafeMediaUrl(post.image) ? post.image : defaultImage, readTime: estimateReadTime(post.content) })),
     services: data.services
       .filter((service) => service.published)
-      .map((service) => ({
-        ...service,
-        ctaUrl: isSafeActionUrl(service.ctaUrl) ? service.ctaUrl : "/contact"
-      }))
+      .map((service) => ({ ...service, ctaUrl: isSafeActionUrl(service.ctaUrl) ? service.ctaUrl : "/contact" }))
       .sort((a, b) => a.order - b.order),
     testimonials: data.testimonials.filter((testimonial) => testimonial.published).sort((a, b) => a.order - b.order),
     actionLinks: data.actionLinks.filter((link) => link.active && isSafeActionUrl(link.url))
@@ -404,23 +931,40 @@ export async function getPublicData() {
 }
 
 export async function getActionLink(slug: string) {
-  const data = await readData();
-  return data.actionLinks.find((link) => link.slug === slug && link.active);
+  assertDatabaseConfigured();
+  const link = await prisma.actionLink.findFirst({ where: { slug, active: true } });
+
+  if (!link || !isSafeActionUrl(link.url)) {
+    return undefined;
+  }
+
+  return {
+    id: link.id,
+    label: link.label,
+    slug: link.slug,
+    url: link.url,
+    type: link.type,
+    description: link.description ?? undefined,
+    ctaLabel: link.ctaLabel ?? undefined,
+    brandColor: link.brandColor ?? undefined,
+    placement: link.placement,
+    noFollow: link.noFollow,
+    sponsored: link.sponsored,
+    active: link.active
+  } satisfies StoredActionLink;
 }
 
 export async function recordLinkClick(
   actionLinkId: string,
   details: Omit<StoredLinkClick, "id" | "actionLinkId" | "createdAt"> = {}
 ) {
-  const data = await readData();
-
-  data.linkClicks.unshift({
-    id: createId("click"),
-    actionLinkId,
-    ...details,
-    createdAt: now()
+  assertDatabaseConfigured();
+  await prisma.linkClick.create({
+    data: {
+      actionLinkId,
+      ipHash: details.ipHash,
+      userAgent: details.userAgent,
+      referrer: details.referrer
+    }
   });
-
-  data.linkClicks = data.linkClicks.slice(0, 500);
-  await writeData(data);
 }

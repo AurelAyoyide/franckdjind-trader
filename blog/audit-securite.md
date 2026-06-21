@@ -21,7 +21,10 @@ Date : 2026-06-18
 - [x] Headers de securite ajoutes, dont CSP et HSTS en production.
 - [x] Permissions admin appliquees aux pages, actions serveur, navbar, dashboard et export.
 - [x] Envoi email contact optionnel via Resend si les variables sont configurees.
-- [x] Ecriture JSON locale atomique pour reduire les risques de corruption.
+- [x] Persistance runtime migree vers PostgreSQL via Prisma ; aucune lecture ou ecriture applicative ne depend de `data/content.json`.
+- [x] Migration SQL versionnee et import legacy protege contre l'ecrasement accidentel d'une base non vide.
+- [x] Comptes legacy sans hash de mot de passe desactives a l'import, sauf administrateur explicitement configure.
+- [x] Suppression de comptes admin desactivee dans l'interface pour eviter de perdre le dernier acces administrateur.
 
 ## Points de production a confirmer
 
@@ -29,5 +32,5 @@ Date : 2026-06-18
 - [ ] Configurer `ADMIN_PASSWORD_HASH` ou `ADMIN_PASSWORD` avant le seed production.
 - [ ] Configurer `RESEND_API_KEY`, `CONTACT_TO_EMAIL` et `CONTACT_FROM_EMAIL` pour l'envoi email.
 - [ ] Configurer `NEXT_IMAGE_REMOTE_HOSTS` pour les domaines d'images optimises par Next.
-- [ ] Migrer la persistance runtime vers PostgreSQL/Prisma avec reprise controlee des donnees JSON.
+- [ ] Fournir et configurer la vraie `DATABASE_URL`, puis executer la migration et l'import PostgreSQL.
 - [ ] Remplacer les contenus de demo et finaliser les textes legaux avec les informations reelles du client.

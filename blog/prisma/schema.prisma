@@ -120,6 +120,7 @@ model SeoMetadata {
 
 model Media {
   id          String      @id @default(cuid())
+  title       String?
   type        MediaType   @default(IMAGE)
   url         String
   alt         String?
@@ -176,6 +177,7 @@ model Post {
   publishedAt    DateTime?
   authorId       String
   author         User           @relation("PostAuthor", fields: [authorId], references: [id])
+  authorLabel    String?
   categoryId     String?
   category       Category?      @relation(fields: [categoryId], references: [id])
   coverMediaId   String?

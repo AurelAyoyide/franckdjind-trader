@@ -10,6 +10,9 @@ npm run dev
 npm run build
 npm run lint
 npm run typecheck
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:import
 ```
 
 ## Notes
@@ -17,8 +20,8 @@ npm run typecheck
 - Le projet est initialise directement a la racine du dossier `blog/`.
 - Le cahier technique et le suivi restent a la racine de ce dossier.
 - La V1 cible un site public SEO, mobile-first, puis un admin simple.
-- Les donnees applicatives courantes sont stockees dans `data/content.json`.
-- Le schema Prisma/PostgreSQL est present et aligne pour une migration production, mais la bascule runtime vers PostgreSQL doit etre faite avec une migration de donnees controlee.
+- Les donnees applicatives sont stockees dans PostgreSQL via Prisma. Le fichier `data/content.json` est uniquement une sauvegarde legacy a importer une fois, jamais une source runtime.
+- Pour initialiser une base neuve : configure `DATABASE_URL`, lance `npx prisma migrate deploy`, puis `npm run prisma:import`. L'import refuse une base non vide sans l'option explicite `--replace`.
 
 ## Production
 
@@ -28,6 +31,8 @@ Variables importantes :
 - `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` ou `ADMIN_PASSWORD` : requis pour le seed Prisma en production.
 - `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` : activent l'envoi email des messages contact.
 - `NEXT_IMAGE_REMOTE_HOSTS` : allowlist des domaines servis par `next/image`.
+
+La migration legacy des comptes sans hash de mot de passe desactive ces comptes par securite, sauf le compte dont l'email correspond a `ADMIN_EMAIL` et pour lequel `ADMIN_PASSWORD_HASH` ou `ADMIN_PASSWORD` est configure. Les mots de passe des autres comptes doivent etre redefinis depuis l'admin.
 
 Securite deja activee :
 

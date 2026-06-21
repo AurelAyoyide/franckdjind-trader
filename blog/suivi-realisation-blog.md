@@ -181,10 +181,15 @@ Les cases sont cochees uniquement lorsqu'une action est reellement terminee.
 - [x] Ajout d'une ecriture atomique pour `data/content.json`.
 - [x] Alignement du schema Prisma avec les champs admin recents.
 - [x] Documentation production et securite ajoutee dans le README.
+- [x] Remplacement de la persistance runtime JSON par PostgreSQL/Prisma.
+- [x] Creation de la migration SQL Prisma versionnee pour PostgreSQL.
+- [x] Creation d'un import legacy protege de `data/content.json` vers PostgreSQL.
+- [x] Conservation de `data/content.json` uniquement comme sauvegarde legacy, hors runtime.
+- [x] Desactivation securisee a l'import des comptes legacy sans mot de passe hashe configure.
 
 ## Prochaine etape
 
-- [ ] Brancher la vraie persistance PostgreSQL en production via `DATABASE_URL` et migrations Prisma.
+- [ ] Configurer la `DATABASE_URL` de production et executer les migrations/import PostgreSQL sur la vraie base.
 - [x] Creer le seed admin.
 - [x] Implementer l'authentification admin securisee.
 - [x] Proteger les routes `/admin`.
