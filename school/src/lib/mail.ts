@@ -74,6 +74,18 @@ export async function deliverLoggedEmail(
   const log = await createEmailLog(prisma, input);
 
   if (!hasSmtpConfig()) {
+    console.warn("\n=== EMAIL EN ATTENTE (Pas de configuration SMTP) ===");
+    console.warn(`À      : ${input.to}`);
+    console.warn(`Sujet  : ${input.subject}`);
+    
+    // Extrait les liens (HTTP/HTTPS) du HTML pour faciliter les tests
+    const links = input.html.match(/href="([^"]+)"/g)?.map(l => l.replace('href="', '').replace('"', ''));
+    if (links && links.length > 0) {
+      console.warn(`Liens  :`);
+      links.forEach(link => console.warn(`         ${link}`));
+    }
+    console.warn("======================================================\n");
+
     return {
       status: EmailStatus.PENDING,
       logId: log.id,

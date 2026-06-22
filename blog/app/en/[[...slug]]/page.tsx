@@ -490,7 +490,7 @@ function EnglishBlog({ posts, categories, tags, page, q, categorie, tag }: { pos
   );
 }
 
-function EnglishCategoryPage({ category, articles, page }: { category: any, articles: PublicData["posts"], page: number }) {
+function EnglishCategoryPage({ category, articles, page }: { category: PublicData["categories"][number], articles: PublicData["posts"], page: number }) {
   const pageSize = 6;
   const pageCount = Math.max(1, Math.ceil(articles.length / pageSize));
   const safePage = Math.min(Math.max(1, page), pageCount);
@@ -508,7 +508,7 @@ function EnglishCategoryPage({ category, articles, page }: { category: any, arti
   );
 }
 
-function EnglishTagPage({ tag, articles, page }: { tag: any, articles: PublicData["posts"], page: number }) {
+function EnglishTagPage({ tag, articles, page }: { tag: PublicData["tags"][number], articles: PublicData["posts"], page: number }) {
   const pageSize = 6;
   const pageCount = Math.max(1, Math.ceil(articles.length / pageSize));
   const safePage = Math.min(Math.max(1, page), pageCount);
@@ -592,7 +592,7 @@ function EnglishSearch({ initialQuery, posts, page }: { initialQuery: string; po
   </section></>;
 }
 
-function EnglishAbout({ pageData }: { pageData: any }) {
+function EnglishAbout({ pageData }: { pageData?: Awaited<ReturnType<typeof readData>>["pages"][number] }) {
   return (
     <>
       <PageHero
@@ -901,17 +901,4 @@ function EnglishDisclaimer() { return <StaticEnglishPage eyebrow="Disclaimer" ti
 function EnglishPrivacy() { return <StaticEnglishPage eyebrow="Privacy" title="Only useful data should be collected and protected." sections={[["Data collected", "The contact form may collect your name, email address, subject and message in order to respond to your request."], ["Purpose", "Data is used to answer requests, administer authorised accounts, prevent abuse and manage newsletter subscriptions when consent has been provided. It is never sold."], ["Retention and security", "Messages are retained for a reasonable period and technical logs may be kept to protect forms and investigate errors. Access is limited to authorised people and necessary technical providers."], ["Your rights", "You can ask to access, correct or delete your data through the contact form by identifying the email address concerned."]]} />; }
 function EnglishTerms() { return <StaticEnglishPage eyebrow="Terms" title="A clear framework for using this site and its content." sections={[["Use of content", "Content is provided for information and education. Commercial reuse requires prior permission."], ["Responsible use", "Visitors must not interfere with the site, bypass protections, submit misleading information or use forms for spam. Administration access is reserved for authorised accounts."], ["Liability", "Visitors remain responsible for their trading decisions, risk management and the suitability of information for their own circumstances."], ["External links", "External destinations are provided for convenience. Users should review their terms and risks before acting."], ["Updates", "These terms may change to reflect changes to the service, security or applicable obligations. The version published on this page applies."]]} />; }
 
-function paginate<T>(items: T[], page: number, pageSize = 3) {
-  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
-  const safePage = Math.min(Math.max(1, page), pageCount);
-  return { items: items.slice((safePage - 1) * pageSize, safePage * pageSize), pageCount, safePage };
-}
 
-function EnglishPagination({ basePath, pageCount, safePage }: { basePath: string; pageCount: number; safePage: number }) {
-  if (pageCount <= 1) return null;
-  const href = (page: number) => {
-    const separator = basePath.includes("?") ? "&" : "?";
-    return page > 1 ? `${basePath}${separator}page=${page}` : basePath;
-  };
-  return <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">{Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => <Link className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${page === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`} href={href(page)} key={page}>{page}</Link>)}</nav>;
-}
