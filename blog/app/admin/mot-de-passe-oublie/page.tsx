@@ -31,7 +31,7 @@ export default async function ForgotPasswordPage({ searchParams }: { searchParam
         </p>
         {status === "sent" ? (
           <p className="mt-4 rounded-md border border-market/30 bg-market/10 px-3 py-2 text-sm font-semibold text-market">
-            Si le compte existe, un email vient d&apos;être envoyé.
+            Si le compte existe, un email vient d&apos;être envoyé. Vérifie aussi les dossiers Spam, Indésirables et Promotions si tu ne le vois pas dans les prochaines minutes.
           </p>
         ) : null}
         {status === "email-error" ? (

@@ -80,8 +80,10 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       <section className="site-shell py-12 md:py-16">
         <form className="rounded-lg border border-line bg-surface p-4" action="/blog">
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px_auto]">
-            <label className="relative block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <label className="grid gap-1 text-xs font-bold text-muted">
+              Recherche
+              <span className="relative block">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 className="min-h-12 w-full rounded-md border border-line bg-background py-2 pl-11 pr-4 text-foreground outline-none transition placeholder:text-muted-strong focus:border-market"
                 defaultValue={q}
@@ -89,6 +91,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 placeholder="Rechercher un article, un tag, une idee..."
                 type="search"
               />
+              </span>
             </label>
             <label className="grid gap-1 text-xs font-bold text-muted">
               Catégorie
@@ -104,9 +107,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 {tags.map((entry) => <option key={entry.slug} value={entry.slug}>{entry.title}</option>)}
               </select>
             </label>
-            <button className="min-h-12 cursor-pointer rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
-              Rechercher
-            </button>
+            <div className="grid gap-1">
+              <span className="text-xs font-bold text-transparent" aria-hidden="true">Action</span>
+              <button className="min-h-12 cursor-pointer rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
+                Rechercher
+              </button>
+            </div>
           </div>
         </form>
 
