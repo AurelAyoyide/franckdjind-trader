@@ -8,7 +8,7 @@ import { buildMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildMetadata({
   title: "A propos",
   description:
-    "Decouvrir l'approche du trader-formateur : discipline, pédagogie, risk management et education responsable.",
+    "Découvrir l&apos;approche de Bono Trading : pédagogie, discipline, gestion du risque et apprentissage responsable.",
   path: "/a-propos"
 });
 
@@ -20,8 +20,8 @@ export default async function AboutPage() {
     <>
       <PageHero
         eyebrow="A propos"
-        title="Un positionnement sobre : apprendre, pratiquer, proteger son capital."
-        description="Le site met en avant une approche orientee methode, discipline et transmission. Pas de promesse magique, pas de mise en scene inutile."
+        title="Apprendre, pratiquer et protéger son capital."
+        description="Bono Trading privilégie une pédagogie claire : comprendre le contexte, préparer ses décisions et progresser sans promesse irréaliste."
       />
       <section className="site-shell grid gap-10 py-12 md:grid-cols-[0.9fr_1.1fr] md:py-16">
         <div className="rounded-lg border border-line bg-surface p-6">
@@ -29,24 +29,25 @@ export default async function AboutPage() {
             Principes
           </p>
           <ul className="mt-6 grid gap-4 text-base leading-8 text-muted">
-            <li>Former avant de vendre une performance.</li>
+            <li>Transmettre une méthode avant de parler de résultat.</li>
             <li>Rendre le risque visible avant le gain potentiel.</li>
-            <li>Parler aux debutants sans simplifier abusivement le marche.</li>
-            <li>Construire une communaute autour de la repetition et du feedback.</li>
+            <li>Parler aux débutants sans simplifier abusivement le marché.</li>
+            <li>Construire une communauté autour de la répétition et du feedback.</li>
           </ul>
         </div>
         <div>
           <h2 className="text-3xl font-black leading-tight md:text-5xl">
-            Le blog doit installer la confiance avant la conversion.
+            Une approche construite pour durer.
           </h2>
           <p className="mt-6 text-base leading-8 text-muted md:text-lg">
-            Un visiteur mobile arrive souvent par un article. Il doit comprendre rapidement
-            qui parle, pourquoi le contenu est credible et quelle prochaine action a du sens.
-            Cette page sert a renforcer cette lecture sans surcharger l&apos;experience.
+            Les contenus s&apos;adressent à celles et ceux qui veulent apprendre à structurer
+            leurs décisions de trading. L&apos;objectif est d&apos;installer de bonnes habitudes :
+            préparer, exécuter avec prudence, journaliser et ajuster. Chaque parcours doit
+            rester adapté au niveau, au temps disponible et à la tolérance au risque de chacun.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/blog" showArrow>
-              Lire le blog
+              Explorer le blog
             </ButtonLink>
             <ButtonLink href="/contact" variant="secondary">
               Contacter

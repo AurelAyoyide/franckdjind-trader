@@ -65,6 +65,7 @@ model User {
   posts        Post[]        @relation("PostAuthor")
   pages        Page[]        @relation("PageAuthor")
   activityLogs ActivityLog[]
+  resetTokens  PasswordResetToken[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -169,9 +170,12 @@ model Tag {
 model Post {
   id             String         @id @default(cuid())
   title          String
+  titleEn        String?
   slug           String         @unique
   excerpt        String?
+  excerptEn      String?
   content        String
+  contentEn      String?
   status         PostStatus     @default(DRAFT)
   featured       Boolean        @default(false)
   publishedAt    DateTime?
@@ -278,6 +282,7 @@ model ActionLink {
   type        LinkType    @default(OTHER)
   description String?
   ctaLabel    String?
+  imageUrl    String?
   brandColor  String?
   placement   ActionLinkPlacement @default(ARTICLE_BOTH)
   noFollow    Boolean     @default(true)
@@ -343,6 +348,20 @@ model ActivityLog {
 
   @@index([userId, createdAt])
   @@index([entity, entityId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model PostView {

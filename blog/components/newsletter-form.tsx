@@ -23,6 +23,11 @@ export function NewsletterForm({ status }: { status?: string }) {
                 Inscription enregistree.
               </p>
             ) : null}
+            {status === "already" ? (
+              <p className="rounded-md border border-amber/30 bg-amber/10 px-3 py-2 text-sm font-semibold text-amber">
+                Cette adresse est deja inscrite a la newsletter.
+              </p>
+            ) : null}
             {status === "invalid" ? (
               <p className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
                 Merci de verifier l&apos;email et le consentement.

@@ -21,9 +21,11 @@ function oneHourAgo() {
 
 export async function submitContactAction(formData: FormData) {
   const requestHeaders = await headers();
+  const locale = formData.get("locale") === "en" ? "en" : "fr";
+  const targetPath = locale === "en" ? "/en/contact" : "/contact";
 
   if (!isSameOriginRequest(requestHeaders)) {
-    redirect("/contact?status=invalid");
+    redirect(`${targetPath}?status=invalid`);
   }
 
   const parsed = contactSchema.safeParse({
@@ -35,7 +37,7 @@ export async function submitContactAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/contact?status=invalid");
+    redirect(`${targetPath}?status=invalid`);
   }
 
   const ip = getClientIp(requestHeaders);
@@ -46,7 +48,7 @@ export async function submitContactAction(formData: FormData) {
   );
 
   if (recentMessages.length >= 5) {
-    redirect("/contact?status=limited");
+    redirect(`${targetPath}?status=limited`);
   }
 
   const messageData = {
@@ -90,5 +92,5 @@ export async function submitContactAction(formData: FormData) {
     await writeData(nextData);
   }
 
-  redirect("/contact?status=sent");
+  redirect(`${targetPath}?status=${emailResult.sent ? "sent" : "saved-email-error"}`);
 }

@@ -2,7 +2,7 @@ export const sessionCookieName = "admin_session";
 
 export type AdminSession = {
   email: string;
-  role: "ADMIN" | "EDITOR" | "AUTHOR";
+  role: "ADMIN" | "EDITOR" | "CONTENT_MANAGER" | "MEDIA_MANAGER" | "AUTHOR";
   name?: string;
 };
 
@@ -128,7 +128,13 @@ export async function verifyAdminToken(token?: string): Promise<AdminSession | n
       return null;
     }
 
-    if (payload.role !== "ADMIN" && payload.role !== "EDITOR" && payload.role !== "AUTHOR") {
+    if (
+      payload.role !== "ADMIN" &&
+      payload.role !== "EDITOR" &&
+      payload.role !== "CONTENT_MANAGER" &&
+      payload.role !== "MEDIA_MANAGER" &&
+      payload.role !== "AUTHOR"
+    ) {
       return null;
     }
 

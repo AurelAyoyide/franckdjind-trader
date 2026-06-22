@@ -6,7 +6,7 @@ import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
 import { getAdminResource, getResourceTitle } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
 import { readData } from "@/lib/data-store";
-import { canManageResource, canViewAdminResource } from "@/lib/permissions";
+import { canManagePostAuthor, canManageResource, canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ type AdminResourcePageProps = {
   searchParams: Promise<{
     q?: string;
     page?: string;
+    notice?: string;
   }>;
 };
 
@@ -67,7 +68,7 @@ export async function generateMetadata({ params }: AdminResourcePageProps): Prom
 
 export default async function AdminResourcePage({ params, searchParams }: AdminResourcePageProps) {
   const { resource } = await params;
-  const { q = "", page = "1" } = await searchParams;
+  const { q = "", page = "1", notice } = await searchParams;
   const config = getAdminResource(resource);
 
   if (!config) {
@@ -81,7 +82,9 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
   }
 
   const data = await readData();
-  const items = data[config.collection] as Array<Record<string, unknown>>;
+  const items = (data[config.collection] as Array<Record<string, unknown>>).filter(
+    (item) => config.slug !== "posts" || canManagePostAuthor(session, item.author)
+  );
   const normalized = q.trim().toLowerCase();
   const filtered = normalized
     ? items.filter((item) => searchableText(item).includes(normalized))
@@ -112,6 +115,12 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
           </Link>
         ) : null}
       </div>
+
+      {notice === "created" || notice === "updated" || notice === "deleted" ? (
+        <p className="mt-6 rounded-md border border-market/30 bg-market/10 px-4 py-3 text-sm font-semibold text-market" role="status">
+          {notice === "created" ? "Element cree avec succes." : notice === "deleted" ? "Element supprime avec succes." : "Modifications enregistrees avec succes."}
+        </p>
+      ) : null}
 
       <form className="mt-8 rounded-lg border border-line bg-surface p-3" action={`/admin/${config.slug}`}>
         <div className="grid gap-3 md:grid-cols-[1fr_auto]">

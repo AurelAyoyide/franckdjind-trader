@@ -33,7 +33,8 @@ function pageHref(page: number, q: string) {
 export const metadata: Metadata = buildMetadata({
   title: "Recherche",
   description: "Rechercher un article de trading par theme, categorie ou mot-cle.",
-  path: "/recherche"
+  path: "/recherche",
+  noIndex: true
 });
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {

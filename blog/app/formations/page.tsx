@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { RichContent } from "@/components/rich-content";
@@ -8,28 +9,40 @@ import { getPublicData } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Formations trading",
+  title: "Services trading",
   description:
-    "Formations et accompagnements pour apprendre le trading avec methode, routine et risk management.",
+    "Services et accompagnements pour apprendre le trading avec méthode, routine et gestion du risque.",
   path: "/formations"
 });
 
-export default async function FormationsPage() {
+type ServicesPageProps = { searchParams: Promise<{ page?: string }> };
+const pageSize = 3;
+
+function pageHref(page: number) {
+  return page > 1 ? `/formations?page=${page}` : "/formations";
+}
+
+export default async function FormationsPage({ searchParams }: ServicesPageProps) {
+  const { page = "1" } = await searchParams;
   const { services } = await getPublicData();
+  const currentPage = Math.max(1, Number(page) || 1);
+  const pageCount = Math.max(1, Math.ceil(services.length / pageSize));
+  const safePage = Math.min(currentPage, pageCount);
+  const paginatedServices = services.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <>
       <PageHero
-        eyebrow="Formations"
-        title="Des accompagnements lisibles, centres sur la progression."
-        description="Chaque offre doit aider le visiteur a choisir selon son niveau : comprendre, pratiquer, corriger."
+        eyebrow="Services"
+        title="Des accompagnements lisibles, centrés sur la progression."
+        description="Choisis un point de départ selon ton niveau : comprendre, pratiquer, relire ou retrouver de la régularité."
       />
       <section className="site-shell py-12 md:py-16">
         <div className="grid gap-5 lg:grid-cols-3">
-          {services.map((service, index) => (
-            <article className="rounded-lg border border-line bg-surface p-6" key={service.title}>
+          {paginatedServices.map((service, index) => (
+            <article className="flex min-h-full flex-col rounded-lg border border-line bg-surface p-6" key={service.title}>
               <span className="font-mono text-xs font-black text-market">
-                0{index + 1}
+                {String((safePage - 1) * pageSize + index + 1).padStart(2, "0")}
               </span>
               <h2 className="mt-6 text-2xl font-black leading-tight">{service.title}</h2>
               <p className="mt-4 text-sm leading-7 text-muted">{service.description}</p>
@@ -49,26 +62,40 @@ export default async function FormationsPage() {
                   <RichContent content={service.content} />
                 </div>
               ) : null}
-              <div className="mt-7">
+              <div className="mt-7 pt-1">
                 <ButtonLink href={service.ctaUrl || "/contact"} className="w-full" showArrow>
-                  {service.ctaLabel || "Demander l'orientation"}
+                  {service.ctaLabel || "Demander une orientation"}
                 </ButtonLink>
               </div>
             </article>
           ))}
         </div>
 
+        {pageCount > 1 ? (
+          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination des services">
+            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+              <Link
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
+                href={pageHref(pageNumber)}
+                key={pageNumber}
+              >
+                {pageNumber}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
+
         <div className="mt-8 rounded-lg border border-line bg-background-soft p-6 md:p-8">
           <h2 className="text-2xl font-black">Canaux directs</h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-            Le visiteur peut demander une orientation par formulaire, WhatsApp ou Telegram selon son besoin.
+            Une question peut être posée par formulaire, WhatsApp ou Telegram selon le besoin.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/contact">Formulaire</ButtonLink>
-            <ButtonLink href={siteConfig.whatsappPath} variant="secondary">
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <ButtonLink className="w-full" href="/contact">Formulaire</ButtonLink>
+            <ButtonLink className="w-full" href={siteConfig.whatsappPath} variant="secondary">
               WhatsApp
             </ButtonLink>
-            <ButtonLink href={siteConfig.telegramPath} variant="secondary">
+            <ButtonLink className="w-full" href={siteConfig.telegramPath} variant="secondary">
               Telegram
             </ButtonLink>
           </div>

@@ -1,12 +1,23 @@
 import Link from "next/link";
 import { saveResourceAction } from "@/app/admin/resource-actions";
 import { RichEditor } from "@/components/admin/rich-editor";
+import { ImageSourcePicker } from "@/components/admin/image-source-picker";
+import { DestinationPicker } from "@/components/admin/destination-picker";
+import { ResourcePreview } from "@/components/admin/resource-preview";
+import { RatingSelector } from "@/components/rating-selector";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
+import { PasswordField } from "@/components/password-field";
 import type { AdminResourceConfig } from "@/lib/admin-resources";
 
 type ResourceFormProps = {
   config: AdminResourceConfig;
   item?: Record<string, unknown>;
+  choices?: {
+    categories: Array<{ slug: string; title: string }>;
+    tags: Array<{ slug: string; title: string }>;
+    media: Array<{ url: string; title: string }>;
+    internalPaths: Array<{ value: string; label: string }>;
+  };
 };
 
 function fieldValue(item: Record<string, unknown> | undefined, name: string) {
@@ -25,6 +36,21 @@ function fieldValue(item: Record<string, unknown> | undefined, name: string) {
     return String(item.category.slug);
   }
 
+  if (name === "priceMode") {
+    const price = String(item.priceLabel ?? "").trim().toLowerCase();
+    return price === "sur demande" ? "ON_REQUEST" : price === "gratuit" || price === "free" ? "FREE" : "FIXED";
+  }
+
+  if (name === "priceAmount") {
+    const match = String(item.priceLabel ?? "").replace(/\s/g, "").match(/[\d]+(?:[.,]\d+)?/);
+    return match?.[0]?.replace(",", ".") ?? "";
+  }
+
+  if (name === "currency") {
+    const price = String(item.priceLabel ?? "").toUpperCase();
+    return price.includes("EUR") ? "EUR" : price.includes("USD") || price.includes("$") ? "USD" : "XOF";
+  }
+
   const value = item[name];
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
@@ -37,14 +63,71 @@ function defaultChecked(item: Record<string, unknown> | undefined, name: string)
   return ["robotsIndex", "robotsFollow", "published", "active", "permanent", "noFollow"].includes(name);
 }
 
-export function ResourceForm({ config, item }: ResourceFormProps) {
+function selectedTagSlugs(item: Record<string, unknown> | undefined) {
+  if (!Array.isArray(item?.tags)) {
+    return [];
+  }
+
+  return item.tags
+    .map((tag) => (typeof tag === "object" && tag && "slug" in tag ? String(tag.slug) : ""))
+    .filter(Boolean);
+}
+
+export function ResourceForm({ config, item, choices }: ResourceFormProps) {
+  const formId = `${config.slug}-resource-form`;
+
   return (
-    <form action={saveResourceAction} className="grid gap-5 rounded-lg border border-line bg-surface p-5" encType="multipart/form-data">
+    <form action={saveResourceAction} className="grid gap-5 rounded-lg border border-line bg-surface p-5" id={formId}>
       <input name="resource" type="hidden" value={config.slug} />
       <input name="id" type="hidden" value={typeof item?.id === "string" ? item.id : ""} />
 
       {config.fields.map((field) => {
         const id = `${config.slug}-${field.name}`;
+
+        if (field.name === "categorySlug") {
+          return (
+            <label className="grid gap-2 text-sm font-semibold text-muted" htmlFor={id} key={field.name}>
+              <span>{field.label}<span className="ml-1 text-danger">*</span></span>
+              <select className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market" defaultValue={fieldValue(item, field.name)} id={id} name={field.name} required>
+                <option value="">Choisir une categorie</option>
+                {choices?.categories.map((category) => <option key={category.slug} value={category.slug}>{category.title}</option>)}
+              </select>
+              <span className="text-xs font-normal leading-5 text-muted-strong">La categorie est choisie dans la liste pour eviter les erreurs.</span>
+            </label>
+          );
+        }
+
+        if (field.name === "tagSlugs") {
+          return (
+            <label className="grid gap-2 text-sm font-semibold text-muted" htmlFor={id} key={field.name}>
+              <span>{field.label}</span>
+              <select className="min-h-32 rounded-md border border-line bg-background px-4 py-3 text-foreground outline-none transition focus:border-market" defaultValue={selectedTagSlugs(item)} id={id} multiple name={field.name}>
+                {choices?.tags.map((tag) => <option key={tag.slug} value={tag.slug}>{tag.title}</option>)}
+              </select>
+              <span className="text-xs font-normal leading-5 text-muted-strong">Utilise Ctrl (Windows) ou Cmd (Mac) pour choisir plusieurs tags.</span>
+            </label>
+          );
+        }
+
+        if (field.name === "image" && config.slug === "posts") {
+          return <ImageSourcePicker allowDefault fileName="imageFile" initialValue={fieldValue(item, field.name) || "/hero-trading-desk.png"} key={field.name} label={field.label} media={choices?.media} sourceName="image" />;
+        }
+
+        if (field.name === "url" && config.slug === "media") {
+          return <ImageSourcePicker allowDefault fileName="mediaFile" initialValue={fieldValue(item, field.name)} key={field.name} label={field.label} sourceName="url" />;
+        }
+
+        if (field.name === "imageUrl" && config.slug === "links") {
+          return <ImageSourcePicker fileName="linkImageFile" initialValue={fieldValue(item, field.name)} key={field.name} label={field.label} media={choices?.media} sourceName="imageUrl" />;
+        }
+
+        if ((field.name === "ctaUrl" && config.slug === "services") || (field.name === "url" && config.slug === "links")) {
+          return <DestinationPicker destinations={choices?.internalPaths ?? []} initialValue={fieldValue(item, field.name)} key={field.name} label={field.label} name={field.name} />;
+        }
+
+        if (field.name === "rating" && config.slug === "testimonials") {
+          return <RatingSelector initialRating={Number(fieldValue(item, field.name) || 5)} key={field.name} label="Note de l’avis" />;
+        }
 
         if (field.type === "checkbox") {
           return (
@@ -79,8 +162,17 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 className="min-h-12 rounded-md border border-dashed border-line bg-background px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market"
                 id={id}
                 name={field.name}
-                accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.pdf,image/jpeg,image/png,image/webp,image/gif,video/mp4,application/pdf"
+                accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif"
                 type="file"
+              />
+            ) : null}
+            {field.type === "color" ? (
+              <input
+                className="h-12 w-20 cursor-pointer rounded-md border border-line bg-background p-1"
+                defaultValue={fieldValue(item, field.name) || "#17c985"}
+                id={id}
+                name={field.name}
+                type="color"
               />
             ) : null}
             {field.type === "textarea" && field.name !== "content" ? (
@@ -107,7 +199,18 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 ))}
               </select>
             ) : null}
-            {!["textarea", "select", "file"].includes(field.type) ? (
+            {!["textarea", "select", "file", "color"].includes(field.type) ? (
+              field.type === "password" ? (
+              <PasswordField
+                autoComplete={field.name === "password" ? "new-password" : undefined}
+                className="min-h-12 w-full rounded-md border border-line bg-background px-4 pr-12 text-foreground outline-none transition focus:border-market"
+                defaultValue={fieldValue(item, field.name)}
+                id={id}
+                minLength={field.name === "password" ? 10 : undefined}
+                name={field.name}
+                required={field.required}
+              />
+              ) : (
               <input
                 className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none transition focus:border-market"
                 defaultValue={fieldValue(item, field.name)}
@@ -116,12 +219,15 @@ export function ResourceForm({ config, item }: ResourceFormProps) {
                 required={field.required}
                 type={field.type}
               />
+              )
             ) : null}
             {field.required ? <span className="text-xs font-normal leading-5 text-muted-strong">Champ obligatoire.</span> : null}
             {field.help ? <span className="text-xs font-normal leading-5 text-muted-strong">{field.help}</span> : null}
           </label>
         );
       })}
+
+      <ResourcePreview formId={formId} resource={config.slug} />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <PendingSubmitButton className="bg-market text-on-market hover:bg-market-strong" pendingLabel="Enregistrement...">

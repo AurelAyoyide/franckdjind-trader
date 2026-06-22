@@ -1,0 +1,4 @@
+ALTER TABLE "Post"
+ADD COLUMN "titleEn" TEXT,
+ADD COLUMN "excerptEn" TEXT,
+ADD COLUMN "contentEn" TEXT;

@@ -37,6 +37,11 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
               Message envoye. Une reponse sera faite via les coordonnees indiquees.
             </p>
           ) : null}
+          {status === "saved-email-error" ? (
+            <p className="mb-5 rounded-md border border-amber/30 bg-amber/10 px-3 py-2 text-sm font-semibold text-amber" role="status">
+              Ton message est bien enregistré, mais la notification email n&apos;a pas pu être envoyée. L&apos;équipe le voit dans l&apos;administration ; réessaie plus tard ou utilise WhatsApp.
+            </p>
+          ) : null}
           {status === "invalid" ? (
             <p className="mb-5 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">
               Merci de verifier les champs du formulaire.

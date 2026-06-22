@@ -24,7 +24,7 @@ function pageHref(slug: string, page: number) {
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { tags } = await getPublicData();
+  const { tags, posts } = await getPublicData();
   const tag = tags.find((entry) => entry.slug === slug);
 
   if (!tag) {
@@ -34,7 +34,8 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   return buildMetadata({
     title: tag.seoTitle || `Articles ${tag.title}`,
     description: tag.seoDescription || `Tous les articles lies au sujet ${tag.title}.`,
-    path: `/tag/${tag.slug}`
+    path: `/tag/${tag.slug}`,
+    noIndex: !posts.some((article) => article.tags.some((entry) => entry.slug === tag.slug))
   });
 }
 

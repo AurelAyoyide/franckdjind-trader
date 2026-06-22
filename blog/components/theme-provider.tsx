@@ -12,19 +12,27 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // The initial value must match the server render. The inline bootstrap script
+  // still paints the stored theme before React takes over, then this effect
+  // synchronizes the interactive state without a hydration mismatch.
   const [theme, setTheme] = useState<Theme>("light");
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("theme");
-    const nextTheme = savedTheme === "dark" ? "dark" : "light";
-    setTheme(nextTheme);
-    document.documentElement.dataset.theme = nextTheme;
+    const initialTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    setTheme(initialTheme);
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
     document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
     window.localStorage.setItem("theme", theme);
-  }, [theme]);
+  }, [isHydrated, theme]);
 
   const value = useMemo(
     () => ({

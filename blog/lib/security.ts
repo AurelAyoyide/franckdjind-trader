@@ -48,7 +48,15 @@ export function isSafeHttpUrl(value: string) {
 }
 
 export function isSafeActionUrl(value: string) {
-  return isSafeInternalPath(value) || isSafeHttpUrl(value);
+  if (isSafeInternalPath(value)) {
+    return true;
+  }
+
+  try {
+    return new URL(value).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export function isSafeMediaUrl(value: string) {

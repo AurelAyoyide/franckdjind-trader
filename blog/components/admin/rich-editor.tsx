@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -55,6 +55,7 @@ function EditorButton({ active, label, onClick, children }: EditorButtonProps) {
 
 export function RichEditor({ name, initialValue, placeholder }: RichEditorProps) {
   const [html, setHtml] = useState(markdownLikeToHtml(initialValue));
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -86,6 +87,10 @@ export function RichEditor({ name, initialValue, placeholder }: RichEditorProps)
   useEffect(() => {
     setHtml(markdownLikeToHtml(initialValue));
   }, [initialValue]);
+
+  useEffect(() => {
+    hiddenInputRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [html]);
 
   function setLink() {
     if (!editor) {
@@ -131,7 +136,7 @@ export function RichEditor({ name, initialValue, placeholder }: RichEditorProps)
 
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-surface">
-      <input name={name} type="hidden" value={html} />
+      <input name={name} ref={hiddenInputRef} type="hidden" value={html} />
       <div className="flex flex-wrap gap-2 border-b border-line bg-surface-strong p-2">
         <EditorButton active={editor.isActive("bold")} label="Gras" onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />

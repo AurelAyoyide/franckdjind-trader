@@ -18,13 +18,14 @@ type BlogPageProps = {
   searchParams: Promise<{
     q?: string;
     categorie?: string;
+    tag?: string;
     page?: string;
   }>;
 };
 
 const pageSize = 6;
 
-function pageHref(page: number, q: string, category: string) {
+function pageHref(page: number, q: string, category: string, tag: string) {
   const params = new URLSearchParams();
 
   if (q) {
@@ -33,6 +34,10 @@ function pageHref(page: number, q: string, category: string) {
 
   if (category) {
     params.set("categorie", category);
+  }
+
+  if (tag) {
+    params.set("tag", tag);
   }
 
   if (page > 1) {
@@ -44,12 +49,13 @@ function pageHref(page: number, q: string, category: string) {
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const { q = "", categorie = "", page = "1" } = await searchParams;
+  const { q = "", categorie = "", tag = "", page = "1" } = await searchParams;
   const currentPage = Math.max(1, Number(page) || 1);
-  const { posts: articles, categories } = await getPublicData();
+  const { posts: articles, categories, tags } = await getPublicData();
   const normalized = q.trim().toLowerCase();
   const filtered = articles.filter((article) => {
     const matchesCategory = categorie ? article.category.slug === categorie : true;
+    const matchesTag = tag ? article.tags.some((articleTag) => articleTag.slug === tag) : true;
     const matchesSearch = normalized
       ? [article.title, article.excerpt, article.content, article.category.title, ...article.tags.map((tag) => tag.title)]
           .join(" ")
@@ -57,7 +63,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           .includes(normalized)
       : true;
 
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesTag && matchesSearch;
   });
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(currentPage, pageCount);
@@ -72,8 +78,8 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       />
 
       <section className="site-shell py-12 md:py-16">
-        <form className="rounded-lg border border-line bg-surface p-3" action="/blog">
-          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+        <form className="rounded-lg border border-line bg-surface p-4" action="/blog">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px_auto]">
             <label className="relative block">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
@@ -84,41 +90,31 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 type="search"
               />
             </label>
+            <label className="grid gap-1 text-xs font-bold text-muted">
+              Catégorie
+              <select className="min-h-12 rounded-md border border-line bg-background px-3 text-sm text-foreground outline-none focus:border-market" defaultValue={categorie} name="categorie">
+                <option value="">Toutes les catégories</option>
+                {categories.map((category) => <option key={category.slug} value={category.slug}>{category.title}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-1 text-xs font-bold text-muted">
+              Thème
+              <select className="min-h-12 rounded-md border border-line bg-background px-3 text-sm text-foreground outline-none focus:border-market" defaultValue={tag} name="tag">
+                <option value="">Tous les thèmes</option>
+                {tags.map((entry) => <option key={entry.slug} value={entry.slug}>{entry.title}</option>)}
+              </select>
+            </label>
             <button className="min-h-12 cursor-pointer rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">
               Rechercher
             </button>
           </div>
         </form>
 
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-3">
-          <Link
-            className={cn(
-              "whitespace-nowrap rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-muted transition hover:border-line-strong hover:text-foreground",
-              !categorie && "border-market bg-market/10 text-market"
-            )}
-            href={pageHref(1, q, "")}
-          >
-            Tous
-          </Link>
-          {categories.map((category) => (
-            <Link
-              className={cn(
-                "whitespace-nowrap rounded-lg border border-line bg-surface px-4 py-2 text-sm font-semibold text-muted transition hover:border-line-strong hover:text-foreground",
-                categorie === category.slug && "border-market bg-market/10 text-market"
-              )}
-              href={pageHref(1, q, category.slug)}
-              key={category.slug}
-            >
-              {category.title}
-            </Link>
-          ))}
-        </div>
-
         <div className="mt-4 flex flex-col gap-2 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <p>
             {filtered.length} article{filtered.length > 1 ? "s" : ""} trouve{filtered.length > 1 ? "s" : ""}
           </p>
-          {(q || categorie) ? (
+          {(q || categorie || tag) ? (
             <Link className="font-semibold text-market underline-offset-4 hover:underline" href="/blog">
               Reinitialiser les filtres
             </Link>
@@ -148,7 +144,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                   "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground",
                   pageNumber === safePage && "border-market bg-market text-on-market"
                 )}
-                href={pageHref(pageNumber, q, categorie)}
+                href={pageHref(pageNumber, q, categorie, tag)}
                 key={pageNumber}
               >
                 {pageNumber}

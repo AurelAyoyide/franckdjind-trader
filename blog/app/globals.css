@@ -104,6 +104,31 @@ select {
   font: inherit;
 }
 
+button:not(:disabled),
+a[href],
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 150ms ease, opacity 150ms ease, filter 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+button:not(:disabled):active,
+a[href]:active,
+[role="button"]:active {
+  transform: scale(0.975);
+  filter: brightness(0.96);
+}
+
+button:focus-visible,
+a[href]:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--market) 65%, transparent);
+  outline-offset: 3px;
+}
+
+button[data-pending="true"] {
+  transform: scale(0.985);
+}
+
 ::selection {
   background: rgba(23, 201, 133, 0.35);
   color: var(--foreground);
@@ -206,10 +231,25 @@ select {
   max-width: 100%;
   border-radius: 8px;
   border: 1px solid var(--line);
+  filter: none;
+  opacity: 1;
+  backdrop-filter: none;
 }
 
 .rich-editor-content {
   line-height: 1.75;
+}
+
+.rich-editor-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  filter: none;
+  opacity: 1;
+  backdrop-filter: none;
 }
 
 .rich-editor-content h2 {
@@ -287,6 +327,24 @@ select {
     transform: translateX(45%);
     opacity: 0.75;
   }
+}
+
+@keyframes navigation-progress {
+  0% {
+    transform: translateX(-130%);
+  }
+
+  55% {
+    transform: translateX(130%);
+  }
+
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+.navigation-progress {
+  animation: navigation-progress 1.25s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

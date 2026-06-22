@@ -27,21 +27,23 @@ export function DeleteConfirmation({ resource, id, title }: DeleteConfirmationPr
 
       {open ? (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-lg border border-line bg-surface p-5 shadow-2xl">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 text-danger">
-                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div className="flex-1 text-center">
-                <h2 className="text-xl font-black">Confirmer la suppression</h2>
-                <p className="mt-2 text-sm leading-7 text-muted">
-                  Tu vas supprimer <span className="font-black text-foreground">{title}</span>.
-                  Cette action est immediate.
-                </p>
+          <div aria-labelledby="delete-dialog-title" aria-modal="true" className="w-full max-w-md overflow-hidden rounded-xl border border-line bg-surface shadow-2xl" role="dialog">
+            <div className="border-b border-line bg-danger/5 p-6">
+              <div className="flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-danger/30 bg-danger/10 text-danger">
+                  <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-danger">Action irréversible</p>
+                  <h2 className="mt-2 text-xl font-black" id="delete-dialog-title">Supprimer cet élément ?</h2>
+                  <p className="mt-2 text-sm leading-7 text-muted">
+                    <span className="font-black text-foreground">{title}</span> sera supprimé définitivement. Cette action ne peut pas être annulée.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
+            <div className="flex flex-col-reverse gap-3 p-5 sm:flex-row sm:justify-end">
               <button
                 className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-4 text-sm font-semibold text-foreground"
                 type="button"
@@ -50,7 +52,7 @@ export function DeleteConfirmation({ resource, id, title }: DeleteConfirmationPr
                 <X className="h-4 w-4" aria-hidden="true" />
                 Annuler
               </button>
-              <form action={deleteResourceAction}>
+              <form action={deleteResourceAction} className="sm:min-w-48">
                 <input name="resource" type="hidden" value={resource} />
                 <input name="id" type="hidden" value={id} />
                 <PendingSubmitButton className="w-full bg-danger text-white" pendingLabel="Suppression...">

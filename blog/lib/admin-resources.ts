@@ -3,7 +3,7 @@ import type { BlogData } from "@/lib/data-store";
 export type AdminField = {
   name: string;
   label: string;
-  type: "text" | "textarea" | "select" | "checkbox" | "number" | "date" | "email" | "url" | "password" | "file";
+  type: "text" | "textarea" | "select" | "checkbox" | "number" | "date" | "email" | "url" | "password" | "file" | "color";
   required?: boolean;
   options?: Array<{ label: string; value: string }>;
   help?: string;
@@ -38,17 +38,12 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "slug", label: "Slug", type: "text", required: true },
-      { name: "categorySlug", label: "Categorie", type: "text", required: true, help: "Slug de categorie, par exemple debuter ou risk-management." },
-      { name: "excerpt", label: "Extrait", type: "textarea", required: true },
+      { name: "categorySlug", label: "Categorie", type: "text", required: true, help: "Choisis la categorie de l'article." },
+      { name: "tagSlugs", label: "Tags", type: "text", help: "Selectionne un ou plusieurs tags." },
       { name: "content", label: "Contenu visuel", type: "textarea", required: true },
       { name: "status", label: "Statut", type: "select", options: statusOptions, required: true },
-      { name: "author", label: "Auteur", type: "text" },
-      { name: "publishedAt", label: "Date de publication", type: "date" },
-      { name: "image", label: "Image", type: "text", help: "Chemin media ou URL, par exemple /hero-trading-desk.png." },
-      { name: "tagSlugs", label: "Tags", type: "text", help: "Slugs separes par des virgules." },
-      { name: "seoTitle", label: "SEO title", type: "text", help: "Optionnel : si vide, genere automatiquement depuis le titre." },
-      { name: "seoDescription", label: "SEO description", type: "textarea", help: "Optionnel : si vide, genere automatiquement depuis l'extrait." },
+      { name: "publishedAt", label: "Programmer la publication", type: "date", help: "Laisse vide pour publier aujourd'hui. Une date future garde l'article invisible jusque-là." },
+      { name: "image", label: "Image de couverture", type: "text", help: "Choisis une image déjà ajoutée dans la médiathèque." },
       { name: "robotsIndex", label: "Autoriser l'indexation Google", type: "checkbox", help: "Decoche pour demander aux moteurs de ne pas indexer cette page." },
       { name: "robotsFollow", label: "Autoriser le suivi des liens", type: "checkbox", help: "Decoche pour demander aux moteurs de ne pas suivre les liens de cette page." }
     ]
@@ -62,10 +57,8 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Nom", type: "text", required: true },
-      { name: "slug", label: "Slug", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea", required: true },
-      { name: "seoTitle", label: "SEO title", type: "text" },
-      { name: "seoDescription", label: "SEO description", type: "textarea" }
+      { name: "robotsIndex", label: "Autoriser l'indexation Google", type: "checkbox" }
     ]
   },
   tags: {
@@ -77,10 +70,7 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Nom", type: "text", required: true },
-      { name: "slug", label: "Slug", type: "text", required: true },
-      { name: "description", label: "Description", type: "textarea" },
-      { name: "seoTitle", label: "SEO title", type: "text" },
-      { name: "seoDescription", label: "SEO description", type: "textarea" }
+      { name: "description", label: "Description", type: "textarea" }
     ]
   },
   pages: {
@@ -92,12 +82,8 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "slug", label: "Slug", type: "text", required: true },
-      { name: "excerpt", label: "Extrait", type: "textarea" },
       { name: "content", label: "Contenu", type: "textarea", required: true },
       { name: "status", label: "Statut", type: "select", options: statusOptions, required: true },
-      { name: "seoTitle", label: "SEO title", type: "text" },
-      { name: "seoDescription", label: "SEO description", type: "textarea" },
       { name: "robotsIndex", label: "Autoriser l'indexation Google", type: "checkbox" },
       { name: "robotsFollow", label: "Autoriser le suivi des liens", type: "checkbox" }
     ]
@@ -111,15 +97,8 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "url", label: "URL externe ou chemin interne", type: "text", help: "Exemple externe https://... ou interne /uploads/image.png." },
-      { name: "file", label: "Importer un fichier local", type: "file", help: "Optionnel : jpg, png, webp, gif, mp4 ou pdf jusqu'a 15 Mo." },
+      { name: "url", label: "Source de l'image", type: "text", help: "Choisis une importation locale ou un lien HTTPS. Une seule source sera conservée." },
       { name: "alt", label: "Texte alternatif", type: "text" },
-      {
-        name: "type",
-        label: "Type",
-        type: "select",
-        options: ["IMAGE", "VIDEO", "DOCUMENT", "OTHER"].map((value) => ({ label: value, value }))
-      }
     ]
   },
   testimonials: {
@@ -131,9 +110,15 @@ export const adminResources = {
     titleField: "name",
     fields: [
       { name: "name", label: "Nom", type: "text", required: true },
-      { name: "role", label: "Role", type: "text" },
+      { name: "role", label: "Profil", type: "select", options: ["Apprenant", "Membre de la communaute", "Client formation", "Client accompagnement"].map((value) => ({ label: value, value })) },
       { name: "quote", label: "Temoignage", type: "textarea", required: true },
-      { name: "rating", label: "Note", type: "number", help: "Publie automatiquement. L'ordre est gere automatiquement." }
+      { name: "rating", label: "Note", type: "number", help: "Note affichée entre 1 et 5." },
+      {
+        name: "published",
+        label: "Approuver et publier ce témoignage",
+        type: "checkbox",
+        help: "Un avis soumis publiquement reste invisible tant qu'il n'est pas approuvé."
+      }
     ]
   },
   services: {
@@ -145,14 +130,23 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "slug", label: "Slug", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea", required: true },
       { name: "content", label: "Contenu", type: "textarea" },
-      { name: "priceLabel", label: "Prix", type: "text" },
+      {
+        name: "priceMode",
+        label: "Mode de prix",
+        type: "select",
+        options: [
+          { label: "Prix fixe", value: "FIXED" },
+          { label: "Sur demande", value: "ON_REQUEST" },
+          { label: "Gratuit", value: "FREE" }
+        ]
+      },
+      { name: "priceAmount", label: "Montant", type: "number", help: "À renseigner seulement pour un prix fixe." },
+      { name: "currency", label: "Devise", type: "select", options: ["XOF", "EUR", "USD"].map((value) => ({ label: value, value })) },
       { name: "ctaLabel", label: "CTA", type: "text" },
-      { name: "ctaUrl", label: "Lien CTA", type: "text" },
+      { name: "ctaUrl", label: "Lien CTA", type: "text", help: "Choisis une page interne ou colle une URL HTTPS." },
       { name: "published", label: "Publie", type: "checkbox" },
-      { name: "order", label: "Ordre", type: "number" }
     ]
   },
   links: {
@@ -164,19 +158,19 @@ export const adminResources = {
     titleField: "label",
     fields: [
       { name: "label", label: "Label", type: "text", required: true },
-      { name: "slug", label: "Slug de tracking", type: "text", required: true },
       { name: "url", label: "URL destination", type: "url", required: true },
       { name: "description", label: "Accroche", type: "textarea", help: "Texte court affiche sur les cartes partenaires." },
       { name: "ctaLabel", label: "Libelle CTA", type: "text", help: "Exemple : Ouvrir un compte." },
-      { name: "brandColor", label: "Couleur marque", type: "text", help: "Hexadecimal, par exemple #ff6b00." },
+      { name: "imageUrl", label: "Visuel publicitaire", type: "text", help: "Choisis une bannière de la médiathèque, importe-la ou colle son URL HTTPS." },
+      { name: "brandColor", label: "Couleur marque", type: "color", help: "Choisis la couleur de la marque pour l'aperçu et les cartes." },
       {
         name: "placement",
         label: "Position",
         type: "select",
         options: [
-          { label: "Article haut et bas", value: "ARTICLE_BOTH" },
-          { label: "Article haut", value: "ARTICLE_TOP" },
-          { label: "Article bas", value: "ARTICLE_BOTTOM" }
+          { label: "Avant le contenu (bannière large)", value: "ARTICLE_TOP" },
+          { label: "Après le contenu", value: "ARTICLE_BOTTOM" },
+          { label: "Avant et après le contenu", value: "ARTICLE_BOTH" }
         ]
       },
       {
@@ -216,13 +210,13 @@ export const adminResources = {
     label: "Redirections",
     singular: "redirection",
     collection: "redirects",
-    description: "Redirige une ancienne URL vers une nouvelle pour eviter les erreurs 404 et garder le SEO.",
+    description: "Quand une ancienne adresse est visitée, le visiteur est envoyé automatiquement vers la nouvelle. Cela évite les erreurs 404 et conserve le référencement.",
     titleField: "source",
     fields: [
-      { name: "source", label: "Source", type: "text", required: true },
-      { name: "destination", label: "Destination", type: "text", required: true },
-      { name: "permanent", label: "Permanente", type: "checkbox" },
-      { name: "active", label: "Active", type: "checkbox" }
+      { name: "source", label: "Ancienne adresse", type: "text", required: true, help: "Exemple : /ancien-article. Ne mets pas le nom de domaine." },
+      { name: "destination", label: "Nouvelle adresse", type: "text", required: true, help: "Exemple : /blog/nouvel-article ou https://..." },
+      { name: "permanent", label: "Redirection permanente (recommandé pour le SEO)", type: "checkbox" },
+      { name: "active", label: "Activer cette redirection", type: "checkbox" }
     ]
   },
   settings: {
@@ -230,7 +224,7 @@ export const adminResources = {
     label: "Parametres",
     singular: "parametre",
     collection: "settings",
-    description: "Parametres site, SEO, contact et securite.",
+    description: "Réglages techniques historiques, consultables seulement. Les réglages actifs du site sont gérés par les variables de déploiement (domaine, email, sécurité) et les rubriques dédiées ; cette zone est verrouillée pour éviter des modifications sans effet.",
     titleField: "key",
     fields: [
       { name: "key", label: "Cle", type: "text", required: true },
@@ -249,7 +243,7 @@ export const adminResources = {
     singular: "utilisateur",
     collection: "users",
     allowDelete: false,
-    description: "Utilisateurs admin et roles simples.",
+    description: "Comptes d’administration : Administrateur (tout), Éditeur (contenu et médias), Responsable de contenu, Responsable médias et Auteur (ses propres articles).",
     titleField: "email",
     fields: [
       { name: "name", label: "Nom", type: "text", required: true },
@@ -259,7 +253,13 @@ export const adminResources = {
         name: "role",
         label: "Role",
         type: "select",
-        options: ["ADMIN", "EDITOR", "AUTHOR"].map((value) => ({ label: value, value }))
+        options: [
+          { label: "Administrateur — accès complet", value: "ADMIN" },
+          { label: "Éditeur — contenus et médias", value: "EDITOR" },
+          { label: "Responsable de contenu — articles, pages et offres", value: "CONTENT_MANAGER" },
+          { label: "Responsable médias — médiathèque et bannières", value: "MEDIA_MANAGER" },
+          { label: "Auteur — ses propres articles uniquement", value: "AUTHOR" }
+        ]
       },
       {
         name: "status",

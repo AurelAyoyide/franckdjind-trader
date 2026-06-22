@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { getActionLink, recordLinkClick } from "@/lib/data-store";
 import { getClientIp, hashValue, isSafeActionUrl, isSafeInternalPath } from "@/lib/security";
+import { prisma } from "@/lib/prisma";
 
 type GoRouteProps = {
   params: Promise<{
@@ -19,9 +20,22 @@ export async function GET(request: Request, { params }: GoRouteProps) {
 
   const requestHeaders = await headers();
   const ip = getClientIp(requestHeaders);
+  const ipHash = hashValue(ip);
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+  const recentClicks = await prisma.linkClick.count({
+    where: {
+      actionLinkId: link.id,
+      ipHash,
+      createdAt: { gte: oneMinuteAgo }
+    }
+  });
+
+  if (recentClicks >= 30) {
+    return NextResponse.redirect(new URL("/contact", request.url));
+  }
 
   await recordLinkClick(link.id, {
-    ipHash: hashValue(ip),
+    ipHash,
     userAgent: requestHeaders.get("user-agent") ?? undefined,
     referrer: requestHeaders.get("referer") ?? undefined
   });

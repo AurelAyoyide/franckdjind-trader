@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { submitTestimonialAction } from "@/app/temoignages/actions";
 import { PageHero } from "@/components/page-hero";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
+import { RatingSelector } from "@/components/rating-selector";
+import { TestimonialsGrid } from "@/components/testimonials-grid";
 import { getPublicData } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
 
@@ -15,12 +18,23 @@ export const metadata: Metadata = buildMetadata({
 type TestimonialsPageProps = {
   searchParams: Promise<{
     status?: string;
+    page?: string;
   }>;
 };
 
+const pageSize = 6;
+
+function pageHref(page: number) {
+  return page > 1 ? `/temoignages?page=${page}` : "/temoignages";
+}
+
 export default async function TestimonialsPage({ searchParams }: TestimonialsPageProps) {
-  const { status } = await searchParams;
+  const { status, page = "1" } = await searchParams;
   const { testimonials } = await getPublicData();
+  const currentPage = Math.max(1, Number(page) || 1);
+  const pageCount = Math.max(1, Math.ceil(testimonials.length / pageSize));
+  const safePage = Math.min(currentPage, pageCount);
+  const paginatedTestimonials = testimonials.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <>
@@ -31,29 +45,29 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
       />
       <section className="site-shell py-12 md:py-16">
         {testimonials.length ? (
-          <div className="grid gap-5 md:grid-cols-3">
-            {testimonials.map((testimonial) => (
-              <figure className="flex min-h-72 flex-col rounded-lg border border-line bg-surface p-6" key={testimonial.name}>
-                <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
-                <blockquote className="mt-5 flex-1 text-base font-semibold leading-8 text-pretty">
-                  &quot;{testimonial.quote}&quot;
-                </blockquote>
-                <figcaption className="mt-6 border-t border-line pt-4 text-sm text-muted">
-                  <span className="font-black text-foreground">{testimonial.name}</span>
-                  <span className="block">{testimonial.role}</span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          <TestimonialsGrid testimonials={paginatedTestimonials} />
         ) : (
           <div className="rounded-lg border border-line bg-surface p-6 md:p-8">
             <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
             <h2 className="mt-4 text-2xl font-black">Aucun temoignage public valide pour le moment.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-              Les avis soumis apparaitront ici automatiquement et resteront moderables dans l&apos;admin.
+              Les avis soumis restent invisibles jusqu&apos;à leur approbation dans l&apos;administration.
             </p>
           </div>
         )}
+        {pageCount > 1 ? (
+          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination des témoignages">
+            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+              <Link
+                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
+                href={pageHref(pageNumber)}
+                key={pageNumber}
+              >
+                {pageNumber}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
       </section>
       <section id="donner-avis" className="site-shell pb-16 md:pb-24">
         <div className="rounded-lg border border-line bg-surface p-6 md:p-8">
@@ -64,11 +78,11 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
             Proposer un temoignage.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
-            Les avis soumis ici sont publies automatiquement. L&apos;admin peut ensuite les modifier ou les retirer.
+            Ton avis est publié immédiatement. Il reste identifiable dans l&apos;administration et peut être désactivé à tout moment si nécessaire.
           </p>
           {status === "sent" ? (
             <p className="mt-5 rounded-md border border-market/30 bg-market/10 px-3 py-2 text-sm font-semibold text-market">
-              Avis recu et publie.
+              Avis reçu et publié. Merci pour ton retour.
             </p>
           ) : null}
           {status === "invalid" ? (
@@ -77,17 +91,17 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
             </p>
           ) : null}
           <form action={submitTestimonialAction} className="mt-6 grid gap-4">
+            <input aria-hidden="true" autoComplete="off" className="hidden" name="website" tabIndex={-1} type="text" />
             <div className="grid gap-4 sm:grid-cols-2">
               <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none focus:border-market" name="name" placeholder="Nom" required />
-              <input className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none focus:border-market" name="role" placeholder="Role ou formation suivie" />
+              <select className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none focus:border-market" defaultValue="Apprenant" name="role">
+                <option>Apprenant</option>
+                <option>Membre de la communaute</option>
+                <option>Client formation</option>
+                <option>Client accompagnement</option>
+              </select>
             </div>
-            <select className="min-h-12 rounded-md border border-line bg-background px-4 text-foreground outline-none focus:border-market" defaultValue="5" name="rating">
-              <option value="5">5/5</option>
-              <option value="4">4/5</option>
-              <option value="3">3/5</option>
-              <option value="2">2/5</option>
-              <option value="1">1/5</option>
-            </select>
+            <RatingSelector />
             <textarea className="min-h-36 rounded-md border border-line bg-background px-4 py-3 text-foreground outline-none focus:border-market" name="quote" placeholder="Ton retour d'experience..." required />
             <PendingSubmitButton className="min-h-12 rounded-md bg-market text-on-market hover:bg-market-strong" pendingLabel="Envoi...">
               Envoyer l&apos;avis

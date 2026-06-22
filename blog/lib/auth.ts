@@ -11,11 +11,7 @@ import { readData } from "@/lib/data-store";
 const sessionMaxAge = 60 * 60 * 8;
 
 function getAdminEmail() {
-  return process.env.ADMIN_EMAIL ?? "admin@example.com";
-}
-
-function getDevPassword() {
-  return process.env.NODE_ENV === "production" ? undefined : "Admin12345!";
+  return process.env.ADMIN_EMAIL?.trim().toLowerCase();
 }
 
 async function isValidPassword(password: string) {
@@ -25,7 +21,7 @@ async function isValidPassword(password: string) {
     return bcrypt.compare(password, hash);
   }
 
-  const plainPassword = process.env.ADMIN_PASSWORD ?? getDevPassword();
+  const plainPassword = process.env.ADMIN_PASSWORD;
 
   if (!plainPassword) {
     return false;
@@ -55,7 +51,9 @@ export async function validateAdminCredentials(email: string, password: string) 
     };
   }
 
-  if (normalizedEmail !== getAdminEmail().toLowerCase()) {
+  const configuredAdminEmail = getAdminEmail();
+
+  if (!configuredAdminEmail || normalizedEmail !== configuredAdminEmail) {
     return null;
   }
 

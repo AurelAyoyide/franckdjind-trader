@@ -1,0 +1,19 @@
+[Unit]
+Description=Bono Trading Next.js application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/bonotrading/blog
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/bonotrading/blog/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -2,15 +2,15 @@ import { absoluteUrl } from "@/lib/utils";
 
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME ?? "Bono Trading",
-  title: "Bono Trading - Blog trading, formation et discipline de marche",
+  title: "Bono Trading — apprendre le trading avec méthode",
   description:
-    "Un blog professionnel pour apprendre le trading avec methode, prudence et clarte. Articles, formations, temoignages et contact.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    "Articles, méthodes et accompagnements pour apprendre le trading avec un cadre clair, une gestion du risque responsable et une routine durable.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://127.0.0.1:3001",
   telegramUrl: "https://t.me/Bonotrading",
   whatsappUrl: "https://wa.me/22961835529",
   telegramPath: "/go/telegram",
   whatsappPath: "/go/whatsapp",
-  email: process.env.CONTACT_TO_EMAIL ?? "contact@example.com",
+  email: process.env.CONTACT_TO_EMAIL ?? "contact@bonotrading.com",
   heroImage: "/hero-trading-desk.png"
 };
 
@@ -32,6 +32,7 @@ export type Article = {
   category: Category;
   tags: Tag[];
   publishedAt: string;
+  updatedAt?: string;
   readTime: string;
   featured?: boolean;
   image: string;
@@ -223,6 +224,9 @@ export const testimonials = [
 ];
 
 export const marketPairs = [
+  { name: "EUR/USD", value: "1.08", change: "Forex" },
+  { name: "GBP/USD", value: "1.27", change: "Forex" },
+  { name: "XAU/USD", value: "2 340", change: "Or" },
   { name: "Volatility 75", value: "12 750.42", change: "+2.45%" },
   { name: "Boom 1000", value: "11 204.10", change: "+1.18%" },
   { name: "Crash 500", value: "8 450.80", change: "-0.62%" },
@@ -282,6 +286,8 @@ export function articleJsonLd(article: Article) {
     description: article.excerpt,
     image: absoluteUrl(article.image),
     datePublished: article.publishedAt,
+    dateModified: article.updatedAt || article.publishedAt,
+    mainEntityOfPage: absoluteUrl(`/blog/${article.slug}`),
     author: {
       "@type": "Person",
       name: article.author

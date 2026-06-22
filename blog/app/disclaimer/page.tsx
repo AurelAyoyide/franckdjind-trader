@@ -28,11 +28,37 @@ export default function DisclaimerPage() {
             </p>
           </section>
           <section>
+            <h2 className="text-2xl font-black text-foreground">Aucune promesse de résultat</h2>
+            <p className="mt-3">
+              Les exemples, graphiques, méthodes et retours d&apos;expérience ne garantissent
+              aucun gain. Les performances passées, réelles ou simulées, ne préjugent pas
+              des performances futures. Les résultats dépendent notamment du marché, du
+              capital, de l&apos;expérience, des coûts et de la capacité à respecter un plan.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-2xl font-black text-foreground">Décision personnelle</h2>
+            <p className="mt-3">
+              Avant toute décision, évalue tes connaissances, ta situation financière et
+              le niveau de risque que tu peux réellement supporter. Si nécessaire,
+              rapproche-toi d&apos;un professionnel autorisé à fournir un conseil adapté à ta
+              situation. Ne finance jamais une activité de trading avec de l&apos;argent dont tu as besoin.
+            </p>
+          </section>
+          <section>
             <h2 className="text-2xl font-black text-foreground">Risque de perte</h2>
             <p className="mt-3">
               Le trading peut entrainer la perte partielle ou totale du capital engage.
               Chaque visiteur reste responsable de ses decisions, de sa gestion du risque
               et de la verification des informations avant toute action.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-2xl font-black text-foreground">Plateformes et partenaires</h2>
+            <p className="mt-3">
+              Les services de plateformes, brokers ou partenaires restent soumis à leurs
+              propres conditions, frais, règles d&apos;éligibilité et restrictions géographiques.
+              Le visiteur doit les lire directement avant toute inscription ou transaction.
             </p>
           </section>
           <section>

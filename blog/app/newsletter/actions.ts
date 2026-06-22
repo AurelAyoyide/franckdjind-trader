@@ -48,6 +48,10 @@ export async function subscribeNewsletterAction(formData: FormData) {
   );
 
   if (existing) {
+    if (existing.active && existing.consent) {
+      redirect("/?newsletter=already#newsletter");
+    }
+
     existing.active = true;
     existing.consent = true;
     existing.name = parsed.data.name;

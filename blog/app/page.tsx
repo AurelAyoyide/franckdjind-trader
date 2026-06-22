@@ -11,6 +11,7 @@ import {
 import { ArticleCard } from "@/components/article-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { RatingStars } from "@/components/rating-stars";
 import { Reveal } from "@/components/reveal";
 import { HomeStructuredData } from "@/components/structured-data";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -18,10 +19,10 @@ import { siteConfig } from "@/lib/content";
 import { getPublicData } from "@/lib/data-store";
 
 const metrics = [
-  { value: "4", label: "axes de contenu" },
-  { value: "1%", label: "risque max cible" },
-  { value: "SEO", label: "structure native" },
-  { value: "Mobile", label: "priorite UX" }
+  { value: "01", label: "méthode avant l’action" },
+  { value: "02", label: "risque défini à l’avance" },
+  { value: "03", label: "routine simple à suivre" },
+  { value: "04", label: "revue pour progresser" }
 ];
 
 const process = [
@@ -62,14 +63,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <Reveal>
               <div className="inline-flex items-center gap-3 rounded-lg border border-white/18 bg-black/55 px-3 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[0_18px_45px_rgba(0,0,0,0.25)]">
                 <span className="h-2 w-2 rounded-full bg-market" />
-                Blog trading + formation
+                Éducation et accompagnement trading
               </div>
               <h1 className="mt-7 text-5xl font-black leading-[0.98] tracking-tight text-white text-balance sm:text-6xl lg:text-7xl">
-                Apprendre le trading avec une methode claire, pas avec du bruit.
+                Apprendre le trading avec méthode, pas avec du bruit.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-white/76 md:text-lg">
-                Articles, routines, risk management et accompagnement pour les traders qui
-                veulent progresser avec discipline, surtout sur mobile, sans perdre le sens du marche.
+                Des repères concrets pour préparer une séance, gérer le risque et faire progresser
+                sa discipline. Sans promesse de gain, avec une approche pensée pour durer.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href="/blog" className="w-full sm:w-auto" showArrow>
@@ -80,7 +81,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   className="w-full sm:w-auto"
                   variant="hero"
                 >
-                  Voir les formations
+                  Découvrir les services
                 </ButtonLink>
               </div>
             </Reveal>
@@ -108,13 +109,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               Article a la une
             </p>
             <h2 className="mt-4 text-3xl font-black leading-tight text-balance md:text-5xl">
-              Un contenu utile avant d&apos;etre spectaculaire.
+              Des repères utiles avant d&apos;être spectaculaires.
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
             <p className="text-base leading-8 text-muted">
-              Le blog sert d&apos;entree SEO, mais aussi de preuve de serieux : chaque article
-              doit aider le visiteur a mieux reflechir avant de cliquer sur un bouton.
+              Chaque article part d&apos;une situation concrète : préparer un scénario, relire une
+              perte, comprendre une session ou limiter le sur-trading. L&apos;objectif est de mieux
+              décider, pas de multiplier les signaux.
             </p>
           </Reveal>
         </div>
@@ -152,11 +154,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               Methode
             </p>
             <h2 className="mt-4 text-3xl font-black leading-tight text-balance md:text-5xl">
-              Une experience pensee pour lire vite, comprendre mieux, agir moins vite.
+              Une méthode en quatre étapes pour garder le cap.
             </h2>
             <p className="mt-6 text-base leading-8 text-muted">
-              Sur mobile, les visiteurs doivent trouver rapidement un article, comprendre
-              le positionnement et acceder au contact sans se battre avec l&apos;interface.
+              Le trading devient plus lisible quand les décisions suivent le même ordre :
+              observer, préparer, risquer peu et apprendre de l&apos;exécution. C&apos;est ce cadre que
+              les contenus et services aident à installer.
             </p>
           </Reveal>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -178,10 +181,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <Reveal>
             <p className="text-xs font-black uppercase tracking-[0.28em] text-market">
-              Formations
+              Services
             </p>
             <h2 className="mt-4 text-3xl font-black leading-tight text-balance md:text-5xl">
-              Des offres simples a comprendre, pas un catalogue confus.
+              Des services simples à comprendre, pas un catalogue confus.
             </h2>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <ButtonLink href="/formations" showArrow>
@@ -220,7 +223,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.28em] text-amber">
-                  Categories
+              Catégories
                 </p>
                 <h2 className="mt-4 text-3xl font-black leading-tight md:text-5xl">
                   Les portes d&apos;entree du blog.
@@ -232,7 +235,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </div>
           </Reveal>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((category, index) => (
+            {categories.slice(0, 4).map((category, index) => (
               <Reveal delay={index * 0.04} key={category.slug}>
                 <Link
                   className="group block min-h-48 rounded-lg border border-line bg-surface p-5 transition hover:-translate-y-1 hover:border-line-strong"
@@ -255,10 +258,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan">
-                Temoignages
+                Témoignages
               </p>
               <h2 className="mt-4 text-3xl font-black leading-tight text-balance md:text-5xl">
-                Ce que les apprenants retiennent vraiment.
+                Des retours précis, publiés avec transparence.
               </h2>
             </div>
             <ButtonLink href="/temoignages" variant="secondary">
@@ -268,10 +271,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </Reveal>
         {testimonials.length ? (
           <div className="grid gap-5 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
+            {testimonials.slice(0, 3).map((testimonial, index) => (
               <Reveal delay={index * 0.05} key={testimonial.name}>
                 <figure className="flex h-full min-h-72 flex-col rounded-lg border border-line bg-surface p-5">
-                  <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
+                  <div className="flex items-center justify-between gap-3">
+                    <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
+                    <RatingStars compact rating={testimonial.rating} />
+                  </div>
                   <blockquote className="mt-5 flex-1 text-base font-semibold leading-8 text-pretty">
                     &quot;{testimonial.quote}&quot;
                   </blockquote>
@@ -288,7 +294,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <Sparkles className="h-5 w-5 text-cyan" aria-hidden="true" />
             <h3 className="mt-4 text-2xl font-black">Aucun avis public valide pour le moment.</h3>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
-              Les temoignages soumis apparaitront ici automatiquement. L&apos;admin peut ensuite les moderer.
+              Les témoignages sont publiés avec l&apos;accord de leur auteur et peuvent être désactivés depuis l&apos;administration si nécessaire.
             </p>
             <div className="mt-6">
               <ButtonLink href="/temoignages#donner-avis" variant="secondary">
@@ -311,8 +317,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 Besoin d&apos;un cadre avant de commencer ?
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-8 text-muted">
-                Le parcours doit rester simple : lire, comprendre, poser une question,
-                rejoindre la communaute ou demander une orientation.
+                Décris ton niveau, ton objectif et ton principal blocage. Une demande claire permet
+                de t&apos;orienter vers le bon contenu ou le bon service.
               </p>
             </div>
             <div className="flex flex-col justify-end gap-3 sm:flex-row md:flex-col">

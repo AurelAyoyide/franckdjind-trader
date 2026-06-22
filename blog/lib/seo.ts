@@ -8,6 +8,7 @@ type SeoInput = {
   path?: string;
   image?: string;
   noIndex?: boolean;
+  follow?: boolean;
 };
 
 export function buildMetadata({
@@ -15,7 +16,8 @@ export function buildMetadata({
   description = siteConfig.description,
   path = "/",
   image = siteConfig.heroImage,
-  noIndex = false
+  noIndex = false,
+  follow = true
 }: SeoInput = {}): Metadata {
   const fullTitle = title === siteConfig.title ? title : `${title} | ${siteConfig.name}`;
   const url = absoluteUrl(path);
@@ -29,7 +31,7 @@ export function buildMetadata({
     },
     robots: {
       index: !noIndex,
-      follow: !noIndex
+      follow: !noIndex && follow
     },
     openGraph: {
       title: fullTitle,

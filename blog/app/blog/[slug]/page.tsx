@@ -45,7 +45,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     description: article.seoDescription || article.excerpt,
     path: `/blog/${article.slug}`,
     image: article.image,
-    noIndex: !article.robotsIndex
+    noIndex: !article.robotsIndex,
+    follow: article.robotsFollow
   });
 }
 
@@ -65,6 +66,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     <>
       <article>
+        {topAffiliateLinks.length ? (
+          <div className="site-shell py-5">
+            <AffiliateCarousel links={topAffiliateLinks} title="Partenaires à découvrir" variant="banner" />
+          </div>
+        ) : null}
         <header className="border-b border-line bg-background-soft">
           <div className="site-shell py-10 md:py-16">
             <Link
@@ -98,7 +104,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 sizes="(min-width: 1180px) 1180px, 100vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/55 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
             </div>
           </div>
         </header>
@@ -106,14 +112,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="site-shell grid gap-10 py-12 md:grid-cols-[minmax(0,760px)_280px] md:py-16">
           <div>
             <DisclaimerBanner />
-            <div className="mt-6">
-              <AffiliateCarousel links={topAffiliateLinks} title="Brokers partenaires a comparer" />
-            </div>
             <div className="mt-10">
               <RichContent content={article.content} />
-            </div>
-            <div className="mt-10">
-              <AffiliateCarousel links={bottomAffiliateLinks} title="Passer a l'action avec un partenaire" />
             </div>
           </div>
 
@@ -138,18 +138,38 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   Poser une question
                 </ButtonLink>
                 <ButtonLink href="/formations" variant="secondary">
-                  Voir les formations
+                  Voir les services
                 </ButtonLink>
               </div>
             </div>
           </aside>
         </div>
+        {bottomAffiliateLinks.length ? (
+          <div className="site-shell pb-12 md:pb-16">
+            <AffiliateCarousel links={bottomAffiliateLinks} title="Partenaires à découvrir" variant="banner" />
+          </div>
+        ) : null}
       </article>
 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: escapeJsonForHtml(articleJsonLd(article))
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: escapeJsonForHtml({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Accueil", item: "/" },
+              { "@type": "ListItem", position: 2, name: "Blog", item: "/blog" },
+              { "@type": "ListItem", position: 3, name: article.category.title, item: `/categorie/${article.category.slug}` },
+              { "@type": "ListItem", position: 4, name: article.title, item: `/blog/${article.slug}` }
+            ]
+          })
         }}
       />
     </>

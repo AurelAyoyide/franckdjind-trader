@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { unstable_noStore as noStore } from "next/cache";
+import { cache } from "react";
 import {
   articles,
   categories,
@@ -26,6 +27,9 @@ export type StoredArticle = Article & {
   seoDescription?: string;
   robotsIndex: boolean;
   robotsFollow: boolean;
+  titleEn?: string;
+  excerptEn?: string;
+  contentEn?: string;
 };
 
 export type StoredCategory = Category & {
@@ -86,6 +90,7 @@ export type StoredActionLink = {
   type: "CONTACT" | "FORMATION" | "AFFILIATE" | "SOCIAL" | "OTHER";
   description?: string;
   ctaLabel?: string;
+  imageUrl?: string;
   brandColor?: string;
   placement?: "ARTICLE_TOP" | "ARTICLE_BOTTOM" | "ARTICLE_BOTH";
   noFollow: boolean;
@@ -134,7 +139,7 @@ export type StoredUser = {
   name: string;
   email: string;
   passwordHash?: string;
-  role: "ADMIN" | "EDITOR" | "AUTHOR";
+  role: "ADMIN" | "EDITOR" | "CONTENT_MANAGER" | "MEDIA_MANAGER" | "AUTHOR";
   status: "ACTIVE" | "DISABLED";
 };
 
@@ -186,6 +191,8 @@ const defaultImage = "/hero-trading-desk.png";
 const roleLabels = {
   ADMIN: "Administrateur",
   EDITOR: "Editeur",
+  CONTENT_MANAGER: "Responsable de contenu",
+  MEDIA_MANAGER: "Responsable médias",
   AUTHOR: "Auteur"
 } as const;
 
@@ -370,7 +377,7 @@ export function defaultData(): BlogData {
       {
         id: "user_admin",
         name: "Administrateur",
-        email: process.env.ADMIN_EMAIL ?? "admin@example.com",
+        email: process.env.ADMIN_EMAIL ?? "admin@invalid.local",
         role: "ADMIN",
         status: "ACTIVE"
       }
@@ -386,7 +393,7 @@ export async function readData(): Promise<BlogData> {
   assertDatabaseConfigured();
 
   const [posts, dbCategories, dbTags, pages, dbServices, dbTestimonials, actionLinks, media, contactMessages, redirects, settings, users, activityLogs, linkClicks, subscribers] =
-    await prisma.$transaction([
+    await Promise.all([
       prisma.post.findMany({
         include: { category: true, tags: { include: { tag: true } }, coverMedia: true, seoMetadata: true, author: { include: { role: true } } },
         orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }]
@@ -406,17 +413,32 @@ export async function readData(): Promise<BlogData> {
       prisma.linkClick.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
       prisma.subscriber.findMany({ orderBy: { createdAt: "desc" } })
     ]);
+  const actionLinkImages = await prisma.$queryRaw<Array<{ id: string; imageUrl: string | null }>>`
+    SELECT "id", "imageUrl" FROM "ActionLink"
+  `;
+  const actionLinkImageById = new Map(actionLinkImages.map((link) => [link.id, link.imageUrl]));
 
   return {
-    posts: posts.map((post) => ({
+    posts: posts.map((post) => {
+      const localizedPost = post as typeof post & {
+        titleEn?: string | null;
+        excerptEn?: string | null;
+        contentEn?: string | null;
+      };
+
+      return {
       id: post.id,
       title: post.title,
+      titleEn: localizedPost.titleEn ?? undefined,
       slug: post.slug,
       excerpt: post.excerpt ?? "",
+      excerptEn: localizedPost.excerptEn ?? undefined,
       content: post.content,
+      contentEn: localizedPost.contentEn ?? undefined,
       status: post.status,
       author: post.authorLabel ?? post.author.name ?? post.author.email,
       publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
+      updatedAt: post.updatedAt.toISOString().slice(0, 10),
       image: post.coverMedia?.url ?? defaultImage,
       category: post.category
         ? { id: post.category.id, title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
@@ -429,7 +451,8 @@ export async function readData(): Promise<BlogData> {
       seoDescription: post.seoMetadata?.description ?? post.excerpt ?? "",
       robotsIndex: post.seoMetadata?.robotsIndex ?? true,
       robotsFollow: post.seoMetadata?.robotsFollow ?? true
-    })),
+    };
+    }),
     categories: dbCategories.map((category) => ({
       id: category.id,
       title: category.name,
@@ -475,7 +498,7 @@ export async function readData(): Promise<BlogData> {
       name: testimonial.name,
       role: testimonial.role ?? "",
       quote: testimonial.quote,
-      rating: testimonial.rating ?? 5,
+      rating: Math.min(5, Math.max(1, (testimonial.rating ?? 50) / 10)),
       published: testimonial.published,
       order: testimonial.order,
       createdAt: iso(testimonial.createdAt)
@@ -488,6 +511,7 @@ export async function readData(): Promise<BlogData> {
       type: link.type,
       description: link.description ?? undefined,
       ctaLabel: link.ctaLabel ?? undefined,
+      imageUrl: actionLinkImageById.get(link.id) ?? undefined,
       brandColor: link.brandColor ?? undefined,
       placement: link.placement,
       noFollow: link.noFollow,
@@ -568,10 +592,6 @@ async function passwordForUser(input: StoredUser, existingHash?: string) {
     }
   }
 
-  if (process.env.NODE_ENV !== "production" && input.role === "ADMIN") {
-    return { hash: await bcrypt.hash("Admin12345!", 12), disabled: false };
-  }
-
   return { hash: await bcrypt.hash(randomBytes(32).toString("hex"), 12), disabled: true };
 }
 
@@ -609,7 +629,7 @@ function safePostMedia(data: BlogData) {
   return [...media.values()];
 }
 
-export async function writeData(data: BlogData) {
+export async function writeData(data: BlogData, options: { prune?: boolean; preserveInteractionData?: boolean } = {}) {
   assertDatabaseConfigured();
 
   await prisma.$transaction(async (tx) => {
@@ -637,11 +657,17 @@ export async function writeData(data: BlogData) {
       const existingById = await tx.user.findUnique({ where: { id: input.id } });
       const existingByEmail = await tx.user.findUnique({ where: { email } });
 
-      if (existingById && existingByEmail && existingById.id !== existingByEmail.id) {
+      if (
+        existingById &&
+        existingByEmail &&
+        existingById.id !== existingByEmail.id &&
+        options.prune !== false &&
+        !options.preserveInteractionData
+      ) {
         throw new Error("An account already uses this email address.");
       }
 
-      const existing = existingById ?? existingByEmail;
+      const existing = existingByEmail ?? existingById;
       const password = await passwordForUser(input, existing?.passwordHash);
       const roleName = roles.has(input.role) ? input.role : "AUTHOR";
       const user = existing
@@ -675,36 +701,42 @@ export async function writeData(data: BlogData) {
     }
 
     const categoryIds = new Set<string>();
+    const categoryBySlug = new Map<string, string>();
     for (const input of data.categories) {
-      categoryIds.add(input.id);
+      const existingById = await tx.category.findUnique({ where: { id: input.id }, select: { id: true } });
+      const existingBySlug = await tx.category.findUnique({ where: { slug: input.slug }, select: { id: true } });
+      const existingCategory = existingById ?? existingBySlug;
       const seo = seoData({ title: input.title, excerpt: input.description, seoTitle: input.seoTitle, seoDescription: input.seoDescription });
-      await tx.category.upsert({
-        where: { id: input.id },
-        update: {
-          name: input.title,
-          slug: input.slug,
-          description: input.description || null,
-          seoMetadata: { upsert: { update: seo, create: seo } }
-        },
-        create: {
-          id: input.id,
-          name: input.title,
-          slug: input.slug,
-          description: input.description || null,
-          seoMetadata: { create: seo }
-        }
-      });
+      const baseData = {
+        name: input.title,
+        slug: input.slug,
+        description: input.description || null
+      };
+      const category = existingCategory
+        ? await tx.category.update({
+            where: { id: existingCategory.id },
+            data: { ...baseData, seoMetadata: { upsert: { update: seo, create: seo } } }
+          })
+        : await tx.category.create({
+            data: { id: input.id, ...baseData, seoMetadata: { create: seo } }
+          });
+      categoryIds.add(category.id);
+      categoryBySlug.set(input.slug, category.id);
     }
 
     const tagIds = new Set<string>();
+    const tagBySlug = new Map<string, string>();
     for (const input of data.tags) {
-      tagIds.add(input.id);
+      const existingById = await tx.tag.findUnique({ where: { id: input.id }, select: { id: true } });
+      const existingBySlug = await tx.tag.findUnique({ where: { slug: input.slug }, select: { id: true } });
+      const existingTag = existingById ?? existingBySlug;
       const seo = seoData({ title: input.title, excerpt: input.description, seoTitle: input.seoTitle, seoDescription: input.seoDescription });
-      await tx.tag.upsert({
-        where: { id: input.id },
-        update: { name: input.title, slug: input.slug, description: input.description || null, seoMetadata: { upsert: { update: seo, create: seo } } },
-        create: { id: input.id, name: input.title, slug: input.slug, description: input.description || null, seoMetadata: { create: seo } }
-      });
+      const baseData = { name: input.title, slug: input.slug, description: input.description || null };
+      const tag = existingTag
+        ? await tx.tag.update({ where: { id: existingTag.id }, data: { ...baseData, seoMetadata: { upsert: { update: seo, create: seo } } } })
+        : await tx.tag.create({ data: { id: input.id, ...baseData, seoMetadata: { create: seo } } });
+      tagIds.add(tag.id);
+      tagBySlug.set(input.slug, tag.id);
     }
 
     const mediaItems = safePostMedia(data);
@@ -720,11 +752,12 @@ export async function writeData(data: BlogData) {
       mediaByUrl.set(input.url, item.id);
     }
 
-    const categoryBySlug = new Map(data.categories.map((category) => [category.slug, category.id]));
-    const tagBySlug = new Map(data.tags.map((tag) => [tag.slug, tag.id]));
     const postIds = new Set<string>();
     for (const input of data.posts) {
-      postIds.add(input.id);
+      const existingById = await tx.post.findUnique({ where: { id: input.id }, select: { id: true } });
+      const existingBySlug = await tx.post.findUnique({ where: { slug: input.slug }, select: { id: true } });
+      const existingPost = existingById ?? existingBySlug;
+      postIds.add(existingPost?.id ?? input.id);
       const matchingAuthor = [...storedUsers.values()].find(
         (user) => user.name?.trim().toLowerCase() === input.author?.trim().toLowerCase() || user.email === input.author?.trim().toLowerCase()
       );
@@ -745,26 +778,31 @@ export async function writeData(data: BlogData) {
       };
       const authorId = matchingAuthor?.id ?? fallbackAuthor.id;
       const coverMediaId = mediaByUrl.get(input.image);
-      await tx.post.upsert({
-        where: { id: input.id },
-        update: {
-          ...baseData,
-          author: { connect: { id: authorId } },
-          category: categoryId ? { connect: { id: categoryId } } : { disconnect: true },
-          coverMedia: coverMediaId ? { connect: { id: coverMediaId } } : { disconnect: true },
-          tags: { deleteMany: {}, create: tagIdsForPost.map((tagId) => ({ tagId })) },
-          seoMetadata: { upsert: { update: seo, create: seo } }
-        },
-        create: {
-          id: input.id,
-          ...baseData,
-          author: { connect: { id: authorId } },
-          ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
-          ...(coverMediaId ? { coverMedia: { connect: { id: coverMediaId } } } : {}),
-          tags: { create: tagIdsForPost.map((tagId) => ({ tagId })) },
-          seoMetadata: { create: seo }
-        }
-      });
+      if (existingPost) {
+        await tx.post.update({
+          where: { id: existingPost.id },
+          data: {
+            ...baseData,
+            author: { connect: { id: authorId } },
+            category: categoryId ? { connect: { id: categoryId } } : { disconnect: true },
+            coverMedia: coverMediaId ? { connect: { id: coverMediaId } } : { disconnect: true },
+            tags: { deleteMany: {}, create: tagIdsForPost.map((tagId) => ({ tagId })) },
+            seoMetadata: { upsert: { update: seo, create: seo } }
+          }
+        });
+      } else {
+        await tx.post.create({
+          data: {
+            id: input.id,
+            ...baseData,
+            author: { connect: { id: authorId } },
+            ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+            ...(coverMediaId ? { coverMedia: { connect: { id: coverMediaId } } } : {}),
+            tags: { create: tagIdsForPost.map((tagId) => ({ tagId })) },
+            seoMetadata: { create: seo }
+          }
+        });
+      }
     }
 
     const pageIds = new Set<string>();
@@ -781,7 +819,10 @@ export async function writeData(data: BlogData) {
 
     const serviceIds = new Set<string>();
     for (const input of data.services) {
-      serviceIds.add(input.id);
+      const existingById = await tx.service.findUnique({ where: { id: input.id }, select: { id: true } });
+      const existingBySlug = await tx.service.findUnique({ where: { slug: input.slug }, select: { id: true } });
+      const existingService = existingById ?? existingBySlug;
+      serviceIds.add(existingService?.id ?? input.id);
       const baseData = {
         title: input.title,
         slug: input.slug,
@@ -793,7 +834,11 @@ export async function writeData(data: BlogData) {
         order: input.order,
         published: input.published
       };
-      await tx.service.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
+      if (existingService) {
+        await tx.service.update({ where: { id: existingService.id }, data: baseData });
+      } else {
+        await tx.service.create({ data: { id: input.id, ...baseData } });
+      }
     }
 
     const testimonialIds = new Set<string>();
@@ -803,7 +848,7 @@ export async function writeData(data: BlogData) {
         name: input.name,
         role: input.role || null,
         quote: input.quote,
-        rating: Math.min(5, Math.max(1, input.rating)),
+        rating: Math.round(Math.min(5, Math.max(1, input.rating)) * 10),
         published: input.published,
         order: input.order
       };
@@ -830,6 +875,11 @@ export async function writeData(data: BlogData) {
         active: input.active
       };
       await tx.actionLink.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
+      await tx.$executeRaw`
+        UPDATE "ActionLink"
+        SET "imageUrl" = ${isSafeMediaUrl(input.imageUrl ?? "") ? input.imageUrl ?? null : null}
+        WHERE "id" = ${input.id}
+      `;
     }
 
     const messageIds = new Set<string>();
@@ -889,22 +939,27 @@ export async function writeData(data: BlogData) {
       await tx.subscriber.upsert({ where: { email }, update: baseData, create: { id: input.id, email, ...baseData, createdAt: dateOrNull(input.createdAt) ?? undefined } });
     }
 
-    await tx.post.updateMany({ where: { categoryId: { notIn: [...categoryIds] } }, data: { categoryId: null } });
-    await tx.post.updateMany({ where: { coverMediaId: { notIn: [...mediaIds] } }, data: { coverMediaId: null } });
-    await tx.post.deleteMany({ where: { id: { notIn: [...postIds] } } });
-    await tx.page.deleteMany({ where: { id: { notIn: [...pageIds] } } });
-    await tx.service.deleteMany({ where: { id: { notIn: [...serviceIds] } } });
-    await tx.testimonial.deleteMany({ where: { id: { notIn: [...testimonialIds] } } });
-    await tx.actionLink.deleteMany({ where: { id: { notIn: [...actionLinkIds] } } });
-    await tx.contactMessage.deleteMany({ where: { id: { notIn: [...messageIds] } } });
-    await tx.redirect.deleteMany({ where: { id: { notIn: [...redirectIds] } } });
-    await tx.setting.deleteMany({ where: { key: { notIn: [...settingKeys, "__system_data_version"] } } });
-    await tx.activityLog.deleteMany({ where: { id: { notIn: [...activityLogIds] } } });
-    await tx.linkClick.deleteMany({ where: { id: { notIn: [...linkClickIds] } } });
-    await tx.subscriber.deleteMany({ where: { email: { notIn: [...subscriberEmails] } } });
-    await tx.tag.deleteMany({ where: { id: { notIn: [...tagIds] } } });
-    await tx.category.deleteMany({ where: { id: { notIn: [...categoryIds] } } });
-    await tx.media.deleteMany({ where: { id: { notIn: [...mediaIds] } } });
+    if (options.prune !== false) {
+      await tx.post.updateMany({ where: { categoryId: { notIn: [...categoryIds] } }, data: { categoryId: null } });
+      await tx.post.updateMany({ where: { coverMediaId: { notIn: [...mediaIds] } }, data: { coverMediaId: null } });
+      await tx.post.deleteMany({ where: { id: { notIn: [...postIds] } } });
+      await tx.page.deleteMany({ where: { id: { notIn: [...pageIds] } } });
+      await tx.service.deleteMany({ where: { id: { notIn: [...serviceIds] } } });
+      await tx.testimonial.deleteMany({ where: { id: { notIn: [...testimonialIds] } } });
+      await tx.actionLink.deleteMany({ where: { id: { notIn: [...actionLinkIds] } } });
+      await tx.redirect.deleteMany({ where: { id: { notIn: [...redirectIds] } } });
+      await tx.setting.deleteMany({ where: { key: { notIn: [...settingKeys, "__system_data_version"] } } });
+      await tx.tag.deleteMany({ where: { id: { notIn: [...tagIds] } } });
+      await tx.category.deleteMany({ where: { id: { notIn: [...categoryIds] } } });
+      await tx.media.deleteMany({ where: { id: { notIn: [...mediaIds] } } });
+
+      if (!options.preserveInteractionData) {
+        await tx.contactMessage.deleteMany({ where: { id: { notIn: [...messageIds] } } });
+        await tx.activityLog.deleteMany({ where: { id: { notIn: [...activityLogIds] } } });
+        await tx.linkClick.deleteMany({ where: { id: { notIn: [...linkClickIds] } } });
+        await tx.subscriber.deleteMany({ where: { email: { notIn: [...subscriberEmails] } } });
+      }
+    }
   }, { timeout: 20_000 });
 }
 
@@ -913,22 +968,121 @@ export async function addActivity(action: string, entity: string, entityId?: str
   await prisma.activityLog.create({ data: { action, entity, entityId } });
 }
 
-export async function getPublicData() {
-  const data = await readData();
+async function loadPublicData() {
+  noStore();
+  assertDatabaseConfigured();
+
+  const [posts, categories, tags, services, testimonials, actionLinks] = await Promise.all([
+    prisma.post.findMany({
+      where: {
+        status: "PUBLISHED",
+        OR: [{ publishedAt: null }, { publishedAt: { lte: new Date() } }]
+      },
+      include: {
+        category: true,
+        tags: { include: { tag: true } },
+        coverMedia: true,
+        seoMetadata: true,
+        author: { include: { role: true } }
+      },
+      orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }]
+    }),
+    prisma.category.findMany({ include: { seoMetadata: true }, where: { deletedAt: null }, orderBy: { name: "asc" } }),
+    prisma.tag.findMany({ include: { seoMetadata: true }, orderBy: { name: "asc" } }),
+    prisma.service.findMany({ where: { published: true }, orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
+    prisma.testimonial.findMany({ where: { published: true }, orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
+    prisma.actionLink.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } })
+  ]);
+  const publicActionLinkImages = await prisma.$queryRaw<Array<{ id: string; imageUrl: string | null }>>`
+    SELECT "id", "imageUrl" FROM "ActionLink" WHERE "active" = true
+  `;
+  const publicActionLinkImageById = new Map(publicActionLinkImages.map((link) => [link.id, link.imageUrl]));
 
   return {
-    ...data,
-    posts: data.posts
-      .filter((post) => post.status === "PUBLISHED")
-      .map((post) => ({ ...post, image: isSafeMediaUrl(post.image) ? post.image : defaultImage, readTime: estimateReadTime(post.content) })),
-    services: data.services
-      .filter((service) => service.published)
-      .map((service) => ({ ...service, ctaUrl: isSafeActionUrl(service.ctaUrl) ? service.ctaUrl : "/contact" }))
-      .sort((a, b) => a.order - b.order),
-    testimonials: data.testimonials.filter((testimonial) => testimonial.published).sort((a, b) => a.order - b.order),
-    actionLinks: data.actionLinks.filter((link) => link.active && isSafeActionUrl(link.url))
+    posts: posts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt ?? "",
+      content: post.content,
+      status: post.status,
+      author: post.authorLabel ?? post.author.name ?? post.author.email,
+      publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
+      updatedAt: post.updatedAt.toISOString().slice(0, 10),
+      image: isSafeMediaUrl(post.coverMedia?.url ?? defaultImage) ? post.coverMedia?.url ?? defaultImage : defaultImage,
+      category: post.category
+        ? { id: post.category.id, title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
+        : { id: "uncategorized", title: "Non classe", slug: "non-classe", description: "" },
+      tags: post.tags.map(({ tag }) => ({ id: tag.id, title: tag.name, slug: tag.slug })),
+      sections: markdownToSections(post.content),
+      featured: post.featured,
+      readTime: estimateReadTime(post.content),
+      seoTitle: post.seoMetadata?.title ?? post.title,
+      seoDescription: post.seoMetadata?.description ?? post.excerpt ?? "",
+      robotsIndex: post.seoMetadata?.robotsIndex ?? true,
+      robotsFollow: post.seoMetadata?.robotsFollow ?? true
+    })),
+    categories: categories.map((category) => ({
+      id: category.id,
+      title: category.name,
+      slug: category.slug,
+      description: category.description ?? "",
+      seoTitle: category.seoMetadata?.title ?? undefined,
+      seoDescription: category.seoMetadata?.description ?? undefined
+    })),
+    tags: tags.map((tag) => ({
+      id: tag.id,
+      title: tag.name,
+      slug: tag.slug,
+      description: tag.description ?? undefined,
+      seoTitle: tag.seoMetadata?.title ?? undefined,
+      seoDescription: tag.seoMetadata?.description ?? undefined
+    })),
+    services: services.map((service) => ({
+      id: service.id,
+      title: service.title,
+      slug: service.slug,
+      description: service.description,
+      content: service.content ?? "",
+      priceLabel: service.priceLabel ?? "",
+      ctaLabel: service.ctaLabel ?? "",
+      ctaUrl: isSafeActionUrl(service.ctaUrl ?? "") ? service.ctaUrl ?? "/contact" : "/contact",
+      order: service.order,
+      published: true
+    })),
+    testimonials: testimonials.map((testimonial) => ({
+      id: testimonial.id,
+      name: testimonial.name,
+      role: testimonial.role ?? "",
+      quote: testimonial.quote,
+      rating: testimonial.rating ?? 5,
+      published: true,
+      order: testimonial.order,
+      createdAt: iso(testimonial.createdAt)
+    })),
+    actionLinks: actionLinks
+      .filter((link) => isSafeActionUrl(link.url))
+      .map((link) => ({
+        id: link.id,
+        label: link.label,
+        slug: link.slug,
+        url: link.url,
+        type: link.type,
+        description: link.description ?? undefined,
+        ctaLabel: link.ctaLabel ?? undefined,
+        imageUrl: publicActionLinkImageById.get(link.id) ?? undefined,
+        brandColor: link.brandColor ?? undefined,
+        placement: link.placement,
+        noFollow: link.noFollow,
+        sponsored: link.sponsored,
+        active: true
+      }))
   };
 }
+
+// One page render often calls this from both its page and the shared footer.
+// React.cache deduplicates that work without serving stale editorial content.
+export const getPublicData = cache(loadPublicData);
 
 export async function getActionLink(slug: string) {
   assertDatabaseConfigured();

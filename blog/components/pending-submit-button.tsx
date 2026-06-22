@@ -25,6 +25,8 @@ export function PendingSubmitButton({
       )}
       disabled={pending}
       aria-disabled={pending}
+      aria-busy={pending}
+      data-pending={pending ? "true" : undefined}
       type="submit"
     >
       {pending ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}

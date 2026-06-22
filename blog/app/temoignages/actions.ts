@@ -10,7 +10,8 @@ const testimonialSchema = z.object({
   name: z.string().trim().min(2).max(120),
   role: z.string().trim().max(120).optional(),
   quote: z.string().trim().min(20).max(800),
-  rating: z.coerce.number().min(1).max(5)
+  rating: z.coerce.number().min(1).max(5),
+  website: z.string().max(0).optional()
 });
 
 export async function submitTestimonialAction(formData: FormData) {
@@ -24,7 +25,8 @@ export async function submitTestimonialAction(formData: FormData) {
     name: formData.get("name"),
     role: formData.get("role") || "Apprenant",
     quote: formData.get("quote"),
-    rating: formData.get("rating") || 5
+    rating: formData.get("rating") || 5,
+    website: formData.get("website") || undefined
   });
 
   if (!parsed.success) {

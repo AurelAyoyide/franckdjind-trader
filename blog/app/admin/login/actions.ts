@@ -43,7 +43,7 @@ export async function loginAction(formData: FormData) {
       new Date(log.createdAt).getTime() >= fifteenMinutesAgo
   );
 
-  if (recentFailures.length >= 8) {
+  if (recentFailures.length >= 5) {
     redirect("/admin/login?error=limited");
   }
 
