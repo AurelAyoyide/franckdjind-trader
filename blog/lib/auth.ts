@@ -10,26 +10,6 @@ import { readData } from "@/lib/data-store";
 
 const sessionMaxAge = 60 * 60 * 8;
 
-function getAdminEmail() {
-  return process.env.ADMIN_EMAIL?.trim().toLowerCase();
-}
-
-async function isValidPassword(password: string) {
-  const hash = process.env.ADMIN_PASSWORD_HASH;
-
-  if (hash) {
-    return bcrypt.compare(password, hash);
-  }
-
-  const plainPassword = process.env.ADMIN_PASSWORD;
-
-  if (!plainPassword) {
-    return false;
-  }
-
-  return password === plainPassword;
-}
-
 export async function validateAdminCredentials(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const data = await readData();
@@ -51,23 +31,7 @@ export async function validateAdminCredentials(email: string, password: string) 
     };
   }
 
-  const configuredAdminEmail = getAdminEmail();
-
-  if (!configuredAdminEmail || normalizedEmail !== configuredAdminEmail) {
-    return null;
-  }
-
-  const validPassword = await isValidPassword(password);
-
-  if (!validPassword) {
-    return null;
-  }
-
-  return {
-    email: normalizedEmail,
-    role: "ADMIN" as const,
-    name: "Administrateur"
-  };
+  return null;
 }
 
 export async function createAdminSession(session: AdminSession) {

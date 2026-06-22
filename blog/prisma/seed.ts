@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import { writeData } from "../lib/data-store";
 import { buildStarterContent } from "./starter-content";
@@ -28,16 +29,13 @@ const roleDefinitions = {
 } as const;
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const password = process.env.ADMIN_PASSWORD;
+  const email = process.env.CONTACT_TO_EMAIL?.trim().toLowerCase();
 
-  if (!email || (!process.env.ADMIN_PASSWORD_HASH && !password)) {
-    throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD_HASH (recommended) or ADMIN_PASSWORD before running the seed.");
+  if (!email) {
+    throw new Error("Set CONTACT_TO_EMAIL before running the seed.");
   }
 
-  const passwordForHash = password ?? "";
-  const passwordHash =
-    process.env.ADMIN_PASSWORD_HASH ?? (await bcrypt.hash(passwordForHash, 12));
+  const passwordHash = await bcrypt.hash(randomBytes(32).toString("base64url"), 12);
 
   const permissionIds = new Map<string, string>();
   for (const [key, label] of permissions) {

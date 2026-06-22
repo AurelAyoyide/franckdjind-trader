@@ -29,7 +29,7 @@ Date : 2026-06-18
 ## Points de production a confirmer
 
 - [ ] Configurer `AUTH_SECRET` avec au moins 32 caracteres.
-- [ ] Configurer `ADMIN_PASSWORD_HASH` ou `ADMIN_PASSWORD` avant le seed production.
+- [ ] Configurer `CONTACT_TO_EMAIL`, lancer le seed, puis choisir le mot de passe depuis « Mot de passe oublié ».
 - [ ] Configurer `RESEND_API_KEY`, `CONTACT_TO_EMAIL` et `CONTACT_FROM_EMAIL` pour l'envoi email.
 - [ ] Configurer `NEXT_IMAGE_REMOTE_HOSTS` pour les domaines d'images optimises par Next.
 - [ ] Fournir et configurer la vraie `DATABASE_URL`, puis executer la migration et l'import PostgreSQL.

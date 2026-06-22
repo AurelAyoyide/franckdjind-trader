@@ -26,7 +26,7 @@ async function main() {
 
   const data = JSON.parse(await readFile(source, "utf8")) as BlogData;
   if (!data.users.length) {
-    throw new Error("This legacy file has no administrator. For a new Bono Trading database, use npm run prisma:seed after configuring ADMIN_EMAIL and ADMIN_PASSWORD_HASH.");
+    throw new Error("This legacy file has no administrator. For a new Bono Trading database, configure CONTACT_TO_EMAIL and run npm run prisma:seed.");
   }
   await writeData(data);
   console.info(`Legacy data imported from ${source}.`);

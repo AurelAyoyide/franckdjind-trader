@@ -377,7 +377,7 @@ export function defaultData(): BlogData {
       {
         id: "user_admin",
         name: "Administrateur",
-        email: process.env.ADMIN_EMAIL ?? "admin@invalid.local",
+        email: process.env.CONTACT_TO_EMAIL ?? "admin@invalid.local",
         role: "ADMIN",
         status: "ACTIVE"
       }
@@ -579,17 +579,6 @@ async function passwordForUser(input: StoredUser, existingHash?: string) {
 
   if (existingHash) {
     return { hash: existingHash, disabled: false };
-  }
-
-  const configuredAdmin = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
-  if (configuredAdmin && input.email.trim().toLowerCase() === configuredAdmin) {
-    if (process.env.ADMIN_PASSWORD_HASH) {
-      return { hash: process.env.ADMIN_PASSWORD_HASH, disabled: false };
-    }
-
-    if (process.env.ADMIN_PASSWORD) {
-      return { hash: await bcrypt.hash(process.env.ADMIN_PASSWORD, 12), disabled: false };
-    }
   }
 
   return { hash: await bcrypt.hash(randomBytes(32).toString("hex"), 12), disabled: true };
