@@ -51,7 +51,7 @@ async function sendEmail(email: OutgoingEmail) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    return { sent: false, reason: "missing_config" as const };
+    return { sent: false, reason: "missing_config" as const, providerEmailId: null, providerStatus: null };
   }
 
   const from = process.env.CONTACT_FROM_EMAIL || "Bono Trading <onboarding@resend.dev>";
@@ -74,9 +74,15 @@ async function sendEmail(email: OutgoingEmail) {
       signal: AbortSignal.timeout(8000)
     });
 
-    return { sent: response.ok, reason: response.ok ? "sent" as const : "provider_error" as const };
+    const payload = await response.json().catch(() => null) as { id?: unknown } | null;
+    return {
+      sent: response.ok,
+      reason: response.ok ? "sent" as const : "provider_error" as const,
+      providerEmailId: typeof payload?.id === "string" ? payload.id : null,
+      providerStatus: response.status
+    };
   } catch {
-    return { sent: false, reason: "network_error" as const };
+    return { sent: false, reason: "network_error" as const, providerEmailId: null, providerStatus: null };
   }
 }
 

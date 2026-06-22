@@ -106,7 +106,13 @@ export async function requestPasswordResetAction(formData: FormData) {
       data: {
         action: emailResult.sent ? "password_reset_email_sent" : "password_reset_email_failed",
         entity: "auth",
-        entityId: user.id
+        entityId: user.id,
+        metadata: {
+          provider: "resend",
+          emailId: emailResult.providerEmailId,
+          status: emailResult.providerStatus,
+          reason: emailResult.reason
+        }
       }
     });
 
