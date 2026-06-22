@@ -98,9 +98,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
               </select>
             </label>
             <label className="grid gap-1 text-xs font-bold text-muted">
-              Thème
+              Tags
               <select className="min-h-12 rounded-md border border-line bg-background px-3 text-sm text-foreground outline-none focus:border-market" defaultValue={tag} name="tag">
-                <option value="">Tous les thèmes</option>
+                <option value="">Tous les tags</option>
                 {tags.map((entry) => <option key={entry.slug} value={entry.slug}>{entry.title}</option>)}
               </select>
             </label>

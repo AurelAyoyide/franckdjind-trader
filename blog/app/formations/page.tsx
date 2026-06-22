@@ -62,7 +62,7 @@ export default async function FormationsPage({ searchParams }: ServicesPageProps
                   <RichContent content={service.content} />
                 </div>
               ) : null}
-              <div className="mt-7 pt-1">
+              <div className="mt-auto pt-7">
                 <ButtonLink href={service.ctaUrl || "/contact"} className="w-full" showArrow>
                   {service.ctaLabel || "Demander une orientation"}
                 </ButtonLink>

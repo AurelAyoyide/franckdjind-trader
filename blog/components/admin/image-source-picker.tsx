@@ -30,8 +30,10 @@ export function ImageSourcePicker({
   const [mode, setMode] = useState<SourceMode>(initialMode);
   const [selectedMedia, setSelectedMedia] = useState(initialMode === "library" ? initialValue || (allowDefault ? defaultImage : media[0]?.url || "") : "");
   const [externalUrl, setExternalUrl] = useState(initialMode === "url" ? initialValue : "");
+  const [uploadPreview, setUploadPreview] = useState("");
   const id = useId();
   const value = mode === "library" ? selectedMedia : mode === "url" ? externalUrl : "";
+  const previewUrl = mode === "upload" ? uploadPreview : value;
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -62,7 +64,10 @@ export function ImageSourcePicker({
       {mode === "upload" ? (
         <div className="mt-4 grid gap-2">
           <label className="text-sm font-semibold text-muted" htmlFor={`${id}-upload`}>Image depuis ton appareil</label>
-          <input accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif" className="min-h-12 rounded-md border border-dashed border-line bg-surface px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market" id={`${id}-upload`} name={fileName} type="file" />
+          <input accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif" className="min-h-12 rounded-md border border-dashed border-line bg-surface px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market" id={`${id}-upload`} name={fileName} onChange={(event) => {
+            const file = event.target.files?.[0];
+            setUploadPreview(file ? URL.createObjectURL(file) : "");
+          }} type="file" />
         </div>
       ) : null}
 
@@ -70,6 +75,14 @@ export function ImageSourcePicker({
         <div className="mt-4 grid gap-2">
           <label className="text-sm font-semibold text-muted" htmlFor={`${id}-url`}>URL HTTPS de l&apos;image</label>
           <input className="min-h-12 rounded-md border border-line bg-surface px-4 text-foreground outline-none focus:border-market" id={`${id}-url`} onChange={(event) => setExternalUrl(event.target.value)} placeholder="https://..." type="url" value={externalUrl} />
+        </div>
+      ) : null}
+
+      {previewUrl && (previewUrl.startsWith("/") || previewUrl.startsWith("https://") || previewUrl.startsWith("blob:")) ? (
+        <div className="mt-4 overflow-hidden rounded-lg border border-line bg-surface">
+          {/* eslint-disable-next-line @next/next/no-img-element -- The picker previews a local upload or an admin-supplied image URL. */}
+          <img alt="Aperçu de l’image sélectionnée" className="aspect-[16/7] w-full object-cover" src={previewUrl} />
+          <p className="border-t border-line px-3 py-2 text-xs font-semibold text-muted">Aperçu de l&apos;image qui sera utilisée.</p>
         </div>
       ) : null}
 

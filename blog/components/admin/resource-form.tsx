@@ -2,6 +2,7 @@ import Link from "next/link";
 import { saveResourceAction } from "@/app/admin/resource-actions";
 import { RichEditor } from "@/components/admin/rich-editor";
 import { ImageSourcePicker } from "@/components/admin/image-source-picker";
+import { TagPicker } from "@/components/admin/tag-picker";
 import { DestinationPicker } from "@/components/admin/destination-picker";
 import { ResourcePreview } from "@/components/admin/resource-preview";
 import { RatingSelector } from "@/components/rating-selector";
@@ -99,13 +100,7 @@ export function ResourceForm({ config, item, choices }: ResourceFormProps) {
 
         if (field.name === "tagSlugs") {
           return (
-            <label className="grid gap-2 text-sm font-semibold text-muted" htmlFor={id} key={field.name}>
-              <span>{field.label}</span>
-              <select className="min-h-32 rounded-md border border-line bg-background px-4 py-3 text-foreground outline-none transition focus:border-market" defaultValue={selectedTagSlugs(item)} id={id} multiple name={field.name}>
-                {choices?.tags.map((tag) => <option key={tag.slug} value={tag.slug}>{tag.title}</option>)}
-              </select>
-              <span className="text-xs font-normal leading-5 text-muted-strong">Utilise Ctrl (Windows) ou Cmd (Mac) pour choisir plusieurs tags.</span>
-            </label>
+            <TagPicker key={field.name} name={field.name} options={choices?.tags ?? []} selected={selectedTagSlugs(item)} />
           );
         }
 
