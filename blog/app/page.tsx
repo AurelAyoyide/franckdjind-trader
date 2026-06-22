@@ -196,7 +196,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </div>
           </Reveal>
           <div className="grid gap-4">
-            {services.map((service, index) => (
+            {services.slice(0, 3).map((service, index) => (
               <Reveal delay={index * 0.05} key={service.title}>
                 <article className="rounded-lg border border-line bg-surface p-5">
                   <div className="flex items-start gap-4">
@@ -223,7 +223,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.28em] text-amber">
-              Catégories
+                  Catégories
                 </p>
                 <h2 className="mt-4 text-3xl font-black leading-tight md:text-5xl">
                   Les portes d&apos;entree du blog.
@@ -264,7 +264,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 Des retours précis, publiés avec transparence.
               </h2>
             </div>
-            <ButtonLink href="/temoignages" variant="secondary">
+            <ButtonLink href="/temoignages" variant="secondary" className="whitespace-nowrap shrink-0">
               Voir les avis
             </ButtonLink>
           </div>
