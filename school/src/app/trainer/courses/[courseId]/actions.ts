@@ -12,6 +12,7 @@ import { getAuthorizedSession } from "@/lib/authorization";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { getNumberSetting } from "@/lib/settings";
+import { notifyUser } from "@/lib/notifications";
 import {
   courseStatusSchema,
   enrollmentStatusSchema,
@@ -376,17 +377,17 @@ export async function createModuleAction(
 export async function updateModuleAction(formData: FormData) {
   const session = await requireBuilderSession(); const parsed = moduleUpdateSchema.safeParse({ moduleId: formData.get("moduleId"), title: formData.get("title"), description: formData.get("description") });
   if (!session || !parsed.success) return;
-  const module = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true } });
-  if (!module || (session.role !== "admin" && module.course.trainerId !== session.userId)) return;
-  await prisma.courseModule.update({ where: { id: module.id }, data: { title: parsed.data.title, description: parsed.data.description || null } });
-  revalidatePath(`/trainer/courses/${module.courseId}`); redirect(`/trainer/courses/${module.courseId}?notice=module-updated`);
+  const courseModule = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true } });
+  if (!courseModule || (session.role !== "admin" && courseModule.course.trainerId !== session.userId)) return;
+  await prisma.courseModule.update({ where: { id: courseModule.id }, data: { title: parsed.data.title, description: parsed.data.description || null } });
+  revalidatePath(`/trainer/courses/${courseModule.courseId}`); redirect(`/trainer/courses/${courseModule.courseId}?notice=module-updated`);
 }
 export async function deleteModuleAction(formData: FormData) {
   const session = await requireBuilderSession(); const parsed = moduleDeleteSchema.safeParse({ moduleId: formData.get("moduleId") }); if (!session || !parsed.success) return;
-  const module = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true, lessons: { select: { id: true } } } });
-  if (!module || (session.role !== "admin" && module.course.trainerId !== session.userId)) return;
-  if (module.lessons.length) redirect(`/trainer/courses/${module.courseId}?notice=module-not-empty`);
-  await prisma.courseModule.delete({ where: { id: module.id } }); revalidatePath(`/trainer/courses/${module.courseId}`); redirect(`/trainer/courses/${module.courseId}?notice=module-deleted`);
+  const courseModule = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true, lessons: { select: { id: true } } } });
+  if (!courseModule || (session.role !== "admin" && courseModule.course.trainerId !== session.userId)) return;
+  if (courseModule.lessons.length) redirect(`/trainer/courses/${courseModule.courseId}?notice=module-not-empty`);
+  await prisma.courseModule.delete({ where: { id: courseModule.id } }); revalidatePath(`/trainer/courses/${courseModule.courseId}`); redirect(`/trainer/courses/${courseModule.courseId}?notice=module-deleted`);
 }
 export async function updateLessonAction(formData: FormData) {
   const session = await requireBuilderSession(); const parsed = lessonUpdateSchema.safeParse({ lessonId: formData.get("lessonId"), title: formData.get("title"), content: formData.get("content") || undefined }); if (!session || !parsed.success) return;
@@ -636,18 +637,7 @@ export async function setEnrollmentStatusAction(formData: FormData) {
     },
   });
 
-  await prisma.notification.create({
-    data: {
-      userId: enrollment.learnerId,
-      senderId: session.userId,
-      type: "INTERNAL",
-      title: parsed.data.status === "REVOKED" ? "Acces retire" : "Acces formation mis a jour",
-      body:
-        parsed.data.status === "REVOKED"
-          ? `Ton acces a la formation ${enrollment.course.title} a ete retire.`
-          : "Ton acces formation a ete mis a jour.",
-    },
-  });
+  await notifyUser(prisma, { userId: enrollment.learnerId, senderId: session.userId, title: parsed.data.status === "REVOKED" ? "Acces retire" : "Acces formation mis a jour", body: parsed.data.status === "REVOKED" ? `Ton acces a la formation ${enrollment.course.title} a ete retire.` : "Ton acces formation a ete mis a jour.", email: true });
 
   await prisma.auditLog.create({
     data: {
@@ -657,15 +647,6 @@ export async function setEnrollmentStatusAction(formData: FormData) {
       metadata: { status: parsed.data.status, learnerId: enrollment.learnerId },
     },
   });
-
-  if (parsed.data.status === EnrollmentStatus.REVOKED) {
-    await deliverLoggedEmail(prisma, {
-      to: enrollment.learner.email,
-      userId: enrollment.learnerId,
-      subject: "Acces formation retire",
-      html: `<p>Bonjour ${escapeHtml(enrollment.learner.firstName)},</p><p>Ton acces a la formation ${escapeHtml(enrollment.course.title)} a ete retire.</p>`,
-    });
-  }
 
   revalidatePath(`/trainer/courses/${enrollment.courseId}`);
   revalidatePath("/trainer/students");
