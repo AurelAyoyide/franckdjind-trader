@@ -137,6 +137,8 @@ export const communityPostSchema = z.object({
   pinned: z.coerce.boolean().optional(),
   commentsEnabled: z.coerce.boolean().optional(),
 });
+export const communityPostUpdateSchema = communityPostSchema.extend({ postId: z.string().min(1) });
+export const communityPostDeleteSchema = z.object({ postId: z.string().min(1) });
 
 export const communityCommentSchema = z.object({
   postId: z.string().min(1),
@@ -246,6 +248,7 @@ export type QuizCreateInput = z.infer<typeof quizCreateSchema>;
 export type QuizQuestionCreateInput = z.infer<typeof quizQuestionCreateSchema>;
 export type EnrollmentStatusInput = z.infer<typeof enrollmentStatusSchema>;
 export type CommunityPostInput = z.infer<typeof communityPostSchema>;
+export type CommunityPostUpdateInput = z.infer<typeof communityPostUpdateSchema>;
 export type CommunityCommentInput = z.infer<typeof communityCommentSchema>;
 export type CommunityPostStatusInput = z.infer<typeof communityPostStatusSchema>;
 export type CommunityCommentDeleteInput = z.infer<typeof communityCommentDeleteSchema>;

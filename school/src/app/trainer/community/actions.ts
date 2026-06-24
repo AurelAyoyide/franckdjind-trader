@@ -9,6 +9,8 @@ import {
   communityCommentDeleteSchema,
   communityPostSchema,
   communityPostStatusSchema,
+  communityPostUpdateSchema,
+  communityPostDeleteSchema,
 } from "@/lib/validation";
 
 export type CommunityPostState = {
@@ -138,6 +140,29 @@ export async function setCommunityPostStatusAction(formData: FormData) {
   revalidatePath("/trainer/community");
   revalidatePath("/student/community");
   redirect("/trainer/community?notice=post-status");
+}
+
+export async function updateCommunityPostAction(formData: FormData) {
+  const session = await requireModerator();
+  const parsed = communityPostUpdateSchema.safeParse({ postId: formData.get("postId"), title: formData.get("title"), body: formData.get("body"), courseId: formData.get("courseId") || undefined, pinned: formData.get("pinned") === "on", commentsEnabled: formData.get("commentsEnabled") === "on" });
+  if (!session || !parsed.success) return;
+  const post = await canModeratePost(parsed.data.postId, session.userId, session.role);
+  if (!post) return;
+  if (parsed.data.courseId) {
+    const course = await prisma.course.findFirst({ where: { id: parsed.data.courseId, ...(session.role !== "admin" ? { trainerId: session.userId } : {}) }, select: { id: true } });
+    if (!course) return;
+  }
+  await prisma.communityPost.update({ where: { id: post.id }, data: { title: parsed.data.title, body: parsed.data.body, courseId: parsed.data.courseId || null, pinned: Boolean(parsed.data.pinned), commentsEnabled: parsed.data.commentsEnabled !== false } });
+  await prisma.auditLog.create({ data: { actorId: session.userId, action: "COMMUNITY_POST_UPDATED", target: post.id } });
+  revalidatePath("/trainer/community"); revalidatePath("/student/community"); redirect("/trainer/community?notice=post-updated");
+}
+
+export async function deleteCommunityPostAction(formData: FormData) {
+  const session = await requireModerator(); const parsed = communityPostDeleteSchema.safeParse({ postId: formData.get("postId") });
+  if (!session || !parsed.success) return;
+  const post = await canModeratePost(parsed.data.postId, session.userId, session.role); if (!post) return;
+  await prisma.$transaction([prisma.communityPost.delete({ where: { id: post.id } }), prisma.auditLog.create({ data: { actorId: session.userId, action: "COMMUNITY_POST_DELETED", target: post.id } })]);
+  revalidatePath("/trainer/community"); revalidatePath("/student/community"); redirect("/trainer/community?notice=post-deleted");
 }
 
 export async function toggleCommunityCommentsAction(formData: FormData) {
