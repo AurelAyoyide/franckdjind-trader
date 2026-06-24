@@ -71,6 +71,8 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
   const [quizState, quizAction, quizPending] = useActionState(createQuizAction, initialState);
   const [assignmentState, assignmentAction, assignmentPending] = useActionState(assignLearnerAction, initialState);
   const [lessonType, setLessonType] = useState<"TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ">("TEXT");
+  const [learnerSearch, setLearnerSearch] = useState("");
+  const matchingLearners = learners.filter((learner) => `${learner.name} ${learner.email}`.toLowerCase().includes(learnerSearch.trim().toLowerCase()));
 
   return (
     <div className="grid gap-5">
@@ -213,21 +215,6 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
               <span className="mt-2 block text-xs font-medium text-muted">Le fichier est stocke hors de l&apos;espace public.</span>
             </label>
           ) : null}
-          {lessonType === "VIDEO" ? (
-            <label className="text-sm font-black">
-              Duree reelle (secondes)
-              <input
-                className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm"
-                min="1"
-                name="durationSeconds"
-                placeholder="Ex. 900 pour 15 min"
-                required
-                type="number"
-              />
-              <span className="mt-2 block text-xs font-medium text-muted">Cette duree sert a valider la lecture sans faire confiance au navigateur.</span>
-              {lessonState.errors?.durationSeconds ? <span className="mt-2 block text-xs text-danger">{lessonState.errors.durationSeconds[0]}</span> : null}
-            </label>
-          ) : null}
         </div>
         {lessonType === "TEXT" ? (
           <label className="mt-4 block text-sm font-black">
@@ -303,13 +290,15 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
         <h2 className="text-xl font-black">Inscrire un apprenant</h2>
         <label className="mt-5 block text-sm font-black">
           Apprenant
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" onChange={(event) => setLearnerSearch(event.target.value)} placeholder="Rechercher par nom ou email" type="search" value={learnerSearch} />
           <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="learnerId">
-            {learners.map((learner) => (
+            {matchingLearners.map((learner) => (
               <option key={learner.id} value={learner.id}>
                 {learner.name} - {learner.email}
               </option>
             ))}
           </select>
+          {!matchingLearners.length ? <span className="mt-2 block text-xs text-muted">Aucun apprenant ne correspond a cette recherche.</span> : null}
         </label>
         <StateMessage state={assignmentState} />
         <button

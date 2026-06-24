@@ -43,12 +43,12 @@ export function CourseForm() {
         </label>
         <label className="text-sm font-black">
           Duree estimee <span className="font-medium text-muted">(facultatif)</span>
-          <input
-            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
-            maxLength={80}
-            name="duration"
-            placeholder="Ex. 6 semaines ou 12 h"
-          />
+          <div className="mt-2 flex gap-2">
+            <input className="min-h-12 min-w-0 flex-1 rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market" min="1" name="durationValue" placeholder="Ex. 6" type="number" />
+            <select className="min-h-12 rounded-lg border border-line bg-background px-3 text-sm" name="durationUnit">
+              <option value="semaines">semaines</option><option value="jours">jours</option><option value="heures">heures</option>
+            </select>
+          </div>
           <span className="mt-2 block text-xs font-medium text-muted">Un simple repere pour l&apos;apprenant, jamais une obligation.</span>
           {state.errors?.duration ? <span className="mt-2 block text-xs text-danger">{state.errors.duration[0]}</span> : null}
         </label>

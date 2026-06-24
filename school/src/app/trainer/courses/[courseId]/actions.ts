@@ -1,8 +1,10 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { execFile as execFileCallback } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { AccountStatus, CourseStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -80,6 +82,17 @@ const lessonFileTypes = {
     ]),
   },
 } as const;
+const execFile = promisify(execFileCallback);
+
+async function getVideoDurationSeconds(filePath: string) {
+  try {
+    const { stdout } = await execFile(process.env.FFPROBE_PATH ?? "ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filePath], { timeout: 30_000 });
+    const duration = Math.round(Number(stdout.trim()));
+    return Number.isFinite(duration) && duration > 0 && duration <= 24 * 60 * 60 ? duration : null;
+  } catch {
+    return null;
+  }
+}
 
 function getSafeExtension(fileName: string, type: LessonType) {
   const extension = path.extname(fileName).toLowerCase();
@@ -371,7 +384,6 @@ export async function createLessonAction(
     content: formData.get("content") || undefined,
     videoPath: formData.get("videoPath") || undefined,
     documentPath: formData.get("documentPath") || undefined,
-    durationSeconds: formData.get("durationSeconds") || undefined,
   });
 
   if (!parsed.success) {
@@ -408,9 +420,10 @@ export async function createLessonAction(
     return { ok: false, message: "Ajoute le fichier prive associe a cette lecon." };
   }
 
-  if (lessonType === LessonType.VIDEO && !parsed.data.durationSeconds) {
-    return { ok: false, message: "Indique la duree reelle de la video en secondes." };
-  }
+  const durationSeconds = lessonType === LessonType.VIDEO && upload?.relativePath
+    ? await getVideoDurationSeconds(path.resolve(getPrivateUploadRoot(), upload.relativePath))
+    : null;
+  if (lessonType === LessonType.VIDEO && !durationSeconds) return { ok: false, message: "Impossible de lire la duree de cette video. Verifie le fichier MP4, WebM ou MOV." };
 
   if (lessonType === LessonType.TEXT && !parsed.data.content) {
     return { ok: false, message: "Ajoute le contenu de la lecon texte." };
@@ -427,7 +440,7 @@ export async function createLessonAction(
         parsed.data.type === "DOCUMENT"
           ? upload?.relativePath || parsed.data.documentPath || parsed.data.videoPath || null
           : null,
-      durationSeconds: lessonType === LessonType.VIDEO ? parsed.data.durationSeconds : null,
+      durationSeconds,
       position: (lastLesson?.position ?? 0) + 1,
     },
   });

@@ -13,14 +13,15 @@ export async function proxy(request: NextRequest) {
 
   const pathLocale = localeFromPath(pathname);
   const normalizedPath = pathLocale.pathname;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-school-pathname", normalizedPath);
 
   if (pathLocale.locale !== "en") {
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   const destination = request.nextUrl.clone();
   destination.pathname = normalizedPath;
-  const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-school-locale", "en");
   return NextResponse.rewrite(destination, { request: { headers: requestHeaders } });
 }

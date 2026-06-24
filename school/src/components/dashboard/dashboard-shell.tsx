@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { LogOut } from "lucide-react";
+import { headers } from "next/headers";
 import { adminNav, assistantTrainerNav, studentNav, trainerNav } from "@/lib/platform-content";
 import { localePath, translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 import type { AppRole } from "@/lib/session-core";
 import { roleLabels } from "@/lib/session-core";
+import { getAuthorizedSession } from "@/lib/authorization";
+import { prisma } from "@/lib/prisma";
 
 type DashboardShellProps = {
   role: AppRole;
@@ -25,6 +28,11 @@ const navByRole = {
 export async function DashboardShell({ role, title, description, children, action, isAssistantTrainer = false }: DashboardShellProps) {
   const navItems = role === "trainer" && isAssistantTrainer ? assistantTrainerNav : navByRole[role];
   const locale = await getRequestLocale();
+  const pathname = (await headers()).get("x-school-pathname") ?? "";
+  const currentSession = role === "student" ? await getAuthorizedSession(["student"]) : null;
+  const unreadNotifications = currentSession
+    ? await prisma.notification.count({ where: { userId: currentSession.userId, readAt: null } })
+    : 0;
   const t = (source: string) => translate(locale, source);
 
   return (
@@ -38,6 +46,7 @@ export async function DashboardShell({ role, title, description, children, actio
             <nav className="grid gap-1">
               {navItems.map((item, index) => {
                 const section = item.section !== navItems[index - 1]?.section ? item.section : undefined;
+                const active = pathname === item.href || (item.href !== `/${role}/dashboard` && pathname.startsWith(`${item.href}/`));
 
                 return (
                   <Fragment key={item.href}>
@@ -47,11 +56,12 @@ export async function DashboardShell({ role, title, description, children, actio
                       </p>
                     ) : null}
                     <Link
-                      className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
+                      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold transition ${active ? "bg-market/12 text-market" : "text-muted hover:bg-foreground/[0.06] hover:text-foreground"}`}
                       href={localePath(locale, item.href)}
                     >
                       <item.icon className="h-4 w-4" aria-hidden="true" />
-                      {t(item.label)}
+                      <span>{t(item.label)}</span>
+                      {item.href === "/student/notifications" && unreadNotifications ? <span className="ml-auto rounded-full bg-danger px-2 py-0.5 text-[10px] font-black text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span> : null}
                     </Link>
                   </Fragment>
                 );

@@ -21,7 +21,7 @@ export async function createCourseAction(
     title: formData.get("title"),
     type: formData.get("type"),
     priceLabel: formData.get("priceLabel"),
-    duration: formData.get("duration"),
+    duration: formData.get("durationValue") ? `${formData.get("durationValue")} ${formData.get("durationUnit")}` : undefined,
     description: formData.get("description"),
   });
 
@@ -49,36 +49,26 @@ export async function createCourseAction(
     };
   }
 
-  const slug = await createUniqueCourseSlug(parsed.data.title);
-
-  await prisma.course.create({
-    data: {
-      title: parsed.data.title,
-      slug,
-      type: parsed.data.type,
-      priceLabel: parsed.data.priceLabel || null,
-      duration: parsed.data.duration || null,
-      description: parsed.data.description,
-      status: CourseStatus.DRAFT,
-      trainerId: session.userId,
-      modules: {
-        create: {
-          title: "Module 1",
-          description: "Premier module a completer.",
-          position: 1,
-        },
+  try {
+    const slug = await createUniqueCourseSlug(parsed.data.title);
+    await prisma.course.create({
+      data: {
+        title: parsed.data.title,
+        slug,
+        type: parsed.data.type,
+        priceLabel: parsed.data.priceLabel || null,
+        duration: parsed.data.duration || null,
+        description: parsed.data.description,
+        status: CourseStatus.DRAFT,
+        trainerId: session.userId,
+        modules: { create: { title: "Module 1", description: "Premier module a completer.", position: 1 } },
       },
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      actorId: session.userId,
-      action: "COURSE_CREATED",
-      target: slug,
-      metadata: { status: CourseStatus.DRAFT },
-    },
-  });
+    });
+    await prisma.auditLog.create({ data: { actorId: session.userId, action: "COURSE_CREATED", target: slug, metadata: { status: CourseStatus.DRAFT } } });
+  } catch (error) {
+    console.error("COURSE_CREATE_FAILED", error);
+    return { ok: false, message: "Impossible de creer la formation pour le moment. Reessaie dans quelques secondes." };
+  }
 
   revalidatePath("/trainer/courses");
 

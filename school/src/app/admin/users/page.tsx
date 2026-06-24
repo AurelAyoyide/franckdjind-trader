@@ -56,7 +56,7 @@ export default async function AdminUsersPage({
                 <input name="userId" type="hidden" value={user.id} />
                 <input name="status" type="hidden" value={user.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED"} />
                 <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line bg-foreground/[0.06] px-3 text-sm font-black" type="submit">
-                  {user.status === "SUSPENDED" ? "Reactiver" : "Suspendre"}
+                  {user.status === "SUSPENDED" ? "Lever la suspension" : "Suspendre temporairement"}
                 </button>
               </form>
               {user.status === "DELETED" ? (
@@ -64,7 +64,7 @@ export default async function AdminUsersPage({
                   <input name="userId" type="hidden" value={user.id} />
                   <input name="status" type="hidden" value="ACTIVE" />
                   <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-market/30 bg-market/10 px-3 text-sm font-black text-market" type="submit">
-                    Reactiver le compte
+                    Restaurer le compte archive
                   </button>
                 </form>
               ) : (
@@ -72,7 +72,7 @@ export default async function AdminUsersPage({
                   <input name="userId" type="hidden" value={user.id} />
                   <input name="status" type="hidden" value="DELETED" />
                   <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger" type="submit">
-                    Desactiver le compte
+                    Archiver le compte
                   </button>
                 </form>
               )}

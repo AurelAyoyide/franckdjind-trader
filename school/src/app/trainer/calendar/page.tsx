@@ -48,7 +48,7 @@ export default async function TrainerCalendarPage({
             <p className="mt-3 text-sm leading-7 text-muted">{call.title} - {formatDate(call.scheduledAt)}</p>
             {call.notes ? <p className="mt-3 text-sm leading-7 text-muted">{call.notes}</p> : null}
             <div className="mt-5">
-              <StatusBadge tone={call.status === "SCHEDULED" ? "market" : "cyan"}>{statusLabel(call.status)}</StatusBadge>
+              <StatusBadge tone={call.status === "DONE" ? "market" : call.status === "MISSED" ? "amber" : call.status === "CANCELLED" ? "danger" : "cyan"}>{statusLabel(call.status)}</StatusBadge>
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
               {(["DONE", "MISSED", "CANCELLED"] as const).map((status) => (
