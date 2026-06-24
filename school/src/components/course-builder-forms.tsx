@@ -7,6 +7,7 @@ import {
   createLessonAction,
   createModuleAction,
   createQuizAction,
+  addQuizQuestionAction,
   setCourseStatusAction,
   updateCourseAction,
   type BuilderActionState,
@@ -21,6 +22,7 @@ type QuizLessonOption = {
   id: string;
   title: string;
 };
+type ConfiguredQuizOption = { id: string; title: string };
 
 type LearnerOption = {
   id: string;
@@ -40,6 +42,7 @@ type CourseBuilderFormsProps = {
   };
   modules: ModuleOption[];
   quizLessons: QuizLessonOption[];
+  configuredQuizzes: ConfiguredQuizOption[];
   learners: LearnerOption[];
 };
 
@@ -64,11 +67,12 @@ function StateMessage({ state }: { state: BuilderActionState }) {
   );
 }
 
-export function CourseBuilderForms({ course, modules, quizLessons, learners }: CourseBuilderFormsProps) {
+export function CourseBuilderForms({ course, modules, quizLessons, configuredQuizzes, learners }: CourseBuilderFormsProps) {
   const [courseState, courseAction, coursePending] = useActionState(updateCourseAction, initialState);
   const [moduleState, moduleAction, modulePending] = useActionState(createModuleAction, initialState);
   const [lessonState, lessonAction, lessonPending] = useActionState(createLessonAction, initialState);
   const [quizState, quizAction, quizPending] = useActionState(createQuizAction, initialState);
+  const [questionState, questionAction, questionPending] = useActionState(addQuizQuestionAction, initialState);
   const [assignmentState, assignmentAction, assignmentPending] = useActionState(assignLearnerAction, initialState);
   const [lessonType, setLessonType] = useState<"TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ">("TEXT");
   const [learnerSearch, setLearnerSearch] = useState("");
@@ -121,6 +125,16 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
         <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={coursePending} type="submit">
           {coursePending ? "Enregistrement..." : "Enregistrer"}
         </button>
+      </form>
+
+      <form action={questionAction} className="rounded-lg border border-line bg-surface p-5">
+        <h2 className="text-xl font-black">Ajouter une question</h2>
+        <label className="mt-4 block text-sm font-black">Quiz<select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="quizId">{configuredQuizzes.map((quiz) => <option key={quiz.id} value={quiz.id}>{quiz.title}</option>)}</select></label>
+        <label className="mt-4 block text-sm font-black">Question<input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="questionText" required /></label>
+        <div className="mt-4 grid gap-3 md:grid-cols-3"><input className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" name="optionA" placeholder="Option A" required /><input className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" name="optionB" placeholder="Option B" required /><input className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" name="optionC" placeholder="Option C" /></div>
+        <label className="mt-4 block text-sm font-black">Bonne reponse<select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="correctOption"><option value="A">Option A</option><option value="B">Option B</option><option value="C">Option C</option></select></label>
+        <StateMessage state={questionState} />
+        <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={questionPending || !configuredQuizzes.length} type="submit">Ajouter la question</button>
       </form>
 
       <div className="grid gap-3 sm:grid-cols-2">

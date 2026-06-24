@@ -116,6 +116,15 @@ export const quizCreateSchema = z.object({
   correctOption: z.enum(["A", "B", "C"]),
 });
 
+export const quizQuestionCreateSchema = z.object({
+  quizId: z.string().min(1),
+  questionText: z.string().min(3, "Question requise").trim(),
+  optionA: z.string().min(1, "Option A requise").trim(),
+  optionB: z.string().min(1, "Option B requise").trim(),
+  optionC: z.string().trim().optional(),
+  correctOption: z.enum(["A", "B", "C"]),
+});
+
 export const enrollmentStatusSchema = z.object({
   enrollmentId: z.string().min(1),
   status: z.enum(["ACTIVE", "REVOKED", "COMPLETED"]),
@@ -234,6 +243,7 @@ export type CourseStatusInput = z.infer<typeof courseStatusSchema>;
 export type ModuleCreateInput = z.infer<typeof moduleCreateSchema>;
 export type LessonCreateInput = z.infer<typeof lessonCreateSchema>;
 export type QuizCreateInput = z.infer<typeof quizCreateSchema>;
+export type QuizQuestionCreateInput = z.infer<typeof quizQuestionCreateSchema>;
 export type EnrollmentStatusInput = z.infer<typeof enrollmentStatusSchema>;
 export type CommunityPostInput = z.infer<typeof communityPostSchema>;
 export type CommunityCommentInput = z.infer<typeof communityCommentSchema>;

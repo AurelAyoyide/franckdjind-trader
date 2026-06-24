@@ -39,6 +39,7 @@ export default async function TrainerCourseBuilderPage({
     .flatMap((module) => module.lessons)
     .filter((lesson) => lesson.type === "QUIZ" && !lesson.quiz)
     .map((lesson) => ({ id: lesson.id, title: lesson.title }));
+  const configuredQuizzes = course.modules.flatMap((module) => module.lessons).flatMap((lesson) => lesson.quiz ? [{ id: lesson.quiz.id, title: lesson.quiz.title }] : []);
   const activeLearnerIds = new Set(
     course.enrollments
       .filter((enrollment) => enrollment.status === "ACTIVE")
@@ -137,6 +138,7 @@ export default async function TrainerCourseBuilderPage({
             }}
             modules={course.modules.map((module) => ({ id: module.id, title: module.title }))}
             quizLessons={quizLessons}
+            configuredQuizzes={configuredQuizzes}
             learners={learners
               .filter((learner) => !activeLearnerIds.has(learner.id))
               .map((learner) => ({ id: learner.id, name: learner.name, email: learner.email }))}

@@ -20,6 +20,7 @@ import {
   lessonCreateSchema,
   moduleCreateSchema,
   quizCreateSchema,
+  quizQuestionCreateSchema,
 } from "@/lib/validation";
 
 export type BuilderActionState = {
@@ -547,6 +548,25 @@ export async function createQuizAction(
   revalidatePath(`/trainer/courses/${lesson.module.courseId}`);
 
   return { ok: true, message: "Quiz cree." };
+}
+
+export async function addQuizQuestionAction(
+  _state: BuilderActionState,
+  formData: FormData,
+): Promise<BuilderActionState> {
+  const session = await requireBuilderSession();
+  const parsed = quizQuestionCreateSchema.safeParse({ quizId: formData.get("quizId"), questionText: formData.get("questionText"), optionA: formData.get("optionA"), optionB: formData.get("optionB"), optionC: formData.get("optionC"), correctOption: formData.get("correctOption") });
+  if (!session || !parsed.success) return { ok: false, message: "Question invalide.", errors: parsed.success ? undefined : parsed.error.flatten().fieldErrors };
+  const quiz = await prisma.quiz.findUnique({ where: { id: parsed.data.quizId }, include: { lesson: { include: { module: { include: { course: true } } } } } });
+  if (!quiz?.lesson || (session.role !== "admin" && quiz.lesson.module.course.trainerId !== session.userId)) return { ok: false, message: "Quiz introuvable ou non autorise." };
+  const options = [parsed.data.optionA, parsed.data.optionB, parsed.data.optionC].filter(Boolean) as string[];
+  const correctIndex = parsed.data.correctOption === "A" ? 0 : parsed.data.correctOption === "B" ? 1 : 2;
+  if (!options[correctIndex]) return { ok: false, message: "La reponse correcte est absente." };
+  const last = await prisma.question.findFirst({ where: { quizId: quiz.id }, orderBy: { position: "desc" }, select: { position: true } });
+  await prisma.question.create({ data: { quizId: quiz.id, type: "SINGLE_CHOICE", text: parsed.data.questionText, options, correctOptions: [options[correctIndex]], position: (last?.position ?? 0) + 1 } });
+  await prisma.auditLog.create({ data: { actorId: session.userId, action: "QUIZ_QUESTION_CREATED", target: quiz.id } });
+  revalidatePath(`/trainer/courses/${quiz.lesson.module.courseId}`);
+  return { ok: true, message: "Question ajoutee au quiz." };
 }
 
 export async function setEnrollmentStatusAction(formData: FormData) {
