@@ -33,6 +33,14 @@ enum CourseType {
   PAID
 }
 
+enum DurationUnit {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
+  MONTHS
+}
+
 enum LessonType {
   VIDEO
   TEXT
@@ -145,8 +153,10 @@ model Course {
   description       String
   type              CourseType
   status            CourseStatus       @default(DRAFT)
-  priceLabel        String?
-  duration          String?
+  priceAmount       Float?
+  priceCurrency     String?
+  durationValue     Int?
+  durationUnit      DurationUnit?
   trainerId         String
   trainer           User               @relation("CourseTrainer", fields: [trainerId], references: [id])
   modules           CourseModule[]

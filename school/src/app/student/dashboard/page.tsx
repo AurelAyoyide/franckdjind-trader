@@ -41,7 +41,7 @@ export default async function StudentDashboardPage() {
                 <div>
                   <StatusBadge tone="market">En cours</StatusBadge>
                   <h2 className="mt-4 text-2xl font-black">{activeCourse.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-muted">{activeCourse.description}</p>
+                  <p className="mt-3 text-sm leading-7 text-muted line-clamp-3 break-words">{activeCourse.description}</p>
                 </div>
               </div>
               <div className="mt-6">

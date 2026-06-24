@@ -8,6 +8,7 @@ type VideoLessonPlayerProps = {
   title: string;
   initialPosition: number;
   watermark: string;
+  nextLessonUrl?: string | null;
 };
 
 export function VideoLessonPlayer({
@@ -15,6 +16,7 @@ export function VideoLessonPlayer({
   title,
   initialPosition,
   watermark,
+  nextLessonUrl,
 }: VideoLessonPlayerProps) {
   const lastSyncAt = useRef(0);
 
@@ -31,6 +33,17 @@ export function VideoLessonPlayer({
       body: JSON.stringify({
         videoPosition: Math.floor(video.currentTime),
       }),
+    }).then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data.completed) {
+          if (nextLessonUrl) {
+            window.location.href = nextLessonUrl;
+          } else {
+            window.location.reload();
+          }
+        }
+      }
     });
   }
 

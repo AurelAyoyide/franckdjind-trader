@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { randomUUID } from "node:crypto";
 import { EnrollmentStatus } from "@prisma/client";
+import * as QRCode from "qrcode";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
@@ -12,84 +13,94 @@ export type CertificatePdfInput = {
   issuedAt: string;
 };
 
+function hexToRgb(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return rgb(r, g, b);
+}
+
 export async function generateCertificatePdf(certificate: CertificatePdfInput) {
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, 595]);
+  const width = 842;
+  const height = 595;
+  const page = pdf.addPage([width, height]);
+
   const titleFont = await pdf.embedFont(StandardFonts.HelveticaBold);
   const bodyFont = await pdf.embedFont(StandardFonts.Helvetica);
+  const italicFont = await pdf.embedFont(StandardFonts.HelveticaOblique);
+
+  const primaryColor = hexToRgb("#27584f");
+  const accentColor = hexToRgb("#317467");
+  const textColor = hexToRgb("#152119");
+  const mutedColor = hexToRgb("#606a64");
 
   page.drawRectangle({
-    x: 28,
-    y: 28,
-    width: 786,
-    height: 539,
-    borderColor: rgb(0.09, 0.79, 0.52),
-    borderWidth: 3,
+    x: 0,
+    y: 0,
+    width,
+    height,
+    color: rgb(0.98, 0.99, 0.98),
   });
 
-  page.drawText("SCHOOL", {
-    x: 70,
-    y: 500,
-    size: 18,
-    font: titleFont,
-    color: rgb(0.09, 0.79, 0.52),
+  page.drawRectangle({
+    x: 30, y: 30, width: width - 60, height: height - 60,
+    borderColor: primaryColor,
+    borderWidth: 6,
+  });
+  page.drawRectangle({
+    x: 40, y: 40, width: width - 80, height: height - 80,
+    borderColor: accentColor,
+    borderWidth: 2,
   });
 
-  page.drawText("Certificat de fin de formation", {
-    x: 70,
-    y: 410,
-    size: 34,
-    font: titleFont,
-    color: rgb(0.06, 0.08, 0.07),
+  const drawCenteredText = (text: string, y: number, font: any, size: number, color: any) => {
+    const textWidth = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: (width - textWidth) / 2, y, size, font, color });
+  };
+
+  drawCenteredText("BONO TRADING SCHOOL", 480, titleFont, 24, primaryColor);
+  drawCenteredText("CERTIFICAT DE RÉUSSITE", 420, titleFont, 44, textColor);
+
+  drawCenteredText("Ce certificat est fièrement décerné à", 350, italicFont, 16, mutedColor);
+  drawCenteredText(certificate.learner.toUpperCase(), 290, titleFont, 36, primaryColor);
+
+  drawCenteredText("Pour avoir suivi et complété avec succès le programme :", 230, bodyFont, 14, mutedColor);
+  drawCenteredText(`« ${certificate.course} »`, 180, titleFont, 24, textColor);
+
+  const dateFormatted = new Date(certificate.issuedAt).toLocaleDateString("fr-FR", {
+    day: "numeric", month: "long", year: "numeric",
   });
 
-  page.drawText("Ce certificat atteste que", {
-    x: 70,
-    y: 350,
-    size: 15,
-    font: bodyFont,
-    color: rgb(0.31, 0.38, 0.35),
-  });
+  page.drawText("Fait le :", { x: 120, y: 110, size: 12, font: bodyFont, color: mutedColor });
+  page.drawText(dateFormatted, { x: 120, y: 90, size: 16, font: titleFont, color: textColor });
+  page.drawLine({ start: { x: 120, y: 80 }, end: { x: 280, y: 80 }, thickness: 1, color: mutedColor });
 
-  page.drawText(certificate.learner, {
-    x: 70,
-    y: 308,
-    size: 30,
-    font: titleFont,
-    color: rgb(0.06, 0.08, 0.07),
-  });
+  page.drawText("Direction Pédagogique", { x: 550, y: 110, size: 12, font: bodyFont, color: mutedColor });
+  page.drawText("BONO TRADING", { x: 550, y: 90, size: 16, font: titleFont, color: primaryColor });
+  page.drawLine({ start: { x: 550, y: 80 }, end: { x: 710, y: 80 }, thickness: 1, color: mutedColor });
 
-  page.drawText(`a termine la formation "${certificate.course}".`, {
-    x: 70,
-    y: 264,
-    size: 16,
-    font: bodyFont,
-    color: rgb(0.31, 0.38, 0.35),
-  });
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pre-prod.regart.online";
+  const verificationUrl = `${baseUrl}/certificates/verify/${certificate.code}`;
 
-  page.drawText(`Code public : ${certificate.code}`, {
-    x: 70,
-    y: 176,
-    size: 13,
-    font: titleFont,
-    color: rgb(0.09, 0.54, 0.64),
-  });
-
-  page.drawText(`Date : ${certificate.issuedAt}`, {
-    x: 70,
-    y: 148,
-    size: 13,
-    font: bodyFont,
-    color: rgb(0.31, 0.38, 0.35),
-  });
-
-  page.drawText("Verification publique disponible avec le code du certificat.", {
-    x: 70,
-    y: 74,
-    size: 11,
-    font: bodyFont,
-    color: rgb(0.45, 0.5, 0.47),
-  });
+  try {
+    const qrBuffer = await QRCode.toBuffer(verificationUrl, {
+      margin: 1,
+      color: { dark: "#152119", light: "#00000000" }, // Transparent background
+    });
+    const qrImage = await pdf.embedPng(qrBuffer);
+    const qrSize = 80;
+    page.drawImage(qrImage, {
+      x: (width - qrSize) / 2,
+      y: 60,
+      width: qrSize,
+      height: qrSize,
+    });
+    drawCenteredText(`ID: ${certificate.code}`, 45, titleFont, 10, mutedColor);
+  } catch (error) {
+    drawCenteredText(`Vérification : ${verificationUrl}`, 80, bodyFont, 11, mutedColor);
+    drawCenteredText(`ID: ${certificate.code}`, 60, titleFont, 11, mutedColor);
+  }
 
   return pdf.save();
 }

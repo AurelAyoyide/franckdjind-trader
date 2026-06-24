@@ -21,60 +21,72 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
   const [state, formAction, pending] = useActionState(createCommunityPostAction, initialState);
 
   return (
-    <form action={formAction} className="mb-5 rounded-lg border border-line bg-surface p-5">
-      <div className="flex items-center gap-3">
-        <MessageCirclePlus className="h-5 w-5 text-market" aria-hidden="true" />
-        <h2 className="text-xl font-black">Publier dans la communaute</h2>
+    <form action={formAction} className="mb-8 rounded-2xl border border-line bg-surface p-1 shadow-sm transition-all focus-within:border-market/40 focus-within:ring-2 focus-within:ring-market/20 hover:shadow-md">
+      <div className="rounded-xl bg-background p-4 sm:p-5">
+        <div className="flex gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-market/10 text-market">
+            <MessageCirclePlus className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div className="flex-1">
+            <input
+              name="title"
+              placeholder="Titre de votre annonce..."
+              required
+              className="w-full bg-transparent text-lg font-black text-foreground placeholder-muted focus:outline-none mb-2"
+            />
+            <textarea
+              name="body"
+              placeholder="Partagez quelque chose avec la communaute..."
+              required
+              className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder-muted focus:outline-none min-h-[100px]"
+            />
+          </div>
+        </div>
+
+        {(state.errors?.title || state.errors?.body) && (
+          <div className="mb-4 ml-16">
+            {state.errors.title && <span className="block text-xs font-bold text-danger">{state.errors.title[0]}</span>}
+            {state.errors.body && <span className="block text-xs font-bold text-danger">{state.errors.body[0]}</span>}
+          </div>
+        )}
+
+        <div className="ml-16 mt-2 flex flex-col gap-4 border-t border-line/40 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            <select name="courseId" className="h-9 cursor-pointer rounded-full border border-line bg-surface px-4 text-xs font-bold text-foreground focus:border-market focus:outline-none focus:ring-1 focus:ring-market transition hover:bg-foreground/[0.04]">
+              <option value="">Public general</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.title}
+                </option>
+              ))}
+            </select>
+            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
+              <input className="accent-[var(--market)]" name="pinned" type="checkbox" />
+              Epingler
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
+              <input className="accent-[var(--market)]" defaultChecked name="commentsEnabled" type="checkbox" />
+              Commentaires
+            </label>
+          </div>
+
+          <button
+            className="inline-flex min-h-10 items-center justify-center rounded-full bg-market px-6 text-sm font-black text-on-market shadow-sm transition hover:bg-market-strong disabled:opacity-60"
+            disabled={pending}
+            type="submit"
+          >
+            {pending ? "Publication..." : "Publier"}
+          </button>
+        </div>
       </div>
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-black">
-          Titre
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" />
-          {state.errors?.title ? <span className="mt-2 block text-xs text-danger">{state.errors.title[0]}</span> : null}
-        </label>
-        <label className="text-sm font-black">
-          Cible
-          <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="courseId">
-            <option value="">Tous les apprenants</option>
-            {courses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.title}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <label className="mt-4 block text-sm font-black">
-        Message
-        <textarea className="mt-2 min-h-28 w-full rounded-lg border border-line bg-background p-3 text-sm" name="body" />
-        {state.errors?.body ? <span className="mt-2 block text-xs text-danger">{state.errors.body[0]}</span> : null}
-      </label>
-      <div className="mt-4 flex flex-wrap gap-4">
-        <label className="flex items-center gap-2 text-sm font-black">
-          <input className="accent-[var(--market)]" name="pinned" type="checkbox" />
-          Epingler
-        </label>
-        <label className="flex items-center gap-2 text-sm font-black">
-          <input className="accent-[var(--market)]" defaultChecked name="commentsEnabled" type="checkbox" />
-          Commentaires ouverts
-        </label>
-      </div>
-      {state.message ? (
-        <p
-          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${
-            state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
-          }`}
-        >
-          {state.message}
-        </p>
-      ) : null}
-      <button
-        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60"
-        disabled={pending}
-        type="submit"
-      >
-        {pending ? "Publication..." : "Publier"}
-      </button>
+
+      {state.message && (
+        <div className="px-5 pb-3 pt-1 ml-16">
+          <p className={`text-xs font-bold ${state.ok ? "text-market" : "text-danger"}`}>
+            {state.message}
+          </p>
+        </div>
+      )}
     </form>
   );
 }

@@ -17,24 +17,40 @@ const noticeMessages: Record<string, string> = {
 export default async function StudentNotificationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; page?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string; q?: string }>;
 }) {
-  const { notice, page: pageParam } = await searchParams;
+  const { notice, page: pageParam, q } = await searchParams;
   const session = await requirePageSession(["student"], "/student/notifications");
 
-  const notifications = await getStudentNotifications(session.userId);
+  const notifications = await getStudentNotifications(session.userId, q);
   const pagedNotifications = paginate(notifications, parsePage(pageParam));
 
   return (
     <DashboardShell role="student" title="Notifications" description="Messages internes et relances visibles par l'apprenant.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
-      {notifications.some((notification) => !notification.readAt) ? (
-        <form action={markAllNotificationsReadAction} className="mb-5">
-          <button className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3 text-sm font-black" type="submit">
-            Tout marquer comme lu
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+        <form method="get" className="flex flex-1 gap-3">
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Rechercher une notification..."
+            className="h-11 flex-1 rounded-lg border border-line bg-surface px-4 text-sm focus:border-market focus:ring-1 focus:ring-market"
+          />
+          <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1] sm:hidden">
+            Go
           </button>
         </form>
-      ) : null}
+        {notifications.some((notification) => !notification.readAt) ? (
+          <form action={markAllNotificationsReadAction}>
+            <button className="inline-flex h-11 items-center rounded-lg border border-line bg-surface px-4 text-sm font-black" type="submit">
+              Tout marquer lu
+            </button>
+          </form>
+        ) : null}
+      </div>
+
       <div className="grid gap-4">
         {pagedNotifications.items.map((notification) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={notification.id}>

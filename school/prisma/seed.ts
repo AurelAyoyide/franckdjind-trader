@@ -77,7 +77,8 @@ async function main() {
       description: "Comprendre le marche, structurer une routine et limiter le risque.",
       type: CourseType.FREE,
       status: CourseStatus.PUBLISHED,
-      duration: "4 semaines",
+      durationValue: 4,
+      durationUnit: "WEEKS",
       trainerId: trainer.id,
     },
   });

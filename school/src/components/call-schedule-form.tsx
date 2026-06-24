@@ -25,8 +25,26 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
         <h2 className="text-xl font-black">Programmer un appel</h2>
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-black">
-          Apprenants <span className="font-medium text-muted">(plusieurs possibles)</span>
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between text-sm font-black w-full">
+            <span>Apprenants <span className="font-medium text-muted">(plusieurs possibles)</span></span>
+            {learners.length > 0 && (
+              <button
+                type="button"
+                className="text-xs font-bold text-market hover:underline"
+                onClick={(e) => {
+                  const selectElement = e.currentTarget.parentElement?.parentElement?.querySelector('select');
+                  if (selectElement) {
+                    for (let i = 0; i < selectElement.options.length; i++) {
+                      selectElement.options[i].selected = true;
+                    }
+                  }
+                }}
+              >
+                Tout cocher
+              </button>
+            )}
+          </div>
           <select className="mt-2 min-h-32 w-full rounded-lg border border-line bg-background px-3 text-sm" multiple name="learnerIds" required>
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
@@ -34,9 +52,9 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
               </option>
             ))}
           </select>
-          <span className="mt-2 block text-xs text-muted">Maintiens Ctrl/Cmd pour selectionner plusieurs apprenants.</span>
+          <span className="mt-2 block text-xs text-muted">Maintiens Ctrl/Cmd pour annuler la selection d'un apprenant specifique.</span>
           {state.errors?.learnerIds ? <span className="mt-2 block text-xs text-danger">{state.errors.learnerIds[0]}</span> : null}
-        </label>
+        </div>
         <label className="text-sm font-black">
           Date et heure
           <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" min={new Date().toISOString().slice(0, 16)} name="scheduledAt" required type="datetime-local" />
@@ -54,9 +72,8 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
       </div>
       {state.message ? (
         <p
-          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${
-            state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
-          }`}
+          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
+            }`}
         >
           {state.message}
         </p>

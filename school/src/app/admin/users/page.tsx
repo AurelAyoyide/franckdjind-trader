@@ -7,6 +7,7 @@ import { requirePageSession } from "@/lib/authorization";
 import { fullName, getAdminUsers, statusLabel } from "@/lib/platform-data";
 import { paginate, parsePage } from "@/lib/pagination";
 import { setUserStatusAction } from "@/app/admin/users/actions";
+import { ConfirmButton } from "@/components/confirm-button";
 import { AdminUserEditor } from "@/components/admin-user-editor";
 
 export const dynamic = "force-dynamic";
@@ -55,25 +56,25 @@ export default async function AdminUsersPage({
               <form action={setUserStatusAction}>
                 <input name="userId" type="hidden" value={user.id} />
                 <input name="status" type="hidden" value={user.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED"} />
-                <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line bg-foreground/[0.06] px-3 text-sm font-black" type="submit">
+                <ConfirmButton className="inline-flex min-h-10 items-center justify-center rounded-lg border border-line bg-foreground/[0.06] px-3 text-sm font-black" confirmMessage={user.status === "SUSPENDED" ? "Lever la suspension de ce compte ?" : "Suspendre temporairement cet utilisateur ?"}>
                   {user.status === "SUSPENDED" ? "Lever la suspension" : "Suspendre temporairement"}
-                </button>
+                </ConfirmButton>
               </form>
               {user.status === "DELETED" ? (
                 <form action={setUserStatusAction}>
                   <input name="userId" type="hidden" value={user.id} />
                   <input name="status" type="hidden" value="ACTIVE" />
-                  <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-market/30 bg-market/10 px-3 text-sm font-black text-market" type="submit">
+                  <ConfirmButton className="inline-flex min-h-10 items-center justify-center rounded-lg border border-market/30 bg-market/10 px-3 text-sm font-black text-market" confirmMessage="Voulez-vous restaurer ce compte ?" >
                     Restaurer le compte archive
-                  </button>
+                  </ConfirmButton>
                 </form>
               ) : (
                 <form action={setUserStatusAction}>
                   <input name="userId" type="hidden" value={user.id} />
                   <input name="status" type="hidden" value="DELETED" />
-                  <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger" type="submit">
+                  <ConfirmButton className="inline-flex min-h-10 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger" confirmMessage="Etes-vous sur de vouloir supprimer ce compte (archivage) ?">
                     Archiver le compte
-                  </button>
+                  </ConfirmButton>
                 </form>
               )}
             </div>

@@ -80,7 +80,7 @@ export const courseUpdateSchema = z.object({
   priceAmount: z.coerce.number().nonnegative("Prix invalide").optional(),
   priceCurrency: z.enum(["XOF", "EUR"]).optional(),
   durationValue: z.coerce.number().int().min(1).max(999).optional(),
-  durationUnit: z.enum(["heures", "jours", "semaines"]).optional(),
+  durationUnit: z.enum(["HOURS", "DAYS", "WEEKS", "MONTHS"]).optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 
@@ -129,6 +129,10 @@ export const quizQuestionCreateSchema = z.object({
   optionB: z.string().min(1, "Option B requise").trim(),
   optionC: z.string().trim().optional(),
   correctOption: z.enum(["A", "B", "C"]),
+});
+
+export const quizQuestionDeleteSchema = z.object({
+  questionId: z.string().min(1),
 });
 
 export const enrollmentStatusSchema = z.object({
@@ -208,7 +212,7 @@ export const courseSchema = z.object({
   priceAmount: z.coerce.number().nonnegative("Prix invalide").optional(),
   priceCurrency: z.enum(["XOF", "EUR"]).optional(),
   durationValue: z.coerce.number().int().min(1).max(999).optional(),
-  durationUnit: z.enum(["heures", "jours", "semaines"]).optional(),
+  durationUnit: z.enum(["HOURS", "DAYS", "WEEKS", "MONTHS"]).optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 

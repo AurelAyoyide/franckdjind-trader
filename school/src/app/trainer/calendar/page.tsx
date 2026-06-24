@@ -25,21 +25,50 @@ const noticeMessages: Record<string, string> = {
 export default async function TrainerCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; page?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string; q?: string; status?: string }>;
 }) {
-  const { notice, page: pageParam } = await searchParams;
+  const { notice, page: pageParam, q, status } = await searchParams;
   const session = await requirePageSession(["trainer", "admin"], "/trainer/calendar");
   if (!canManageTrainerData(session)) {
     redirect("/trainer/dashboard");
   }
   const scope = { userId: session.userId, isAdmin: session.role === "admin" };
-  const [calls, learners] = await Promise.all([getTrainerCalls(scope), getLearnerRows(scope)]);
+  const [calls, learners] = await Promise.all([
+    getTrainerCalls(scope, { q, status }),
+    getLearnerRows(scope)
+  ]);
   const pagedCalls = paginate(calls, parsePage(pageParam));
 
   return (
     <DashboardShell role={session.role} title="Calendrier d'appels" description="Appels programmes et suggestions automatiques selon l'inactivite.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <CallScheduleForm learners={learners.map((learner) => ({ id: learner.id, name: learner.name, email: learner.email }))} />
+
+      <form method="get" className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Apprenant, titre..."
+          className="h-11 flex-1 rounded-lg border border-line bg-surface px-4 text-sm focus:border-market focus:ring-1 focus:ring-market"
+        />
+        <select
+          name="status"
+          defaultValue={status}
+          className="h-11 rounded-lg border border-line bg-surface px-4 text-sm focus:border-market focus:ring-1 focus:ring-market"
+          onChange={(e) => e.currentTarget.form?.submit()}
+        >
+          <option value="">Tous les statuts</option>
+          <option value="PENDING">En attente</option>
+          <option value="DONE">Termine</option>
+          <option value="MISSED">Manque</option>
+          <option value="CANCELLED">Annule</option>
+        </select>
+        <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1] sm:hidden">
+          Filtrer
+        </button>
+      </form>
+
       <div className="grid gap-5 md:grid-cols-2">
         {pagedCalls.items.map((call) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={call.id}>

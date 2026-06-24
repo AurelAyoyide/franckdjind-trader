@@ -82,7 +82,14 @@ export async function completeLessonAction(formData: FormData) {
 
   await createCertificateIfCourseCompleted(session.userId, lesson.module.courseId);
 
+  const nextUrl = formData.get("nextLessonUrl") as string | null;
+
   revalidatePath(`/student/lessons/${lessonId}`);
   revalidatePath(`/student/courses/${lesson.module.courseId}`);
-  redirect(`/student/lessons/${lessonId}?notice=completed`);
+
+  if (nextUrl) {
+    redirect(nextUrl);
+  } else {
+    redirect(`/student/courses/${lesson.module.courseId}?notice=completed`);
+  }
 }

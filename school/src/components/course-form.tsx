@@ -46,7 +46,7 @@ export function CourseForm() {
           <div className="mt-2 flex gap-2">
             <input className="min-h-12 min-w-0 flex-1 rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market" min="1" name="durationValue" placeholder="Ex. 6" type="number" />
             <select className="min-h-12 rounded-lg border border-line bg-background px-3 text-sm" name="durationUnit">
-              <option value="semaines">semaines</option><option value="jours">jours</option><option value="heures">heures</option>
+              <option value="WEEKS">semaines</option><option value="DAYS">jours</option><option value="HOURS">heures</option><option value="MONTHS">mois</option>
             </select>
           </div>
           <span className="mt-2 block text-xs font-medium text-muted">Un simple repere pour l&apos;apprenant, jamais une obligation.</span>
@@ -64,9 +64,8 @@ export function CourseForm() {
       </label>
       {state.message ? (
         <p
-          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${
-            state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
-          }`}
+          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
+            }`}
         >
           {state.message}
         </p>

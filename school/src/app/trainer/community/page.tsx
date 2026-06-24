@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
 import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
+import { ConfirmButton } from "@/components/confirm-button";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getCommunityPosts, getTrainerCourses, statusLabel } from "@/lib/platform-data";
 import { paginate, parsePage } from "@/lib/pagination";
@@ -82,7 +83,7 @@ export default async function TrainerCommunityPage({
                   {post.commentsEnabled ? "Fermer commentaires" : "Ouvrir commentaires"}
                 </button>
               </form>
-              <form action={deleteCommunityPostAction}><input name="postId" type="hidden" value={post.id} /><button className="inline-flex min-h-10 items-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger" type="submit">Supprimer publication</button></form>
+              <form action={deleteCommunityPostAction}><input name="postId" type="hidden" value={post.id} /><ConfirmButton className="inline-flex min-h-10 items-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger">Supprimer publication</ConfirmButton></form>
             </div>
             <details className="mt-5 rounded-lg border border-line bg-foreground/[0.04] p-4"><summary className="cursor-pointer text-sm font-black">Modifier la publication</summary><form action={updateCommunityPostAction} className="mt-4 grid gap-3"><input name="postId" type="hidden" value={post.id} /><input className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" defaultValue={post.title} name="title" required /><textarea className="min-h-24 rounded-lg border border-line bg-background p-3 text-sm" defaultValue={post.body} name="body" required /><select className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" defaultValue={post.courseId ?? ""} name="courseId"><option value="">Tous les apprenants</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select><label className="flex gap-2 text-sm font-black"><input defaultChecked={post.pinned} name="pinned" type="checkbox" />Epingler</label><label className="flex gap-2 text-sm font-black"><input defaultChecked={post.commentsEnabled} name="commentsEnabled" type="checkbox" />Autoriser les commentaires</label><button className="min-h-10 rounded-lg bg-market px-3 text-sm font-black text-on-market" type="submit">Enregistrer</button></form></details>
             <div className="mt-5 grid gap-3">
@@ -92,9 +93,9 @@ export default async function TrainerCommunityPage({
                   <p className="mt-2 text-sm leading-6 text-muted">{comment.body}</p>
                   <form action={deleteCommunityCommentAction} className="mt-3">
                     <input name="commentId" type="hidden" value={comment.id} />
-                    <button className="inline-flex min-h-9 items-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger" type="submit">
+                    <ConfirmButton className="inline-flex min-h-9 items-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger">
                       Supprimer
-                    </button>
+                    </ConfirmButton>
                   </form>
                 </div>
               ))}

@@ -74,13 +74,13 @@ export async function requestAccessAction(
 
   const course = parsed.data.courseId
     ? await prisma.course.findFirst({
-        where: {
-          id: parsed.data.courseId,
-          status: CourseStatus.PUBLISHED,
-          type: parsed.data.kind === "free" ? CourseType.FREE : CourseType.PAID,
-        },
-        select: { id: true, title: true },
-      })
+      where: {
+        id: parsed.data.courseId,
+        status: CourseStatus.PUBLISHED,
+        type: parsed.data.kind === "free" ? CourseType.FREE : CourseType.PAID,
+      },
+      select: { id: true, title: true },
+    })
     : null;
 
   if (parsed.data.courseId && !course) {
@@ -113,7 +113,9 @@ export async function requestAccessAction(
   if (recentPendingRequest) {
     return {
       ok: true,
-      message: "Une demande recente est deja en attente. Tu peux rouvrir WhatsApp avec le meme message.",
+      message: parsed.data.kind === "paid"
+        ? "Une demande est deja en attente. Tu peux rouvrir WhatsApp pour le paiement."
+        : "Une demande recente est deja en attente. Tu peux rouvrir WhatsApp avec le meme message.",
       whatsappUrl: buildWhatsAppLink(message),
     };
   }
@@ -138,7 +140,9 @@ export async function requestAccessAction(
 
   return {
     ok: true,
-    message: "Demande enregistree. Le clic WhatsApp garde le paiement hors plateforme.",
+    message: parsed.data.kind === "paid"
+      ? "Demande enregistree. Continue vers WhatsApp pour discuter avec le formateur et finaliser ton paiement hors plateforme."
+      : "Demande enregistree. Ouvre WhatsApp pour envoyer ton message pre-rempli.",
     whatsappUrl: buildWhatsAppLink(message),
   };
 }

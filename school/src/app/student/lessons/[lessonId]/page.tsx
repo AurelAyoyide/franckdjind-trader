@@ -39,13 +39,14 @@ export default async function StudentLessonPage({
       }
     >
       <NoticeBanner message={notice === "completed" ? "Lecon marquee comme terminee. Ta progression a ete mise a jour." : null} />
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] items-start">
         {lesson.kind === "VIDEO" ? (
           <VideoLessonPlayer
             initialPosition={lesson.videoPosition}
             lessonId={lesson.id}
             title={lesson.title}
             watermark={session.email ?? "apprenant"}
+            nextLessonUrl={lesson.nextLessonUrl}
           />
         ) : lesson.kind === "DOCUMENT" ? (
           <section className="rounded-lg border border-line bg-surface p-6">
@@ -106,18 +107,29 @@ export default async function StudentLessonPage({
             {lesson.kind !== "VIDEO" ? (
               <form action={completeLessonAction}>
                 <input name="lessonId" type="hidden" value={lesson.id} />
-                <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market" type="submit">
+                <input name="nextLessonUrl" type="hidden" value={lesson.nextLessonUrl ?? ""} />
+                <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market hover:bg-market/90 transition-colors" type="submit">
                   {lesson.completed ? "Lecon terminee" : "Marquer comme termine"}
                 </button>
               </form>
             ) : (
-              <p className="rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-semibold text-cyan">
-                Cette lecon se valide automatiquement apres 90 % de la lecture reelle de la video.
+              <p className="rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-medium text-cyan">
+                Cette lecon se valide automatiquement apres 90 % de lecture.
               </p>
+            )}
+            {(lesson.previousLessonUrl || lesson.nextLessonUrl) && (
+              <div className="mt-2 flex items-center justify-between gap-3">
+                {lesson.previousLessonUrl ? (
+                  <ButtonLink className="flex-1 text-center" href={lesson.previousLessonUrl} variant="secondary">Precedent</ButtonLink>
+                ) : <div className="flex-1" />}
+                {lesson.nextLessonUrl ? (
+                  <ButtonLink className="flex-1 text-center" href={lesson.nextLessonUrl} variant="secondary">Suivant</ButtonLink>
+                ) : <div className="flex-1" />}
+              </div>
             )}
           </div>
         </aside>
       </div>
-    </DashboardShell>
+    </DashboardShell >
   );
 }

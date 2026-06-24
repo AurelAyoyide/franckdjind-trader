@@ -26,6 +26,7 @@ import {
   lessonUpdateSchema,
   quizCreateSchema,
   quizQuestionCreateSchema,
+  quizQuestionDeleteSchema,
 } from "@/lib/validation";
 
 export type BuilderActionState = {
@@ -243,9 +244,10 @@ export async function updateCourseAction(
     where: { id: parsed.data.courseId },
     data: {
       title: parsed.data.title,
-      type: parsed.data.type,
-      priceLabel: parsed.data.priceAmount ? `${parsed.data.priceAmount.toLocaleString("fr-FR")} ${parsed.data.priceCurrency ?? "XOF"}` : null,
-      duration: parsed.data.durationValue ? `${parsed.data.durationValue} ${parsed.data.durationUnit ?? "semaines"}` : null,
+      priceAmount: parsed.data.priceAmount ?? null,
+      priceCurrency: parsed.data.priceCurrency ?? null,
+      durationValue: parsed.data.durationValue ?? null,
+      durationUnit: (parsed.data.durationUnit?.toUpperCase() as any) ?? null,
       description: parsed.data.description,
     },
   });
@@ -624,6 +626,28 @@ export async function addQuizQuestionAction(
   return { ok: true, message: "Question ajoutee au quiz." };
 }
 
+export async function deleteQuizQuestionAction(formData: FormData) {
+  const session = await requireBuilderSession();
+  const parsed = quizQuestionDeleteSchema.safeParse({ questionId: formData.get("questionId") });
+  if (!session || !parsed.success) return;
+  const question = await prisma.question.findUnique({ where: { id: parsed.data.questionId }, include: { quiz: { include: { attempts: { select: { id: true } }, lesson: { include: { module: { include: { course: true } } } } } } } });
+  if (!question || !question.quiz || !question.quiz.lesson) return;
+  const quiz = question.quiz;
+  const lesson = question.quiz.lesson;
+
+  if (session.role !== "admin" && lesson.module.course.trainerId !== session.userId) return;
+
+  if (quiz.attempts.length > 0) {
+    redirect(`/trainer/courses/${lesson.module.courseId}?notice=question-tracked`);
+  }
+
+  await prisma.question.delete({ where: { id: question.id } });
+  await prisma.auditLog.create({ data: { actorId: session.userId, action: "QUIZ_QUESTION_DELETED", target: question.quizId } });
+
+  revalidatePath(`/trainer/courses/${lesson.module.courseId}`);
+  redirect(`/trainer/courses/${lesson.module.courseId}?notice=question-deleted`);
+}
+
 export async function setEnrollmentStatusAction(formData: FormData) {
   const session = await requireBuilderSession();
   if (!session) {
@@ -764,4 +788,82 @@ export async function assignLearnerAction(
   revalidatePath("/student/notifications");
 
   return { ok: true, message: "Apprenant inscrit a la formation." };
+}
+
+export async function bulkAssignLearnersAction(
+  _state: BuilderActionState,
+  formData: FormData,
+): Promise<BuilderActionState> {
+  const session = await requireBuilderSession();
+  if (!session) {
+    return { ok: false, message: "Connexion formateur requise." };
+  }
+
+  const courseId = String(formData.get("courseId") ?? "");
+  const course = await canManageCourse(courseId, session.userId, session.role);
+  if (!course) {
+    return { ok: false, message: "Formation introuvable ou non autorisee." };
+  }
+
+  const existingEnrollments = await prisma.enrollment.findMany({
+    where: { courseId: course.id },
+    select: { learnerId: true },
+  });
+  const alreadyEnrolledIds = new Set(existingEnrollments.map((e) => e.learnerId));
+
+  const eligibleLearners = await prisma.user.findMany({
+    where: {
+      role: UserRole.STUDENT,
+      status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
+      id: { notIn: [...alreadyEnrolledIds] },
+    },
+    select: { id: true, email: true, firstName: true },
+  });
+
+  if (eligibleLearners.length === 0) {
+    return { ok: false, message: "Tous les apprenants sont deja inscrits a cette formation." };
+  }
+
+  const operations: any[] = eligibleLearners.flatMap((learner) => [
+    prisma.enrollment.create({
+      data: {
+        learnerId: learner.id,
+        courseId: course.id,
+        status: EnrollmentStatus.ACTIVE,
+      },
+    }),
+    prisma.user.update({
+      where: { id: learner.id },
+      data: { status: AccountStatus.ACTIVE },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: learner.id,
+        senderId: session.userId,
+        type: "INTERNAL",
+        title: "Nouvel acces formation",
+        body: `Tu as ete inscrit a la formation ${course.title}.`,
+      },
+    }),
+  ]);
+
+  operations.push(
+    prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "BULK_LEARNERS_ASSIGNED",
+        target: course.id,
+        metadata: { count: eligibleLearners.length },
+      },
+    }),
+  );
+
+  await prisma.$transaction(operations);
+
+  revalidatePath(`/trainer/courses/${course.id}`);
+  revalidatePath("/trainer/students");
+  revalidatePath("/student/courses");
+  revalidatePath("/student/notifications");
+
+  return { ok: true, message: `${eligibleLearners.length} apprenant(s) inscrits a la formation.` };
 }

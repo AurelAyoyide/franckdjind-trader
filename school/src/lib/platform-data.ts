@@ -13,20 +13,20 @@ function courseScope(scope?: TrainerDataScope) {
 function learnerScope(scope?: TrainerDataScope) {
   return scope && !scope.isAdmin
     ? {
-        enrollments: {
-          some: {
-            course: { trainerId: scope.userId },
-          },
+      enrollments: {
+        some: {
+          course: { trainerId: scope.userId },
         },
-      }
+      },
+    }
     : {};
 }
 
 function requestScope(scope?: TrainerDataScope) {
   return scope && !scope.isAdmin
     ? {
-        OR: [{ course: { trainerId: scope.userId } }, { courseId: null }],
-      }
+      OR: [{ course: { trainerId: scope.userId } }, { courseId: null }],
+    }
     : {};
 }
 
@@ -40,6 +40,11 @@ function percent(done: number, total: number) {
 
 function statusLabel(status: string) {
   return status.replaceAll("_", " ");
+}
+
+function formatDuration(value?: number | null, unit?: string | null) {
+  if (!value) return "A votre rythme";
+  return `${value} ${unit?.toLowerCase() ?? "semaines"}`;
 }
 
 export async function getStudentCourseCards(userId: string) {
@@ -82,7 +87,7 @@ export async function getStudentCourseCards(userId: string) {
       progress: percent(completed, lessons.length),
       lessons: lessons.length,
       modules: course.modules.length,
-      duration: course.duration || "A votre rythme",
+      duration: formatDuration(course.durationValue, course.durationUnit),
       description: course.description,
     };
   });
@@ -177,7 +182,7 @@ export async function getStudentCourseDetail(userId: string, courseId: string) {
       modules: enrollment.course.modules.length,
       lessons: lessons.length,
       level: enrollment.course.type === "FREE" ? "Debutant" : "Intermediaire",
-      duration: enrollment.course.duration || "A votre rythme",
+      duration: formatDuration(enrollment.course.durationValue, enrollment.course.durationUnit),
     },
     modules: (() => {
       let unlockedSoFar = true;
@@ -242,6 +247,19 @@ export async function getStudentLesson(userId: string, lessonId: string) {
     return null;
   }
 
+  const allLessons = await prisma.lesson.findMany({
+    where: { module: { courseId: lesson.module.courseId } },
+    orderBy: [{ module: { position: "asc" } }, { position: "asc" }],
+    include: { quiz: true },
+  });
+
+  const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
+  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+
+  const getHref = (l: { id: string; type: string; quiz: { id: string } | null }) =>
+    l.type === "QUIZ" && l.quiz ? `/student/quizzes/${l.quiz.id}` : `/student/lessons/${l.id}`;
+
   const previousLessons = await prisma.lesson.findMany({
     where: {
       module: {
@@ -264,17 +282,19 @@ export async function getStudentLesson(userId: string, lessonId: string) {
     return null;
   }
 
+  const progress = lesson.progress[0];
+
   return {
     id: lesson.id,
-    title: lesson.title,
-    kind: lesson.type,
-    content: lesson.content,
-    documentPath: lesson.documentPath,
     courseId: lesson.module.courseId,
-    courseTitle: lesson.module.course.title,
-    completed: lesson.progress.some((item) => item.completed),
-    videoPosition: lesson.progress[0]?.videoPosition ?? 0,
-    durationSeconds: lesson.durationSeconds,
+    title: lesson.title,
+    content: lesson.content,
+    kind: lesson.type,
+    videoPosition: progress?.videoPosition ?? 0,
+    documentPath: lesson.documentPath,
+    completed: progress?.completed ?? false,
+    previousLessonUrl: prevLesson ? getHref(prevLesson) : null,
+    nextLessonUrl: nextLesson ? getHref(nextLesson) : null,
   };
 }
 
@@ -346,9 +366,15 @@ export async function getStudentQuiz(userId: string, quizId: string) {
   };
 }
 
-export async function getStudentCertificates(userId: string) {
+export async function getStudentCertificates(userId: string, q?: string) {
   return prisma.certificate.findMany({
-    where: { learnerId: userId, revokedAt: null },
+    where: {
+      learnerId: userId,
+      revokedAt: null,
+      ...(q ? {
+        course: { title: { contains: q, mode: "insensitive" } },
+      } : {}),
+    },
     include: {
       learner: true,
       course: true,
@@ -357,9 +383,17 @@ export async function getStudentCertificates(userId: string) {
   });
 }
 
-export async function getStudentNotifications(userId: string) {
+export async function getStudentNotifications(userId: string, q?: string) {
   return prisma.notification.findMany({
-    where: { userId },
+    where: {
+      userId,
+      ...(q ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { body: { contains: q, mode: "insensitive" } },
+        ],
+      } : {}),
+    },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -371,21 +405,21 @@ export async function getVisibleLiveAnnouncements(userId?: string) {
       status: { in: ["SCHEDULED", "SENT"] },
       ...(userId
         ? {
-            OR: [
-              { courseId: null },
-              {
-                course: {
-                  enrollments: {
-                    some: {
-                      learnerId: userId,
-                      status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
-                      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-                    },
+          OR: [
+            { courseId: null },
+            {
+              course: {
+                enrollments: {
+                  some: {
+                    learnerId: userId,
+                    status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+                    OR: [{ endsAt: null }, { endsAt: { gt: now } }],
                   },
                 },
               },
-            ],
-          }
+            },
+          ],
+        }
         : {}),
     },
     include: { course: true },
@@ -393,14 +427,27 @@ export async function getVisibleLiveAnnouncements(userId?: string) {
   });
 }
 
-export async function getTrainerLiveAnnouncements(scope: TrainerDataScope) {
+export async function getTrainerLiveAnnouncements(
+  scope: TrainerDataScope,
+  filters?: { q?: string; status?: string }
+) {
   return prisma.liveAnnouncement.findMany({
-    where:
-      scope.isAdmin
+    where: {
+      ...(scope.isAdmin
         ? {}
         : {
-            OR: [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }],
-          },
+          OR: [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }],
+        }),
+      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(filters?.q ? {
+        OR: [
+          ...(scope.isAdmin ? [] : [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }]),
+          { title: { contains: filters.q, mode: "insensitive" } },
+          { body: { contains: filters.q, mode: "insensitive" } },
+          { course: { title: { contains: filters.q, mode: "insensitive" } } },
+        ],
+      } : {}),
+    },
     include: { course: true },
     orderBy: { scheduledAt: "asc" },
   });
@@ -413,21 +460,21 @@ export async function getCommunityPosts(userId?: string, includeHidden = false) 
       ...(includeHidden ? {} : { status: "PUBLISHED" }),
       ...(userId
         ? {
-            OR: [
-              { courseId: null },
-              {
-                course: {
-                  enrollments: {
-                    some: {
-                      learnerId: userId,
-                      status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
-                      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-                    },
+          OR: [
+            { courseId: null },
+            {
+              course: {
+                enrollments: {
+                  some: {
+                    learnerId: userId,
+                    status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+                    OR: [{ endsAt: null }, { endsAt: { gt: now } }],
                   },
                 },
               },
-            ],
-          }
+            },
+          ],
+        }
         : {}),
     },
     include: {
@@ -477,9 +524,16 @@ export async function getTrainerDashboardData(scope?: TrainerDataScope) {
   return { learners, courses, requests, calls, recentRequests };
 }
 
-export async function getTrainerCourses(scope?: TrainerDataScope) {
+export async function getTrainerCourses(
+  scope?: TrainerDataScope,
+  filters?: { q?: string; status?: string }
+) {
   return prisma.course.findMany({
-    where: courseScope(scope),
+    where: {
+      ...courseScope(scope),
+      ...(filters?.q ? { title: { contains: filters.q, mode: "insensitive" } } : {}),
+      ...(filters?.status ? { status: filters.status as any } : {}),
+    },
     include: {
       modules: { include: { lessons: true } },
     },
@@ -519,20 +573,45 @@ export async function getTrainerCourseBuilder(courseId: string, scope?: TrainerD
   });
 }
 
-export async function getTrainingRequests(scope?: TrainerDataScope) {
+export async function getTrainingRequests(
+  scope?: TrainerDataScope,
+  filters?: { q?: string; status?: string }
+) {
   return prisma.trainingRequest.findMany({
-    where: requestScope(scope),
+    where: {
+      ...requestScope(scope),
+      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(filters?.q ? {
+        learner: {
+          OR: [
+            { firstName: { contains: filters.q, mode: "insensitive" } },
+            { lastName: { contains: filters.q, mode: "insensitive" } },
+            { email: { contains: filters.q, mode: "insensitive" } },
+          ],
+        },
+      } : {}),
+    },
     include: { learner: true, course: true },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function getLearnerRows(scope?: TrainerDataScope) {
+export async function getLearnerRows(
+  scope?: TrainerDataScope,
+  filters?: { q?: string; status?: string }
+) {
   const learners = await prisma.user.findMany({
     where: {
       role: UserRole.STUDENT,
       status: { not: AccountStatus.DELETED },
       ...learnerScope(scope),
+      ...(filters?.q ? {
+        OR: [
+          { firstName: { contains: filters.q, mode: "insensitive" } },
+          { lastName: { contains: filters.q, mode: "insensitive" } },
+          { email: { contains: filters.q, mode: "insensitive" } },
+        ],
+      } : {}),
     },
     include: {
       enrollments: {
@@ -545,7 +624,7 @@ export async function getLearnerRows(scope?: TrainerDataScope) {
     orderBy: { createdAt: "desc" },
   });
 
-  return learners.map((learner) => {
+  const rows = learners.map((learner) => {
     const lessonIds = new Set(
       learner.enrollments.flatMap((enrollment) =>
         enrollment.course.modules.flatMap((module) => module.lessons.map((lesson) => lesson.id)),
@@ -573,11 +652,30 @@ export async function getLearnerRows(scope?: TrainerDataScope) {
       lastSeen: lastActivity ?? learner.createdAt,
     };
   });
+
+  if (filters?.status) {
+    return rows.filter((r) => r.status === filters.status);
+  }
+  return rows;
 }
 
-export async function getTrainerCalls(scope?: TrainerDataScope) {
+export async function getTrainerCalls(
+  scope?: TrainerDataScope,
+  filters?: { q?: string; status?: string }
+) {
   return prisma.callSchedule.findMany({
-    where: scope && !scope.isAdmin ? { trainerId: scope.userId } : {},
+    where: {
+      ...(scope && !scope.isAdmin ? { trainerId: scope.userId } : {}),
+      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(filters?.q ? {
+        OR: [
+          { title: { contains: filters.q, mode: "insensitive" } },
+          { learner: { firstName: { contains: filters.q, mode: "insensitive" } } },
+          { learner: { lastName: { contains: filters.q, mode: "insensitive" } } },
+          { learner: { email: { contains: filters.q, mode: "insensitive" } } },
+        ],
+      } : {}),
+    },
     include: { learner: true, trainer: true },
     orderBy: { scheduledAt: "asc" },
   });
@@ -625,8 +723,17 @@ export async function getAuditLogs(
   });
 }
 
-export async function getAdminCertificates() {
+export async function getAdminCertificates(q?: string) {
   return prisma.certificate.findMany({
+    where: q ? {
+      OR: [
+        { code: { contains: q, mode: "insensitive" } },
+        { course: { title: { contains: q, mode: "insensitive" } } },
+        { learner: { firstName: { contains: q, mode: "insensitive" } } },
+        { learner: { lastName: { contains: q, mode: "insensitive" } } },
+        { learner: { email: { contains: q, mode: "insensitive" } } },
+      ],
+    } : undefined,
     include: {
       learner: true,
       course: true,
@@ -637,12 +744,17 @@ export async function getAdminCertificates() {
 
 export async function getPublicCertificate(code: string) {
   return prisma.certificate.findUnique({
-    where: { code },
-    include: {
-      learner: true,
-      course: true,
-    },
+    where: { code, revokedAt: null },
+    include: { course: true, learner: true },
   });
+}
+
+export async function getManualCertificateOptions() {
+  const [courses, learners] = await Promise.all([
+    prisma.course.findMany({ select: { id: true, title: true }, orderBy: { title: "asc" } }),
+    prisma.user.findMany({ where: { role: "STUDENT" }, select: { id: true, email: true, firstName: true, lastName: true }, orderBy: { email: "asc" } }),
+  ]);
+  return { courses, learners };
 }
 
 export { fullName, statusLabel };

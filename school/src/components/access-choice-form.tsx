@@ -72,9 +72,8 @@ export function AccessChoiceForm({
 
       {state.message ? (
         <p
-          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${
-            state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
-          }`}
+          className={`mt-5 rounded-lg border p-3 text-sm font-semibold ${state.ok ? "border-market/30 bg-market/10 text-market" : "border-danger/30 bg-danger/10 text-danger"
+            }`}
         >
           {state.message}
         </p>
@@ -96,7 +95,9 @@ export function AccessChoiceForm({
             target="_blank"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            {t("Ouvrir WhatsApp")}
+            {kind === "paid"
+              ? t("Discuter avec le formateur afin de payer ma formation")
+              : t("Ouvrir WhatsApp pour envoyer la demande")}
           </a>
         ) : null}
       </div>

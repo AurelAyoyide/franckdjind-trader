@@ -32,16 +32,22 @@ export async function approveTrainingRequestAction(formData: FormData) {
     return;
   }
 
+  const formCourseId = formData.get("courseId") as string | null;
+
   const course =
     request.course ??
-    (await prisma.course.findFirst({
-      where: {
-        status: "PUBLISHED",
-        type: request.type === "FREE" ? "FREE" : "PAID",
-        ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
-      },
-      orderBy: { createdAt: "asc" },
-    }));
+    (formCourseId
+      ? await prisma.course.findFirst({
+        where: { id: formCourseId, status: "PUBLISHED" },
+      })
+      : await prisma.course.findFirst({
+        where: {
+          status: "PUBLISHED",
+          type: request.type === "FREE" ? "FREE" : "PAID",
+          ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
+        },
+        orderBy: { createdAt: "asc" },
+      }));
 
   if (!course) {
     return;

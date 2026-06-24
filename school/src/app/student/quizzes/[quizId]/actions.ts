@@ -125,7 +125,8 @@ export async function submitQuizAction(formData: FormData) {
     });
 
     await createCertificateIfCourseCompleted(session.userId, quiz.lesson.module.courseId);
+    redirect(`/student/courses/${quiz.lesson.module.courseId}?notice=quiz-passed`);
   }
 
-  redirect(`/student/quizzes/${quizId}?result=${passed ? "passed" : "failed"}&score=${score}`);
+  redirect(`/student/quizzes/${quizId}?result=failed&score=${score}`);
 }
