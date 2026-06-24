@@ -27,7 +27,7 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="text-sm font-black">
           Apprenant
-          <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="learnerId">
+          <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="learnerId" required>
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
                 {learner.name} - {learner.email}
@@ -38,17 +38,17 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
         </label>
         <label className="text-sm font-black">
           Date et heure
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="scheduledAt" type="datetime-local" />
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" min={new Date().toISOString().slice(0, 16)} name="scheduledAt" required type="datetime-local" />
           {state.errors?.scheduledAt ? <span className="mt-2 block text-xs text-danger">{state.errors.scheduledAt[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
           Titre
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" />
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" placeholder="Ex. Bilan de progression" required />
           {state.errors?.title ? <span className="mt-2 block text-xs text-danger">{state.errors.title[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
           Notes internes
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="notes" />
+          <textarea className="mt-2 min-h-20 w-full rounded-lg border border-line bg-background p-3 text-sm" name="notes" placeholder="Objectif, points a aborder, suivi..." />
         </label>
       </div>
       {state.message ? (

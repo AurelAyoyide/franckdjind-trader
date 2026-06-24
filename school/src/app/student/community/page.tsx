@@ -1,21 +1,25 @@
 import { MessageCircle } from "lucide-react";
 import { CommunityCommentForm } from "@/components/community-comment-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getCommunityPosts } from "@/lib/platform-data";
+import { paginate, parsePage } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudentCommunityPage() {
+export default async function StudentCommunityPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
   const session = await requirePageSession(["student"], "/student/community");
 
   const communityPosts = await getCommunityPosts(session.userId);
+  const pagedPosts = paginate(communityPosts, parsePage(pageParam));
 
   return (
     <DashboardShell role="student" title="Communaute" description="Mini-espace communautaire pour annonces, questions et commentaires moderes.">
       <div className="grid gap-4">
-        {communityPosts.map((post) => (
+        {pagedPosts.items.map((post) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={post.id}>
             <div className="flex items-start justify-between gap-4">
               <MessageCircle className="h-5 w-5 text-market" aria-hidden="true" />
@@ -37,7 +41,7 @@ export default async function StudentCommunityPage() {
             {post.commentsEnabled ? <CommunityCommentForm postId={post.id} /> : null}
           </article>
         ))}
-        {!communityPosts.length ? (
+        {!pagedPosts.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <MessageCircle className="h-5 w-5 text-market" aria-hidden="true" />
             <h2 className="mt-5 text-xl font-black">Aucune publication</h2>
@@ -45,6 +49,7 @@ export default async function StudentCommunityPage() {
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedPosts.page} path="/student/community" totalPages={pagedPosts.totalPages} />
     </DashboardShell>
   );
 }

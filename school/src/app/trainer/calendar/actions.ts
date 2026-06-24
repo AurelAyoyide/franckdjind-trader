@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
-import { callScheduleSchema, callStatusSchema } from "@/lib/validation";
+import { callDeleteSchema, callScheduleSchema, callStatusSchema, callUpdateSchema } from "@/lib/validation";
 
 export type CallScheduleState = {
   ok: boolean;
@@ -145,4 +145,85 @@ export async function setCallStatusAction(formData: FormData) {
 
   revalidatePath("/trainer/calendar");
   redirect("/trainer/calendar?notice=status-updated");
+}
+
+export async function updateCallAction(formData: FormData) {
+  const session = await requireTrainer();
+  if (!session) {
+    return;
+  }
+
+  const parsed = callUpdateSchema.safeParse({
+    callId: formData.get("callId"),
+    learnerId: formData.get("learnerId"),
+    title: formData.get("title"),
+    notes: formData.get("notes"),
+    scheduledAt: formData.get("scheduledAt"),
+  });
+
+  if (!parsed.success || parsed.data.scheduledAt.getTime() < Date.now() - 60_000) {
+    redirect("/trainer/calendar?notice=invalid-call");
+  }
+
+  const call = await prisma.callSchedule.findUnique({
+    where: { id: parsed.data.callId },
+    select: { id: true, trainerId: true },
+  });
+  if (!call || (session.role !== "admin" && call.trainerId !== session.userId)) {
+    redirect("/trainer/calendar?notice=call-not-found");
+  }
+
+  const learner = await prisma.user.findFirst({
+    where: {
+      id: parsed.data.learnerId,
+      role: UserRole.STUDENT,
+      status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
+      ...(session.role !== "admin"
+        ? { enrollments: { some: { course: { trainerId: session.userId }, status: { in: ["ACTIVE", "COMPLETED"] } } } }
+        : {}),
+    },
+    select: { id: true },
+  });
+  if (!learner) {
+    redirect("/trainer/calendar?notice=invalid-learner");
+  }
+
+  await prisma.callSchedule.update({
+    where: { id: call.id },
+    data: {
+      learnerId: learner.id,
+      title: parsed.data.title,
+      notes: parsed.data.notes || null,
+      scheduledAt: parsed.data.scheduledAt,
+      status: CallStatus.SCHEDULED,
+    },
+  });
+  await prisma.auditLog.create({
+    data: { actorId: session.userId, action: "CALL_UPDATED", target: call.id, metadata: { learnerId: learner.id } },
+  });
+  revalidatePath("/trainer/calendar");
+  redirect("/trainer/calendar?notice=call-updated");
+}
+
+export async function deleteCallAction(formData: FormData) {
+  const session = await requireTrainer();
+  const parsed = callDeleteSchema.safeParse({ callId: formData.get("callId") });
+  if (!session || !parsed.success) {
+    return;
+  }
+
+  const call = await prisma.callSchedule.findUnique({
+    where: { id: parsed.data.callId },
+    select: { id: true, trainerId: true },
+  });
+  if (!call || (session.role !== "admin" && call.trainerId !== session.userId)) {
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.callSchedule.delete({ where: { id: call.id } }),
+    prisma.auditLog.create({ data: { actorId: session.userId, action: "CALL_DELETED", target: call.id } }),
+  ]);
+  revalidatePath("/trainer/calendar");
+  redirect("/trainer/calendar?notice=call-deleted");
 }

@@ -1,9 +1,11 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { CreateTrainerForm } from "@/components/create-trainer-form";
 import { NoticeBanner } from "@/components/notice-banner";
+import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getAdminUsers, statusLabel } from "@/lib/platform-data";
+import { paginate, parsePage } from "@/lib/pagination";
 import { setUserStatusAction } from "@/app/admin/users/actions";
 import { AdminUserEditor } from "@/components/admin-user-editor";
 
@@ -24,11 +26,12 @@ const noticeMessages: Record<string, string> = {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, page: pageParam } = await searchParams;
   await requirePageSession(["admin"], "/admin/users");
   const users = await getAdminUsers();
+  const pagedUsers = paginate(users, parsePage(pageParam));
 
   return (
     <DashboardShell role="admin" title="Utilisateurs" description="Creation formateurs, suspension et supervision des comptes.">
@@ -37,7 +40,7 @@ export default async function AdminUsersPage({
         <CreateTrainerForm />
       </div>
       <div className="grid gap-4">
-        {users.map((user) => (
+        {pagedUsers.items.map((user) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={user.id}>
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
@@ -77,13 +80,14 @@ export default async function AdminUsersPage({
             <AdminUserEditor user={user} />
           </article>
         ))}
-        {!users.length ? (
+        {!pagedUsers.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-xl font-black">Aucun utilisateur</h2>
             <p className="mt-2 text-sm text-muted">Les comptes apparaitront apres inscription ou seed.</p>
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedUsers.page} path="/admin/users" totalPages={pagedUsers.totalPages} />
     </DashboardShell>
   );
 }

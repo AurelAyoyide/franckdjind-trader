@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
-import { liveAnnouncementSchema } from "@/lib/validation";
+import { liveAnnouncementDeleteSchema, liveAnnouncementSchema, liveAnnouncementUpdateSchema } from "@/lib/validation";
 
 export type LiveAnnouncementState = {
   ok: boolean;
@@ -129,4 +129,101 @@ export async function createLiveAnnouncementAction(
   revalidatePath("/student/live-announcements");
 
   return { ok: true, message: `Live programme pour ${learners.length} apprenant(s).` };
+}
+
+async function findManageableLive(liveId: string, userId: string, isAdmin: boolean) {
+  return prisma.liveAnnouncement.findFirst({
+    where: {
+      id: liveId,
+      ...(isAdmin ? {} : { OR: [{ creatorId: userId }, { course: { trainerId: userId } }] }),
+    },
+    select: { id: true, creatorId: true, courseId: true, status: true },
+  });
+}
+
+export async function updateLiveAnnouncementAction(formData: FormData) {
+  const session = await getAuthorizedSession(["trainer", "admin"]);
+  if (!canManageTrainerData(session)) {
+    return;
+  }
+
+  const parsed = liveAnnouncementUpdateSchema.safeParse({
+    liveId: formData.get("liveId"),
+    title: formData.get("title"),
+    body: formData.get("body"),
+    externalUrl: formData.get("externalUrl"),
+    scheduledAt: formData.get("scheduledAt"),
+    courseId: formData.get("courseId") || undefined,
+  });
+  if (!parsed.success || parsed.data.scheduledAt.getTime() < Date.now() - 60_000) {
+    return;
+  }
+
+  const live = await findManageableLive(parsed.data.liveId, session.userId, session.role === "admin");
+  if (!live || live.status === LiveStatus.CANCELLED) {
+    return;
+  }
+
+  const course = parsed.data.courseId
+    ? await prisma.course.findFirst({
+        where: { id: parsed.data.courseId, ...(session.role !== "admin" ? { trainerId: session.userId } : {}) },
+        select: { id: true },
+      })
+    : null;
+  if (parsed.data.courseId && !course) {
+    return;
+  }
+
+  await prisma.liveAnnouncement.update({
+    where: { id: live.id },
+    data: {
+      title: parsed.data.title,
+      body: parsed.data.body,
+      externalUrl: parsed.data.externalUrl,
+      scheduledAt: parsed.data.scheduledAt,
+      courseId: course?.id ?? null,
+    },
+  });
+  await prisma.auditLog.create({
+    data: { actorId: session.userId, action: "LIVE_UPDATED", target: live.id, metadata: { courseId: course?.id ?? null } },
+  });
+  revalidatePath("/trainer/lives");
+  revalidatePath("/student/live-announcements");
+}
+
+export async function cancelLiveAnnouncementAction(formData: FormData) {
+  const session = await getAuthorizedSession(["trainer", "admin"]);
+  const parsed = liveAnnouncementDeleteSchema.safeParse({ liveId: formData.get("liveId") });
+  if (!canManageTrainerData(session) || !parsed.success) {
+    return;
+  }
+
+  const live = await findManageableLive(parsed.data.liveId, session.userId, session.role === "admin");
+  if (!live || live.status === LiveStatus.CANCELLED) {
+    return;
+  }
+
+  await prisma.liveAnnouncement.update({ where: { id: live.id }, data: { status: LiveStatus.CANCELLED } });
+  await prisma.auditLog.create({ data: { actorId: session.userId, action: "LIVE_CANCELLED", target: live.id } });
+  revalidatePath("/trainer/lives");
+  revalidatePath("/student/live-announcements");
+}
+
+export async function deleteLiveAnnouncementAction(formData: FormData) {
+  const session = await getAuthorizedSession(["trainer", "admin"]);
+  const parsed = liveAnnouncementDeleteSchema.safeParse({ liveId: formData.get("liveId") });
+  if (!canManageTrainerData(session) || !parsed.success) {
+    return;
+  }
+
+  const live = await findManageableLive(parsed.data.liveId, session.userId, session.role === "admin");
+  if (!live || live.status !== LiveStatus.CANCELLED) {
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.liveAnnouncement.delete({ where: { id: live.id } }),
+    prisma.auditLog.create({ data: { actorId: session.userId, action: "LIVE_DELETED", target: live.id } }),
+  ]);
+  revalidatePath("/trainer/lives");
 }

@@ -5,18 +5,22 @@ import { Plus } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { ButtonLink } from "@/components/ui/button-link";
+import { Pagination } from "@/components/pagination";
 import { requirePageSession } from "@/lib/authorization";
 import { getTrainerCourses, statusLabel } from "@/lib/platform-data";
+import { paginate, parsePage } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function TrainerCoursesPage() {
+export default async function TrainerCoursesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
   const session = await requirePageSession(["trainer", "admin"], "/trainer/courses");
 
   if (session.role !== "admin" && session.prismaRole !== UserRole.MAIN_TRAINER) {
     redirect("/trainer/dashboard");
   }
   const courses = await getTrainerCourses({ userId: session.userId, isAdmin: session.role === "admin" });
+  const pagedCourses = paginate(courses, parsePage(pageParam));
 
   return (
     <DashboardShell
@@ -26,7 +30,7 @@ export default async function TrainerCoursesPage() {
       action={<ButtonLink href="/trainer/courses/new"><Plus className="h-4 w-4" /> Creer</ButtonLink>}
     >
       <div className="grid gap-5">
-        {courses.map((course) => {
+        {pagedCourses.items.map((course) => {
           const lessons = course.modules.reduce((total, module) => total + module.lessons.length, 0);
 
           return (
@@ -46,13 +50,14 @@ export default async function TrainerCoursesPage() {
           </article>
         );
         })}
-        {!courses.length ? (
+        {!pagedCourses.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-xl font-black">Aucune formation</h2>
             <p className="mt-3 text-sm leading-7 text-muted">Cree une premiere formation pour ouvrir les inscriptions.</p>
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedCourses.page} path="/trainer/courses" totalPages={pagedCourses.totalPages} />
     </DashboardShell>
   );
 }

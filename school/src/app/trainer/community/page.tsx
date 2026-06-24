@@ -2,9 +2,11 @@ import { MessageCircle } from "lucide-react";
 import { CommunityPostForm } from "@/components/community-post-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
+import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getCommunityPosts, getTrainerCourses, statusLabel } from "@/lib/platform-data";
+import { paginate, parsePage } from "@/lib/pagination";
 import {
   deleteCommunityCommentAction,
   setCommunityPostStatusAction,
@@ -22,14 +24,15 @@ const noticeMessages: Record<string, string> = {
 export default async function TrainerCommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, page: pageParam } = await searchParams;
   const session = await requirePageSession(["trainer", "admin"], "/trainer/community");
   const [communityPosts, courses] = await Promise.all([
     getCommunityPosts(undefined, true),
     getTrainerCourses({ userId: session.userId, isAdmin: session.role === "admin" }),
   ]);
+  const pagedPosts = paginate(communityPosts, parsePage(pageParam));
 
   return (
     <DashboardShell
@@ -41,7 +44,7 @@ export default async function TrainerCommunityPage({
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <CommunityPostForm courses={courses.map((course) => ({ id: course.id, title: course.title }))} />
       <div className="grid gap-4">
-        {communityPosts.map((post) => (
+        {pagedPosts.items.map((post) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={post.id}>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
@@ -93,7 +96,7 @@ export default async function TrainerCommunityPage({
             </div>
           </article>
         ))}
-        {!communityPosts.length ? (
+        {!pagedPosts.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <MessageCircle className="h-5 w-5 text-market" aria-hidden="true" />
             <h2 className="mt-5 text-xl font-black">Aucune publication</h2>
@@ -101,6 +104,7 @@ export default async function TrainerCommunityPage({
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedPosts.page} path="/trainer/community" totalPages={pagedPosts.totalPages} />
     </DashboardShell>
   );
 }

@@ -357,7 +357,6 @@ export async function getStudentNotifications(userId: string) {
   return prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    take: 50,
   });
 }
 
@@ -387,7 +386,6 @@ export async function getVisibleLiveAnnouncements(userId?: string) {
     },
     include: { course: true },
     orderBy: { scheduledAt: "asc" },
-    take: 50,
   });
 }
 
@@ -401,7 +399,6 @@ export async function getTrainerLiveAnnouncements(scope: TrainerDataScope) {
           },
     include: { course: true },
     orderBy: { scheduledAt: "asc" },
-    take: 50,
   });
 }
 
@@ -438,7 +435,6 @@ export async function getCommunityPosts(userId?: string, includeHidden = false) 
       },
     },
     orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
-    take: 50,
   });
 }
 
@@ -524,7 +520,6 @@ export async function getTrainingRequests(scope?: TrainerDataScope) {
     where: requestScope(scope),
     include: { learner: true, course: true },
     orderBy: { createdAt: "desc" },
-    take: 100,
   });
 }
 
@@ -544,7 +539,6 @@ export async function getLearnerRows(scope?: TrainerDataScope) {
       lessonProgress: true,
     },
     orderBy: { createdAt: "desc" },
-    take: 200,
   });
 
   return learners.map((learner) => {
@@ -582,7 +576,6 @@ export async function getTrainerCalls(scope?: TrainerDataScope) {
     where: scope && !scope.isAdmin ? { trainerId: scope.userId } : {},
     include: { learner: true, trainer: true },
     orderBy: { scheduledAt: "asc" },
-    take: 50,
   });
 }
 
@@ -612,12 +605,10 @@ export async function getAdminUsers() {
       lastLoginAt: true,
     },
     orderBy: { createdAt: "desc" },
-    take: 200,
   });
 }
 
 export async function getAuditLogs(
-  limit = 100,
   filters: { action?: string; target?: string } = {},
 ) {
   return prisma.auditLog.findMany({
@@ -627,7 +618,6 @@ export async function getAuditLogs(
     },
     include: { actor: true },
     orderBy: { createdAt: "desc" },
-    take: limit,
   });
 }
 
@@ -638,7 +628,6 @@ export async function getAdminCertificates() {
       course: true,
     },
     orderBy: { issuedAt: "desc" },
-    take: 200,
   });
 }
 

@@ -29,17 +29,17 @@ export function LiveAnnouncementForm({ courses }: { courses: CourseOption[] }) {
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="text-sm font-black">
           Titre
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" />
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" placeholder="Ex. Session analyse marche" required />
           {state.errors?.title ? <span className="mt-2 block text-xs text-danger">{state.errors.title[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
           Date et heure
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="scheduledAt" type="datetime-local" />
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" min={new Date().toISOString().slice(0, 16)} name="scheduledAt" required type="datetime-local" />
           {state.errors?.scheduledAt ? <span className="mt-2 block text-xs text-danger">{state.errors.scheduledAt[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
           Lien externe
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="externalUrl" type="url" />
+          <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="externalUrl" placeholder="https://meet.google.com/..." required type="url" />
           {state.errors?.externalUrl ? <span className="mt-2 block text-xs text-danger">{state.errors.externalUrl[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
@@ -56,7 +56,7 @@ export function LiveAnnouncementForm({ courses }: { courses: CourseOption[] }) {
       </div>
       <label className="mt-4 block text-sm font-black">
         Description
-        <textarea className="mt-2 min-h-24 w-full rounded-lg border border-line bg-background p-3 text-sm" name="body" />
+        <textarea className="mt-2 min-h-24 w-full rounded-lg border border-line bg-background p-3 text-sm" name="body" placeholder="Ce qui sera traite pendant le live..." required />
         {state.errors?.body ? <span className="mt-2 block text-xs text-danger">{state.errors.body[0]}</span> : null}
       </label>
       {state.message ? (

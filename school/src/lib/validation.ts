@@ -150,9 +150,25 @@ export const callScheduleSchema = z.object({
   scheduledAt: z.coerce.date(),
 });
 
+export const callUpdateSchema = callScheduleSchema.extend({
+  callId: z.string().min(1),
+});
+
+export const callDeleteSchema = z.object({
+  callId: z.string().min(1),
+});
+
 export const callStatusSchema = z.object({
   callId: z.string().min(1),
   status: z.enum(["SCHEDULED", "DONE", "MISSED", "CANCELLED"]),
+});
+
+export const liveAnnouncementUpdateSchema = liveAnnouncementSchema.extend({
+  liveId: z.string().min(1),
+});
+
+export const liveAnnouncementDeleteSchema = z.object({
+  liveId: z.string().min(1),
 });
 
 export const learnerAssignmentSchema = z.object({
@@ -220,7 +236,11 @@ export type CommunityCommentInput = z.infer<typeof communityCommentSchema>;
 export type CommunityPostStatusInput = z.infer<typeof communityPostStatusSchema>;
 export type CommunityCommentDeleteInput = z.infer<typeof communityCommentDeleteSchema>;
 export type CallScheduleInput = z.infer<typeof callScheduleSchema>;
+export type CallUpdateInput = z.infer<typeof callUpdateSchema>;
+export type CallDeleteInput = z.infer<typeof callDeleteSchema>;
 export type CallStatusInput = z.infer<typeof callStatusSchema>;
+export type LiveAnnouncementUpdateInput = z.infer<typeof liveAnnouncementUpdateSchema>;
+export type LiveAnnouncementDeleteInput = z.infer<typeof liveAnnouncementDeleteSchema>;
 export type LearnerAssignmentInput = z.infer<typeof learnerAssignmentSchema>;
 export type AccessChoiceInput = z.infer<typeof accessChoiceSchema>;
 export type CourseInput = z.infer<typeof courseSchema>;

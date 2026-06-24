@@ -1,8 +1,10 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
+import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { getStudentNotifications } from "@/lib/platform-data";
+import { paginate, parsePage } from "@/lib/pagination";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +17,13 @@ const noticeMessages: Record<string, string> = {
 export default async function StudentNotificationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, page: pageParam } = await searchParams;
   const session = await requirePageSession(["student"], "/student/notifications");
 
   const notifications = await getStudentNotifications(session.userId);
+  const pagedNotifications = paginate(notifications, parsePage(pageParam));
 
   return (
     <DashboardShell role="student" title="Notifications" description="Messages internes et relances visibles par l'apprenant.">
@@ -33,7 +36,7 @@ export default async function StudentNotificationsPage({
         </form>
       ) : null}
       <div className="grid gap-4">
-        {notifications.map((notification) => (
+        {pagedNotifications.items.map((notification) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={notification.id}>
             <StatusBadge tone={notification.readAt ? "muted" : "cyan"}>{notification.title}</StatusBadge>
             <p className="mt-4 text-sm leading-7 text-muted">{notification.body}</p>
@@ -47,13 +50,14 @@ export default async function StudentNotificationsPage({
             ) : null}
           </article>
         ))}
-        {!notifications.length ? (
+        {!pagedNotifications.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <StatusBadge tone="muted">Aucune</StatusBadge>
             <p className="mt-4 text-sm leading-7 text-muted">Tu n&apos;as pas encore de notification.</p>
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedNotifications.page} path="/student/notifications" totalPages={pagedNotifications.totalPages} />
     </DashboardShell>
   );
 }

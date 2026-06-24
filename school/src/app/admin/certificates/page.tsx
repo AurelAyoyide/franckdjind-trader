@@ -1,10 +1,12 @@
 import { Award } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
+import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getAdminCertificates } from "@/lib/platform-data";
 import { formatDate } from "@/lib/utils";
+import { paginate, parsePage } from "@/lib/pagination";
 import { revokeCertificateAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -16,17 +18,18 @@ const noticeMessages: Record<string, string> = {
 export default async function AdminCertificatesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; page?: string }>;
 }) {
-  const { notice } = await searchParams;
+  const { notice, page: pageParam } = await searchParams;
   await requirePageSession(["admin"], "/admin/certificates");
   const certificates = await getAdminCertificates();
+  const pagedCertificates = paginate(certificates, parsePage(pageParam));
 
   return (
     <DashboardShell role="admin" title="Certificats" description="Supervision, verification et revocation des certificats emis.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <div className="grid gap-4">
-        {certificates.map((certificate) => (
+        {pagedCertificates.items.map((certificate) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={certificate.id}>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
@@ -50,7 +53,7 @@ export default async function AdminCertificatesPage({
             ) : null}
           </article>
         ))}
-        {!certificates.length ? (
+        {!pagedCertificates.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <Award className="h-5 w-5 text-market" aria-hidden="true" />
             <h2 className="mt-5 text-xl font-black">Aucun certificat</h2>
@@ -58,6 +61,7 @@ export default async function AdminCertificatesPage({
           </article>
         ) : null}
       </div>
+      <Pagination page={pagedCertificates.page} path="/admin/certificates" totalPages={pagedCertificates.totalPages} />
     </DashboardShell>
   );
 }
