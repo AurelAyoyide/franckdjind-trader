@@ -49,6 +49,7 @@ export async function getStudentCourseCards(userId: string) {
       learnerId: userId,
       status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
       OR: [{ endsAt: null }, { endsAt: { gt: now } }],
+      course: { status: CourseStatus.PUBLISHED },
     },
     include: {
       course: {
@@ -133,7 +134,10 @@ export async function getStudentCourseDetail(userId: string, courseId: string) {
       status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
       OR: [{ endsAt: null }, { endsAt: { gt: now } }],
       course: {
-        OR: [{ id: courseId }, { slug: courseId }],
+        AND: [
+          { OR: [{ id: courseId }, { slug: courseId }] },
+          { status: CourseStatus.PUBLISHED },
+        ],
       },
     },
     include: {
