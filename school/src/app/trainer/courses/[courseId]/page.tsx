@@ -2,12 +2,13 @@ import { UserRole } from "@prisma/client";
 import { notFound, redirect } from "next/navigation";
 import { BookOpen, FileText, HelpCircle, PlayCircle, UsersRound } from "lucide-react";
 import { CourseBuilderForms } from "@/components/course-builder-forms";
+import { ConfirmActionForm } from "@/components/confirm-action-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getLearnerRows, getTrainerCourseBuilder, statusLabel } from "@/lib/platform-data";
-import { deleteLessonAction, deleteModuleAction, setEnrollmentStatusAction, updateLessonAction, updateModuleAction } from "./actions";
+import { deleteLessonAction, deleteModuleAction, retireCourseAction, setEnrollmentStatusAction, updateLessonAction, updateModuleAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function TrainerCourseBuilderPage({
               : null
         }
       />
+      <div className="mb-6 flex justify-end"><ConfirmActionForm action={retireCourseAction} description="Sans apprenant, la formation sera supprimee. Avec un historique apprenant, elle sera archivee pour proteger les donnees." label="Retirer cette formation" title="Retirer la formation ?" values={{ courseId: course.id }} /></div>
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <div className="grid gap-5">
           <section className="rounded-lg border border-line bg-surface p-5">

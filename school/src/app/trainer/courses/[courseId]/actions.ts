@@ -324,6 +324,24 @@ export async function setCourseStatusAction(formData: FormData) {
   redirect(`/trainer/courses/${parsed.data.courseId}?notice=course-status`);
 }
 
+export async function retireCourseAction(formData: FormData) {
+  const session = await requireBuilderSession();
+  const courseId = String(formData.get("courseId") ?? "");
+  if (!session || !courseId) return;
+  const course = await canManageCourse(courseId, session.userId, session.role);
+  if (!course) return;
+  const enrollmentCount = await prisma.enrollment.count({ where: { courseId: course.id } });
+  if (enrollmentCount) {
+    await prisma.course.update({ where: { id: course.id }, data: { status: CourseStatus.ARCHIVED } });
+    await prisma.auditLog.create({ data: { actorId: session.userId, action: "COURSE_RETIRED", target: course.id, metadata: { mode: "ARCHIVED", enrollmentCount } } });
+  } else {
+    await prisma.course.delete({ where: { id: course.id } });
+    await prisma.auditLog.create({ data: { actorId: session.userId, action: "COURSE_DELETED", target: course.id, metadata: { mode: "DELETED" } } });
+  }
+  revalidatePath("/trainer/courses");
+  redirect("/trainer/courses?notice=course-retired");
+}
+
 export async function createModuleAction(
   _state: BuilderActionState,
   formData: FormData,
