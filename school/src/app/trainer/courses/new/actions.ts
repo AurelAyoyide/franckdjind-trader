@@ -20,8 +20,10 @@ export async function createCourseAction(
   const parsed = courseSchema.safeParse({
     title: formData.get("title"),
     type: formData.get("type"),
-    priceLabel: formData.get("priceLabel"),
-    duration: formData.get("durationValue") ? `${formData.get("durationValue")} ${formData.get("durationUnit")}` : undefined,
+    priceAmount: formData.get("priceAmount") || undefined,
+    priceCurrency: formData.get("priceCurrency") || undefined,
+    durationValue: formData.get("durationValue") || undefined,
+    durationUnit: formData.get("durationUnit") || undefined,
     description: formData.get("description"),
   });
 
@@ -56,8 +58,8 @@ export async function createCourseAction(
         title: parsed.data.title,
         slug,
         type: parsed.data.type,
-        priceLabel: parsed.data.priceLabel || null,
-        duration: parsed.data.duration || null,
+      priceLabel: parsed.data.priceAmount ? `${parsed.data.priceAmount.toLocaleString("fr-FR")} ${parsed.data.priceCurrency ?? "XOF"}` : null,
+      duration: parsed.data.durationValue ? `${parsed.data.durationValue} ${parsed.data.durationUnit ?? "semaines"}` : null,
         description: parsed.data.description,
         status: CourseStatus.DRAFT,
         trainerId: session.userId,

@@ -223,8 +223,10 @@ export async function updateCourseAction(
     courseId: formData.get("courseId"),
     title: formData.get("title"),
     type: formData.get("type"),
-    priceLabel: formData.get("priceLabel"),
-    duration: formData.get("duration"),
+    priceAmount: formData.get("priceAmount") || undefined,
+    priceCurrency: formData.get("priceCurrency") || undefined,
+    durationValue: formData.get("durationValue") || undefined,
+    durationUnit: formData.get("durationUnit") || undefined,
     description: formData.get("description"),
   });
 
@@ -242,8 +244,8 @@ export async function updateCourseAction(
     data: {
       title: parsed.data.title,
       type: parsed.data.type,
-      priceLabel: parsed.data.priceLabel || null,
-      duration: parsed.data.duration || null,
+      priceLabel: parsed.data.priceAmount ? `${parsed.data.priceAmount.toLocaleString("fr-FR")} ${parsed.data.priceCurrency ?? "XOF"}` : null,
+      duration: parsed.data.durationValue ? `${parsed.data.durationValue} ${parsed.data.durationUnit ?? "semaines"}` : null,
       description: parsed.data.description,
     },
   });

@@ -77,8 +77,10 @@ export const courseUpdateSchema = z.object({
   courseId: z.string().min(1),
   title: z.string().min(4, "Titre trop court").trim(),
   type: z.enum(["FREE", "PAID"]),
-  priceLabel: z.string().trim().optional(),
-  duration: z.string().trim().max(80, "Duree trop longue").optional(),
+  priceAmount: z.coerce.number().nonnegative("Prix invalide").optional(),
+  priceCurrency: z.enum(["XOF", "EUR"]).optional(),
+  durationValue: z.coerce.number().int().min(1).max(999).optional(),
+  durationUnit: z.enum(["heures", "jours", "semaines"]).optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 
@@ -203,8 +205,10 @@ export const accessChoiceSchema = z.object({
 export const courseSchema = z.object({
   title: z.string().min(4, "Titre trop court").trim(),
   type: z.enum(["FREE", "PAID"]),
-  priceLabel: z.string().trim().optional(),
-  duration: z.string().trim().max(80, "Duree trop longue").optional(),
+  priceAmount: z.coerce.number().nonnegative("Prix invalide").optional(),
+  priceCurrency: z.enum(["XOF", "EUR"]).optional(),
+  durationValue: z.coerce.number().int().min(1).max(999).optional(),
+  durationUnit: z.enum(["heures", "jours", "semaines"]).optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 

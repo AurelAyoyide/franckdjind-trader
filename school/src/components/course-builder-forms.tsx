@@ -101,17 +101,11 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
           </label>
           <label className="text-sm font-black">
             Prix hors plateforme
-            <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" defaultValue={course.priceLabel ?? ""} name="priceLabel" />
+            <div className="mt-2 flex gap-2"><input className="min-h-11 min-w-0 flex-1 rounded-lg border border-line bg-background px-3 text-sm" name="priceAmount" placeholder="Montant" step="1" type="number" /><select className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" name="priceCurrency"><option value="XOF">FCFA</option><option value="EUR">EUR</option></select></div>
           </label>
           <label className="text-sm font-black">
             Duree estimee <span className="font-medium text-muted">(facultatif)</span>
-            <input
-              className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm"
-              defaultValue={course.duration ?? ""}
-              maxLength={80}
-              name="duration"
-              placeholder="Ex. 6 semaines ou 12 h"
-            />
+            <div className="mt-2 flex gap-2"><input className="min-h-11 min-w-0 flex-1 rounded-lg border border-line bg-background px-3 text-sm" min="1" name="durationValue" placeholder="Ex. 6" type="number" /><select className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" name="durationUnit"><option value="semaines">semaines</option><option value="jours">jours</option><option value="heures">heures</option></select></div>
             <span className="mt-2 block text-xs font-medium text-muted">Laisse vide si le parcours est libre.</span>
             {courseState.errors?.duration ? <span className="mt-2 block text-xs text-danger">{courseState.errors.duration[0]}</span> : null}
           </label>

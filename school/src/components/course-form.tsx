@@ -20,6 +20,7 @@ export function CourseForm() {
             className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
             name="title"
             placeholder="Fondations trading prive"
+            required
           />
           {state.errors?.title ? <span className="mt-2 block text-xs text-danger">{state.errors.title[0]}</span> : null}
         </label>
@@ -35,11 +36,10 @@ export function CourseForm() {
         </label>
         <label className="text-sm font-black">
           Prix hors plateforme
-          <input
-            className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market"
-            name="priceLabel"
-            placeholder="Ex: 50 000 FCFA"
-          />
+          <div className="mt-2 flex gap-2">
+            <input className="min-h-12 min-w-0 flex-1 rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market" min="0" name="priceAmount" placeholder="Ex. 50 000" step="1" type="number" />
+            <select className="min-h-12 rounded-lg border border-line bg-background px-3 text-sm" name="priceCurrency"><option value="XOF">FCFA</option><option value="EUR">EUR</option></select>
+          </div>
         </label>
         <label className="text-sm font-black">
           Duree estimee <span className="font-medium text-muted">(facultatif)</span>
@@ -58,6 +58,7 @@ export function CourseForm() {
         <textarea
           className="mt-2 min-h-36 w-full rounded-lg border border-line bg-background p-4 text-sm outline-none focus:border-market"
           name="description"
+          required
         />
         {state.errors?.description ? <span className="mt-2 block text-xs text-danger">{state.errors.description[0]}</span> : null}
       </label>
