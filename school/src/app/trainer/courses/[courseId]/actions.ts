@@ -19,6 +19,10 @@ import {
   learnerAssignmentSchema,
   lessonCreateSchema,
   moduleCreateSchema,
+  moduleDeleteSchema,
+  moduleUpdateSchema,
+  lessonDeleteSchema,
+  lessonUpdateSchema,
   quizCreateSchema,
   quizQuestionCreateSchema,
 } from "@/lib/validation";
@@ -367,6 +371,36 @@ export async function createModuleAction(
   revalidatePath(`/trainer/courses/${parsed.data.courseId}`);
 
   return { ok: true, message: "Module cree." };
+}
+
+export async function updateModuleAction(formData: FormData) {
+  const session = await requireBuilderSession(); const parsed = moduleUpdateSchema.safeParse({ moduleId: formData.get("moduleId"), title: formData.get("title"), description: formData.get("description") });
+  if (!session || !parsed.success) return;
+  const module = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true } });
+  if (!module || (session.role !== "admin" && module.course.trainerId !== session.userId)) return;
+  await prisma.courseModule.update({ where: { id: module.id }, data: { title: parsed.data.title, description: parsed.data.description || null } });
+  revalidatePath(`/trainer/courses/${module.courseId}`); redirect(`/trainer/courses/${module.courseId}?notice=module-updated`);
+}
+export async function deleteModuleAction(formData: FormData) {
+  const session = await requireBuilderSession(); const parsed = moduleDeleteSchema.safeParse({ moduleId: formData.get("moduleId") }); if (!session || !parsed.success) return;
+  const module = await prisma.courseModule.findUnique({ where: { id: parsed.data.moduleId }, include: { course: true, lessons: { select: { id: true } } } });
+  if (!module || (session.role !== "admin" && module.course.trainerId !== session.userId)) return;
+  if (module.lessons.length) redirect(`/trainer/courses/${module.courseId}?notice=module-not-empty`);
+  await prisma.courseModule.delete({ where: { id: module.id } }); revalidatePath(`/trainer/courses/${module.courseId}`); redirect(`/trainer/courses/${module.courseId}?notice=module-deleted`);
+}
+export async function updateLessonAction(formData: FormData) {
+  const session = await requireBuilderSession(); const parsed = lessonUpdateSchema.safeParse({ lessonId: formData.get("lessonId"), title: formData.get("title"), content: formData.get("content") || undefined }); if (!session || !parsed.success) return;
+  const lesson = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId }, include: { module: { include: { course: true } } } });
+  if (!lesson || (session.role !== "admin" && lesson.module.course.trainerId !== session.userId)) return;
+  if (lesson.type === "TEXT" && !parsed.data.content) redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-invalid`);
+  await prisma.lesson.update({ where: { id: lesson.id }, data: { title: parsed.data.title, ...(lesson.type === "TEXT" ? { content: parsed.data.content } : {}) } }); revalidatePath(`/trainer/courses/${lesson.module.courseId}`); redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-updated`);
+}
+export async function deleteLessonAction(formData: FormData) {
+  const session = await requireBuilderSession(); const parsed = lessonDeleteSchema.safeParse({ lessonId: formData.get("lessonId") }); if (!session || !parsed.success) return;
+  const lesson = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId }, include: { module: { include: { course: true } }, progress: { select: { id: true } }, quiz: { include: { attempts: { select: { id: true } } } } } });
+  if (!lesson || (session.role !== "admin" && lesson.module.course.trainerId !== session.userId)) return;
+  if (lesson.progress.length || lesson.quiz?.attempts.length) redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-tracked`);
+  await prisma.lesson.delete({ where: { id: lesson.id } }); revalidatePath(`/trainer/courses/${lesson.module.courseId}`); redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-deleted`);
 }
 
 export async function createLessonAction(

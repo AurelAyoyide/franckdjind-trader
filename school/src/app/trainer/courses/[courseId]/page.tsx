@@ -7,7 +7,7 @@ import { NoticeBanner } from "@/components/notice-banner";
 import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getLearnerRows, getTrainerCourseBuilder, statusLabel } from "@/lib/platform-data";
-import { setEnrollmentStatusAction } from "./actions";
+import { deleteLessonAction, deleteModuleAction, setEnrollmentStatusAction, updateLessonAction, updateModuleAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +58,10 @@ export default async function TrainerCourseBuilderPage({
             ? "Statut de la formation mis a jour."
             : notice === "course-incomplete"
               ? "Ajoute au moins une lecon complete : texte rempli, quiz configure ou fichier prive valide avant publication."
+              : notice === "module-not-empty" ? "Supprime ou deplace les lecons du module avant de supprimer ce module."
+              : notice === "lesson-tracked" ? "Cette lecon a deja une progression ou des tentatives ; elle ne peut pas etre supprimee."
+              : notice === "module-updated" || notice === "lesson-updated" ? "Structure mise a jour."
+              : notice === "module-deleted" || notice === "lesson-deleted" ? "Element supprime."
             : notice === "enrollment-status"
               ? "Acces apprenant mis a jour et notification envoyee."
               : null
@@ -86,10 +90,12 @@ export default async function TrainerCourseBuilderPage({
                           {lesson.position}. {lesson.title}
                         </span>
                         <StatusBadge tone={lesson.quiz ? "market" : "muted"}>{lesson.type}</StatusBadge>
+                        <details><summary className="cursor-pointer text-xs font-black">Gerer</summary><form action={updateLessonAction} className="mt-2 grid gap-2"><input name="lessonId" type="hidden" value={lesson.id}/><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={lesson.title} name="title"/><input name="content" type="hidden" value={lesson.content ?? ""}/><button className="text-xs font-black text-market" type="submit">Modifier</button></form><form action={deleteLessonAction}><input name="lessonId" type="hidden" value={lesson.id}/><button className="mt-2 text-xs font-black text-danger" type="submit">Supprimer</button></form></details>
                       </div>
                     ))}
                     {!module.lessons.length ? <p className="text-sm text-muted">Aucune lecon dans ce module.</p> : null}
                   </div>
+                  <details className="mt-3"><summary className="cursor-pointer text-xs font-black">Modifier le module</summary><form action={updateModuleAction} className="mt-2 grid gap-2"><input name="moduleId" type="hidden" value={module.id}/><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={module.title} name="title"/><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={module.description ?? ""} name="description"/><button className="text-xs font-black text-market" type="submit">Enregistrer</button></form><form action={deleteModuleAction}><input name="moduleId" type="hidden" value={module.id}/><button className="mt-2 text-xs font-black text-danger" type="submit">Supprimer le module vide</button></form></details>
                 </article>
               ))}
               {!course.modules.length ? <p className="text-sm text-muted">Aucun module pour le moment.</p> : null}

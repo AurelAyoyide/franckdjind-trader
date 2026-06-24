@@ -92,6 +92,8 @@ export const moduleCreateSchema = z.object({
   title: z.string().min(3, "Titre de module requis").trim(),
   description: z.string().trim().optional(),
 });
+export const moduleUpdateSchema = moduleCreateSchema.extend({ moduleId: z.string().min(1) }).omit({ courseId: true });
+export const moduleDeleteSchema = z.object({ moduleId: z.string().min(1) });
 
 export const lessonCreateSchema = z.object({
   moduleId: z.string().min(1),
@@ -102,6 +104,8 @@ export const lessonCreateSchema = z.object({
   documentPath: z.string().trim().optional(),
   durationSeconds: z.coerce.number().int().min(1).max(24 * 60 * 60).optional(),
 });
+export const lessonUpdateSchema = z.object({ lessonId: z.string().min(1), title: z.string().min(3).trim(), content: z.string().trim().optional() });
+export const lessonDeleteSchema = z.object({ lessonId: z.string().min(1) });
 
 export const quizCreateSchema = z.object({
   lessonId: z.string().min(1),
