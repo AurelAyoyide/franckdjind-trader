@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
-import { callDeleteSchema, callScheduleSchema, callStatusSchema, callUpdateSchema } from "@/lib/validation";
+import { callBatchScheduleSchema, callDeleteSchema, callStatusSchema, callUpdateSchema } from "@/lib/validation";
 
 export type CallScheduleState = {
   ok: boolean;
@@ -27,8 +27,8 @@ export async function scheduleCallAction(
     return { ok: false, message: "Connexion formateur requise." };
   }
 
-  const parsed = callScheduleSchema.safeParse({
-    learnerId: formData.get("learnerId"),
+  const parsed = callBatchScheduleSchema.safeParse({
+    learnerIds: formData.getAll("learnerIds").map(String),
     title: formData.get("title"),
     notes: formData.get("notes"),
     scheduledAt: formData.get("scheduledAt"),
@@ -46,9 +46,9 @@ export async function scheduleCallAction(
     return { ok: false, message: "La date de l'appel doit etre future." };
   }
 
-  const learner = await prisma.user.findFirst({
+  const learners = await prisma.user.findMany({
     where: {
-      id: parsed.data.learnerId,
+      id: { in: [...new Set(parsed.data.learnerIds)] },
       role: UserRole.STUDENT,
       status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
       ...(session.role !== "admin"
@@ -62,47 +62,23 @@ export async function scheduleCallAction(
           }
         : {}),
     },
-    select: { id: true, firstName: true },
+    select: { id: true },
   });
 
-  if (!learner) {
+  if (learners.length !== new Set(parsed.data.learnerIds).size) {
     return { ok: false, message: "Apprenant introuvable ou suspendu." };
   }
 
-  const call = await prisma.callSchedule.create({
-    data: {
-      learnerId: learner.id,
-      trainerId: session.userId,
-      title: parsed.data.title,
-      notes: parsed.data.notes || null,
-      scheduledAt: parsed.data.scheduledAt,
-      status: CallStatus.SCHEDULED,
-    },
-  });
-
-  await prisma.notification.create({
-    data: {
-      userId: learner.id,
-      senderId: session.userId,
-      type: "INTERNAL",
-      title: "Appel programme",
-      body: `Un appel est programme : ${parsed.data.title}.`,
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      actorId: session.userId,
-      action: "CALL_SCHEDULED",
-      target: call.id,
-      metadata: { learnerId: learner.id, scheduledAt: parsed.data.scheduledAt.toISOString() },
-    },
-  });
+  await prisma.$transaction([
+    prisma.callSchedule.createMany({ data: learners.map((learner) => ({ learnerId: learner.id, trainerId: session.userId, title: parsed.data.title, notes: parsed.data.notes || null, scheduledAt: parsed.data.scheduledAt, status: CallStatus.SCHEDULED })) }),
+    prisma.notification.createMany({ data: learners.map((learner) => ({ userId: learner.id, senderId: session.userId, type: "INTERNAL", title: "Appel programme", body: `Un appel est programme : ${parsed.data.title}.` })) }),
+    prisma.auditLog.create({ data: { actorId: session.userId, action: "CALLS_SCHEDULED", target: "batch", metadata: { learners: learners.length, scheduledAt: parsed.data.scheduledAt.toISOString() } } }),
+  ]);
 
   revalidatePath("/trainer/calendar");
   revalidatePath("/student/notifications");
 
-  return { ok: true, message: "Appel programme et notification envoyee." };
+  return { ok: true, message: `${learners.length} appel(s) programmes et notifications envoyees.` };
 }
 
 export async function setCallStatusAction(formData: FormData) {

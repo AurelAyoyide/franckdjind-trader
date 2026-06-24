@@ -150,6 +150,10 @@ export const callScheduleSchema = z.object({
   scheduledAt: z.coerce.date(),
 });
 
+export const callBatchScheduleSchema = callScheduleSchema.omit({ learnerId: true }).extend({
+  learnerIds: z.array(z.string().min(1)).min(1, "Selectionne au moins un apprenant"),
+});
+
 export const callUpdateSchema = callScheduleSchema.extend({
   callId: z.string().min(1),
 });

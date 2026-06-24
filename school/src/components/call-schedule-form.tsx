@@ -26,15 +26,16 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="text-sm font-black">
-          Apprenant
-          <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="learnerId" required>
+          Apprenants <span className="font-medium text-muted">(plusieurs possibles)</span>
+          <select className="mt-2 min-h-32 w-full rounded-lg border border-line bg-background px-3 text-sm" multiple name="learnerIds" required>
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
                 {learner.name} - {learner.email}
               </option>
             ))}
           </select>
-          {state.errors?.learnerId ? <span className="mt-2 block text-xs text-danger">{state.errors.learnerId[0]}</span> : null}
+          <span className="mt-2 block text-xs text-muted">Maintiens Ctrl/Cmd pour selectionner plusieurs apprenants.</span>
+          {state.errors?.learnerIds ? <span className="mt-2 block text-xs text-danger">{state.errors.learnerIds[0]}</span> : null}
         </label>
         <label className="text-sm font-black">
           Date et heure
