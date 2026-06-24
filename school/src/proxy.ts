@@ -1,34 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { decryptSession, SESSION_COOKIE } from "@/lib/session-core";
-
-const protectedPrefixes = [
-  { prefix: "/student", role: "student", fallback: "/student/dashboard" },
-  { prefix: "/trainer", role: "trainer", fallback: "/trainer/dashboard" },
-  { prefix: "/admin", role: "admin", fallback: "/admin/dashboard" },
-];
+import { localeFromPath } from "@/lib/i18n";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const matched = protectedPrefixes.find((item) => pathname.startsWith(item.prefix));
+  const language = request.nextUrl.searchParams.get("lang");
 
-  if (!matched) {
+  if (language === "fr") {
+    const destination = request.nextUrl.clone();
+    destination.searchParams.delete("lang");
+    return NextResponse.redirect(destination);
+  }
+
+  const pathLocale = localeFromPath(pathname);
+  const normalizedPath = pathLocale.pathname;
+
+  if (pathLocale.locale !== "en") {
     return NextResponse.next();
   }
 
-  const session = await decryptSession(request.cookies.get(SESSION_COOKIE)?.value);
-
-  if (!session) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (session.role !== matched.role) {
-    const ownSpace = protectedPrefixes.find((item) => item.role === session.role)?.fallback ?? "/login";
-    return NextResponse.redirect(new URL(ownSpace, request.url));
-  }
-
-  return NextResponse.next();
+  const destination = request.nextUrl.clone();
+  destination.pathname = normalizedPath;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-school-locale", "en");
+  return NextResponse.rewrite(destination, { request: { headers: requestHeaders } });
 }
 
 export const config = {

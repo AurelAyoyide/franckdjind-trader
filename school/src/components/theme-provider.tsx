@@ -11,21 +11,32 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") {
-    return "light";
+function readTheme(): Theme {
+  const documentTheme = document.documentElement.dataset.theme;
+  if (documentTheme === "dark" || documentTheme === "light") {
+    return documentTheme;
   }
 
-  const stored = window.localStorage.getItem("school-theme");
-  return stored === "dark" || stored === "light" ? stored : "light";
+  const storedTheme = window.localStorage.getItem("school-theme");
+  return storedTheme === "dark" || storedTheme === "light" ? storedTheme : "light";
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  window.localStorage.setItem("school-theme", theme);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    return readTheme();
+  });
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("school-theme", theme);
+    applyTheme(theme);
   }, [theme]);
 
   const value = useMemo(
@@ -34,6 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       toggleTheme: () => {
         setTheme((current) => {
           const nextTheme = current === "light" ? "dark" : "light";
+          applyTheme(nextTheme);
           return nextTheme;
         });
       },

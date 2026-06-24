@@ -85,7 +85,7 @@ export async function createLiveAnnouncementAction(
       await deliverLoggedEmail(prisma, {
         to: learner.email,
         userId: learner.id,
-        subject: "Nouvelle session live School",
+        subject: "Nouvelle session live Bono Trading",
         html: `<p>Bonjour ${escapeHtml(learner.firstName)},</p><p>${escapeHtml(parsed.data.title)}</p><p>${escapeHtml(parsed.data.externalUrl)}</p>`,
       });
     }

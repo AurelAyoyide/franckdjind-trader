@@ -5,12 +5,20 @@ import { StatusBadge } from "@/components/status-badge";
 import { requirePageSession } from "@/lib/authorization";
 import { fullName, getAdminUsers, statusLabel } from "@/lib/platform-data";
 import { setUserStatusAction } from "@/app/admin/users/actions";
+import { AdminUserEditor } from "@/components/admin-user-editor";
 
 export const dynamic = "force-dynamic";
 
 const noticeMessages: Record<string, string> = {
   "status-updated": "Statut utilisateur mis a jour et anciennes sessions invalidees.",
   "self-protected": "Impossible de suspendre ou supprimer ton propre compte.",
+  deactivated: "Compte desactive. Il reste archive et peut etre reactive.",
+  "user-updated": "Informations du compte mises a jour.",
+  "invalid-user": "Les informations du compte sont invalides.",
+  "email-in-use": "Cette adresse email est deja utilisee.",
+  "super-admin-protected": "Le compte super-admin ne peut pas etre modifie depuis un autre compte.",
+  "auth-required": "Connexion administrateur requise.",
+  "not-found": "Compte introuvable.",
 };
 
 export default async function AdminUsersPage({
@@ -24,7 +32,7 @@ export default async function AdminUsersPage({
 
   return (
     <DashboardShell role="admin" title="Utilisateurs" description="Creation formateurs, suspension et supervision des comptes.">
-      <NoticeBanner message={notice ? noticeMessages[notice] : null} tone={notice === "self-protected" ? "warning" : "success"} />
+      <NoticeBanner message={notice ? noticeMessages[notice] : null} tone={notice === "self-protected" || notice === "super-admin-protected" ? "warning" : notice === "invalid-user" || notice === "email-in-use" || notice === "auth-required" || notice === "not-found" ? "danger" : "success"} />
       <div className="mb-5">
         <CreateTrainerForm />
       </div>
@@ -48,16 +56,25 @@ export default async function AdminUsersPage({
                   {user.status === "SUSPENDED" ? "Reactiver" : "Suspendre"}
                 </button>
               </form>
-              {user.status !== "DELETED" ? (
+              {user.status === "DELETED" ? (
+                <form action={setUserStatusAction}>
+                  <input name="userId" type="hidden" value={user.id} />
+                  <input name="status" type="hidden" value="ACTIVE" />
+                  <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-market/30 bg-market/10 px-3 text-sm font-black text-market" type="submit">
+                    Reactiver le compte
+                  </button>
+                </form>
+              ) : (
                 <form action={setUserStatusAction}>
                   <input name="userId" type="hidden" value={user.id} />
                   <input name="status" type="hidden" value="DELETED" />
                   <button className="inline-flex min-h-10 items-center justify-center rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-black text-danger" type="submit">
-                    Supprimer logique
+                    Desactiver le compte
                   </button>
                 </form>
-              ) : null}
+              )}
             </div>
+            <AdminUserEditor user={user} />
           </article>
         ))}
         {!users.length ? (

@@ -14,7 +14,17 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash("SchoolDemo2026", 12);
+  if (process.env.SEED_DEMO_DATA !== "true") {
+    console.info("Donnees de demonstration ignorees. Definissez SEED_DEMO_DATA=true uniquement en developpement.");
+    return;
+  }
+
+  const demoPassword = process.env.SEED_DEMO_PASSWORD;
+  if (!demoPassword) {
+    throw new Error("SEED_DEMO_PASSWORD est requis lorsque SEED_DEMO_DATA=true.");
+  }
+
+  const passwordHash = await bcrypt.hash(demoPassword, 12);
 
   const trainer = await prisma.user.upsert({
     where: { email: "formateur@example.com" },

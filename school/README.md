@@ -44,12 +44,27 @@ Copier `.env.example` vers `.env`, puis renseigner. Prisma CLI lit `.env` pour `
 - `CRON_SECRET` pour la route de relance `/api/jobs/reminders`.
 - `EMAIL_TOKEN_TTL_HOURS`, `RESET_PASSWORD_TOKEN_TTL_HOURS`, `REMINDERS_ENABLED`, `REMINDER_COOLDOWN_DAYS`, `REMINDER_MAX_EMAILS_PER_WEEK`, `CERTIFICATE_PREFIX` pour les parametres metier.
 - `SECURITY_MAX_LOGIN_ATTEMPTS`, `SECURITY_LOGIN_WINDOW_MINUTES` pour la limite login.
+- `INITIAL_ADMIN_EMAIL` pour l'adresse du premier super-admin. Elle doit etre definie avant l'initialisation de production.
 
-Comptes de seed :
+## Comptes et donnees de demonstration
 
-- `apprenant@example.com` / `SchoolDemo2026`
-- `formateur@example.com` / `SchoolDemo2026`
-- `admin@example.com` / `SchoolDemo2026`
+Il n'existe pas de mot de passe administrateur livre dans le depot. Cree le super-admin avec une adresse controlee et
+la configuration SMTP/Resend renseignee :
+
+```bash
+npm run admin:bootstrap
+```
+
+La commande envoie un lien de definition de mot de passe a `INITIAL_ADMIN_EMAIL` (ou `CONTACT_TO_EMAIL`). Elle
+desactive les anciens comptes de demonstration pour qu'ils ne soient jamais utilisables en production.
+
+Les donnees de demonstration ne sont creees qu'en developpement, avec des variables explicites :
+
+```bash
+SEED_DEMO_DATA=true
+SEED_DEMO_PASSWORD=un-mot-de-passe-local-solide
+npm run prisma:seed
+```
 
 ## Structure utile
 
@@ -80,7 +95,8 @@ garde anti-spam des relances, logs d'audit, certificats revoques, suppression lo
 anciennes sessions, headers de securite, routes documents/videos privees et verification MIME/extension/taille
 des uploads.
 
-Pour tester les flux dynamiques, appliquer le schema sur PostgreSQL puis lancer le seed :
+Pour tester les flux dynamiques en developpement, appliquer le schema puis lancer le seed avec les deux variables
+`SEED_DEMO_DATA=true` et `SEED_DEMO_PASSWORD` definies :
 
 ```bash
 npm run prisma:migrate

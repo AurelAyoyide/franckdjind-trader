@@ -1,18 +1,22 @@
 import { PageHero } from "@/components/page-hero";
 import { AccessChoiceForm } from "@/components/access-choice-form";
 import { requirePageSession } from "@/lib/authorization";
+import { translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccessChoicePage() {
   await requirePageSession(["student"], "/access-choice");
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
 
   return (
     <>
       <PageHero
-        eyebrow="Demande d'acces"
-        title="Choisir gratuit ou payant sans paiement en ligne."
-        description="La plateforme prepare une demande propre. Le paiement reste hors plateforme et le formateur attribue l'acces apres verification."
+        eyebrow={t("Demande d'acces")}
+        title={t("Finalisez votre demande d'acces.")}
+        description={t("Selectionnez le parcours qui vous a ete propose. Votre demande sera ensuite examinee avant l'ouverture de l'acces.")}
       />
       <section className="site-shell py-12 md:py-16">
         <AccessChoiceForm />

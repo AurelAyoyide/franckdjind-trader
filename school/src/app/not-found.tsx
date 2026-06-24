@@ -1,16 +1,21 @@
 import { PageHero } from "@/components/page-hero";
 import { ButtonLink } from "@/components/ui/button-link";
+import { localePath, translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
+
   return (
     <>
       <PageHero
         eyebrow="404"
-        title="Page introuvable."
-        description="Le parcours demande n'existe pas ou n'est pas encore disponible."
+        title={t("Page introuvable.")}
+        description={t("Le parcours demande n'existe pas ou n'est pas encore disponible.")}
       />
       <section className="site-shell py-12">
-        <ButtonLink href="/" variant="secondary">Retour accueil</ButtonLink>
+        <ButtonLink href={localePath(locale, "/")} variant="secondary">{t("Retour accueil")}</ButtonLink>
       </section>
     </>
   );

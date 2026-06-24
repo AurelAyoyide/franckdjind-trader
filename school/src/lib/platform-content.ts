@@ -20,14 +20,16 @@ export const siteConfig = {
   name: "School",
   tagline: "Formation privee",
   heroImage: "/hero-trading-desk.png",
-  whatsappNumber: process.env.TRAINER_WHATSAPP_NUMBER ?? "22900000000",
+  whatsappNumber: process.env.CONTACT_WHATSAPP_NUMBER ?? process.env.TRAINER_WHATSAPP_NUMBER ?? "22961835529",
+  whatsappUrl: process.env.CONTACT_WHATSAPP_URL ?? "https://wa.me/22961835529",
+  telegramUrl: process.env.TELEGRAM_URL ?? "https://t.me/Bonotrading",
 };
 
 export const publicMetrics = [
-  { value: "1", label: "espace apprenant" },
-  { value: "24/7", label: "cours disponibles" },
-  { value: "Quiz", label: "validation acquis" },
-  { value: "PDF", label: "certificats" },
+  { value: "Prive", label: "espace securise" },
+  { value: "24/7", label: "suivi en ligne" },
+  { value: "Quiz", label: "validation des acquis" },
+  { value: "PDF", label: "certificat verifiable" },
 ];
 
 export const publicCourseHighlights = [
@@ -97,6 +99,14 @@ export const trainerNav = [
 export const adminNav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Utilisateurs", icon: UsersRound },
+  { href: "/trainer/courses", label: "Formations", icon: BookOpen },
+  { href: "/trainer/requests", label: "Demandes", icon: ShieldCheck },
+  { href: "/trainer/students", label: "Apprenants", icon: UsersRound },
+  { href: "/trainer/calendar", label: "Appels", icon: CalendarDays },
+  { href: "/trainer/lives", label: "Lives", icon: Radio },
+  { href: "/trainer/community", label: "Communaute", icon: MessageCircle },
+  { href: "/trainer/import-export", label: "Excel", icon: FileSpreadsheet },
+  { href: "/trainer/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/certificates", label: "Certificats", icon: BadgeCheck },
   { href: "/admin/settings", label: "Parametres", icon: Settings },
   { href: "/admin/logs", label: "Audit", icon: Activity },

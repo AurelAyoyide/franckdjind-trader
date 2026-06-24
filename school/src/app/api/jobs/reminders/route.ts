@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   const sentCandidates = [];
 
   for (const candidate of candidates) {
-    const subject = `Relance School - ${candidate.reason}`;
+    const subject = `Bono Trading - ${candidate.reason}`;
 
     if (candidate.channel === "INTERNAL") {
       const recentInternal = await prisma.notification.findFirst({

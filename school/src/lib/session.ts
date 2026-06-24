@@ -5,6 +5,7 @@ import {
   SESSION_COOKIE,
   type AppSession,
 } from "@/lib/session-core";
+import { isSecureCookieRequired } from "@/lib/cookie-security";
 
 export {
   isAppRole,
@@ -23,7 +24,7 @@ export async function setAppSession(payload: AppSession, maxAgeSeconds = 60 * 60
   cookieStore.set(SESSION_COOKIE, session, {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureCookieRequired(),
     path: "/",
     maxAge: maxAgeSeconds,
   });

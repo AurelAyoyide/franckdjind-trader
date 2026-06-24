@@ -2,8 +2,10 @@
 
 import { AccountStatus } from "@prisma/client";
 import { createSecureToken, getFutureDate, hashToken } from "@/lib/auth";
+import { getAppUrl } from "@/lib/app-url";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
+import { consumeAnonymousRateLimit } from "@/lib/rate-limit";
 import { getNumberSetting } from "@/lib/settings";
 import { forgotPasswordSchema } from "@/lib/validation";
 
@@ -17,6 +19,14 @@ export async function forgotPasswordAction(
   _state: ForgotPasswordState,
   formData: FormData,
 ): Promise<ForgotPasswordState> {
+  const honeypot = formData.get("website");
+  if (typeof honeypot === "string" && honeypot.trim()) {
+    return {
+      ok: true,
+      message: "Si ce compte existe, un lien temporaire a ete prepare.",
+    };
+  }
+
   const parsed = forgotPasswordSchema.safeParse({
     email: formData.get("email"),
   });
@@ -26,6 +36,13 @@ export async function forgotPasswordAction(
       ok: false,
       message: "Email invalide.",
       errors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  if (!(await consumeAnonymousRateLimit("password-reset", 5, 15))) {
+    return {
+      ok: true,
+      message: "Si ce compte existe, un lien temporaire a ete prepare.",
     };
   }
 
@@ -65,13 +82,13 @@ export async function forgotPasswordAction(
     },
   });
 
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
   const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
   await deliverLoggedEmail(prisma, {
     to: user.email,
     userId: user.id,
-    subject: "Lien de reinitialisation School",
+    subject: "Reinitialisez votre mot de passe Bono Trading",
     html: `<p>Bonjour ${escapeHtml(user.firstName)},</p><p>Voici ton lien temporaire de reinitialisation :</p><p><a href="${escapeHtml(resetUrl)}">${escapeHtml(resetUrl)}</a></p>`,
   });
 

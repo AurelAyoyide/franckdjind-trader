@@ -28,11 +28,13 @@ export const roleLabels: Record<AppRole, string> = {
 const fallbackSecret = "school-local-development-secret-change-before-production";
 
 function getSigningKey() {
-  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
-    throw new Error("SESSION_SECRET doit etre defini en production.");
+  const secret = process.env.SESSION_SECRET;
+
+  if (process.env.NODE_ENV === "production" && (!secret || secret.length < 32)) {
+    throw new Error("SESSION_SECRET doit contenir au moins 32 caracteres en production.");
   }
 
-  return new TextEncoder().encode(process.env.SESSION_SECRET ?? fallbackSecret);
+  return new TextEncoder().encode(secret ?? fallbackSecret);
 }
 
 export function isAppRole(value: unknown): value is AppRole {

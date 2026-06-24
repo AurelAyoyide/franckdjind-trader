@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { LogOut } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button-link";
 import { adminNav, studentNav, trainerNav } from "@/lib/platform-content";
-import type { AppRole } from "@/lib/session";
-import { roleLabels } from "@/lib/session";
+import { localePath, translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
+import type { AppRole } from "@/lib/session-core";
+import { roleLabels } from "@/lib/session-core";
 
 type DashboardShellProps = {
   role: AppRole;
@@ -19,8 +20,10 @@ const navByRole = {
   admin: adminNav,
 };
 
-export function DashboardShell({ role, title, description, children, action }: DashboardShellProps) {
+export async function DashboardShell({ role, title, description, children, action }: DashboardShellProps) {
   const navItems = navByRole[role];
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
 
   return (
     <section className="site-shell py-8 md:py-10">
@@ -28,28 +31,30 @@ export function DashboardShell({ role, title, description, children, action }: D
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="rounded-lg border border-line bg-surface p-3">
             <p className="px-3 pb-3 pt-2 text-[10px] font-black uppercase tracking-[0.24em] text-market">
-              {roleLabels[role]}
+              {t(roleLabels[role])}
             </p>
             <nav className="grid gap-1">
               {navItems.map((item) => (
                 <Link
                   className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
-                  href={item.href}
+                  href={localePath(locale, item.href)}
                   key={item.href}
                 >
                   <item.icon className="h-4 w-4" aria-hidden="true" />
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               ))}
             </nav>
             <div className="mt-3 border-t border-line pt-3">
-              <Link
-                className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
-                href="/logout"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                Deconnexion
-              </Link>
+              <form action={localePath(locale, "/logout")} method="post">
+                <button
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg border border-danger/30 bg-danger/10 px-3 text-sm font-semibold text-danger transition hover:bg-danger/15"
+                  type="submit"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {t("Deconnexion")}
+                </button>
+              </form>
             </div>
           </div>
         </aside>
@@ -57,11 +62,11 @@ export function DashboardShell({ role, title, description, children, action }: D
         <div>
           <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan">Espace prive</p>
-              <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight md:text-5xl">{title}</h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-muted">{description}</p>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan">{t("Espace prive")}</p>
+              <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight md:text-5xl">{t(title)}</h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-muted">{t(description)}</p>
             </div>
-            {action ?? <ButtonLink href="/" variant="secondary">Accueil</ButtonLink>}
+            {action}
           </div>
           {children}
         </div>

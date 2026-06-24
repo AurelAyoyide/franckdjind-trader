@@ -1,20 +1,23 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useTranslate } from "@/components/locale-provider";
 import { useTheme } from "@/components/theme-provider";
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
-  const isLight = theme === "light";
+  const { toggleTheme } = useTheme();
+  const t = useTranslate();
 
   return (
     <button
       type="button"
-      aria-label={isLight ? "Activer le mode sombre" : "Activer le mode clair"}
+      aria-label={t("Changer le theme")}
+      title={t("Changer le theme")}
       className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-foreground/[0.06] text-foreground transition hover:bg-foreground/[0.1]"
       onClick={toggleTheme}
     >
-      {isLight ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      <Moon className="theme-icon-moon h-4 w-4" aria-hidden="true" />
+      <Sun className="theme-icon-sun h-4 w-4" aria-hidden="true" />
     </button>
   );
 }

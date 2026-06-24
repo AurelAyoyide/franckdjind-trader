@@ -2,9 +2,11 @@
 
 import { AccountStatus, UserRole } from "@prisma/client";
 import { registrationSchema } from "@/lib/validation";
+import { getAppUrl } from "@/lib/app-url";
 import { createSecureToken, getFutureDate, hashPassword, hashToken } from "@/lib/auth";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
+import { consumeAnonymousRateLimit } from "@/lib/rate-limit";
 import { getNumberSetting } from "@/lib/settings";
 
 export type RegistrationState = {
@@ -17,6 +19,14 @@ export async function registerAction(
   _state: RegistrationState,
   formData: FormData,
 ): Promise<RegistrationState> {
+  const honeypot = formData.get("website");
+  if (typeof honeypot === "string" && honeypot.trim()) {
+    return {
+      ok: true,
+      message: "Si l'inscription est possible, un lien de validation a ete prepare.",
+    };
+  }
+
   const parsed = registrationSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
@@ -35,9 +45,16 @@ export async function registerAction(
     };
   }
 
+  if (!(await consumeAnonymousRateLimit("register", 5, 15))) {
+    return {
+      ok: true,
+      message: "Si l'inscription est possible, un lien de validation a ete prepare.",
+    };
+  }
+
   const ttlHours = await getNumberSetting("emailTokenTtlHours");
   const expiresAt = getFutureDate(ttlHours);
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
   const existing = await prisma.user.findUnique({
     where: { email: parsed.data.email },
     select: { id: true, email: true, firstName: true, status: true },
@@ -75,7 +92,7 @@ export async function registerAction(
         await deliverLoggedEmail(prisma, {
           to: existing.email,
           userId: existing.id,
-          subject: "Valide ton email School",
+          subject: "Confirmez votre email Bono Trading",
           html: `<p>Bonjour ${escapeHtml(existing.firstName)},</p><p>Valide ton email en ouvrant ce lien temporaire :</p><p><a href="${escapeHtml(verifyUrl)}">${escapeHtml(verifyUrl)}</a></p>`,
         });
       }
@@ -121,7 +138,7 @@ export async function registerAction(
   await deliverLoggedEmail(prisma, {
     to: user.email,
     userId: user.id,
-    subject: "Valide ton email School",
+    subject: "Confirmez votre email Bono Trading",
     html: `<p>Bonjour ${escapeHtml(user.firstName)},</p><p>Valide ton email en ouvrant ce lien temporaire :</p><p><a href="${escapeHtml(verifyUrl)}">${escapeHtml(verifyUrl)}</a></p>`,
   });
 

@@ -97,7 +97,7 @@ export async function sendNotificationAction(
       await deliverLoggedEmail(prisma, {
         to: learner.email,
         userId: learner.id,
-        subject: "Notification School",
+        subject: "Notification Bono Trading",
         html: `<p>Bonjour ${escapeHtml(learner.firstName)},</p><p>${escapeHtml(parsed.data.message)}</p>`,
       });
     }

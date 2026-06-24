@@ -193,7 +193,7 @@ export async function createCertificateIfCourseCompleted(learnerId: string, cour
     await deliverLoggedEmail(prisma, {
       to: learner.email,
       userId: learnerId,
-      subject: "Certificat School disponible",
+      subject: "Votre certificat Bono Trading est disponible",
       html: `<p>Bonjour ${escapeHtml(learner.firstName)},</p><p>Ton certificat ${escapeHtml(certificate.code)} pour ${escapeHtml(course.title)} est disponible dans ton espace.</p>`,
     });
   }

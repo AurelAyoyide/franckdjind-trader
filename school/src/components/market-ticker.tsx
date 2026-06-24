@@ -6,7 +6,9 @@ const items = [
   { label: "Certificat", value: "code verifiable", tone: "text-cyan" },
 ];
 
-export function MarketTicker() {
+export async function MarketTicker() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
   const duplicated = [...items, ...items];
 
   return (
@@ -14,11 +16,13 @@ export function MarketTicker() {
       <div className="ticker-track flex w-max gap-10">
         {duplicated.map((item, index) => (
           <div className="flex items-center gap-3" key={`${item.label}-${index}`}>
-            <span>{item.label}</span>
-            <span className={`font-mono ${item.tone}`}>{item.value}</span>
+            <span>{t(item.label)}</span>
+            <span className={`font-mono ${item.tone}`}>{t(item.value)}</span>
           </div>
         ))}
       </div>
     </div>
   );
 }
+import { translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";

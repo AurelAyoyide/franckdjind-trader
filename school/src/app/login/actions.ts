@@ -21,7 +21,10 @@ export async function loginAction(formData: FormData) {
     email: formData.get("email"),
     password: formData.get("password"),
     next: formData.get("next"),
-    rememberMe: formData.get("rememberMe"),
+    // A checkbox that is not checked is absent from FormData, so `get` returns
+    // null rather than undefined. Normalize it before Zod validation: a normal
+    // login must not depend on the optional "remember me" control.
+    rememberMe: formData.get("rememberMe") ?? undefined,
   });
 
   if (!parsed.success) {

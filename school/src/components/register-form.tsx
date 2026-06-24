@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { registerAction, type RegistrationState } from "@/app/register/actions";
 import { PasswordField } from "@/components/password-field";
+import { useLocale, useTranslate } from "@/components/locale-provider";
+import { localePath } from "@/lib/i18n";
 
 const initialState: RegistrationState = {
   ok: false,
@@ -19,24 +21,30 @@ const fields = [
 
 export function RegisterForm() {
   const [state, formAction, pending] = useActionState(registerAction, initialState);
+  const locale = useLocale();
+  const t = useTranslate();
 
   return (
     <form action={formAction} className="rounded-lg border border-line bg-surface p-6">
-      <h2 className="text-2xl font-black">Compte apprenant</h2>
+      <div aria-hidden="true" className="hidden">
+        <label htmlFor="website">Site web</label>
+        <input autoComplete="off" id="website" name="website" tabIndex={-1} type="text" />
+      </div>
+      <h2 className="text-2xl font-black">{t("Vos informations")}</h2>
       <p className="mt-3 text-sm leading-7 text-muted">
-        Apres inscription, un lien de validation est envoye par email avant la demande d&apos;acces.
+        {t("Un lien de validation vous sera envoye par email avant l'ouverture de votre demande d'acces.")}
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         {fields.map((field) => (
           <div key={field.id}>
             <label className="block text-sm font-black" htmlFor={field.id}>
-              {field.label}
+              {t(field.label)}
             </label>
             <input
               className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none transition focus:border-market"
               id={field.id}
               name={field.id}
-              placeholder={field.placeholder}
+              placeholder={t(field.placeholder)}
               type={field.type}
             />
             {state.errors?.[field.id]?.length ? (
@@ -64,13 +72,13 @@ export function RegisterForm() {
       <label className="mt-5 flex items-start gap-3 text-sm font-semibold text-muted">
         <input className="mt-1 accent-[var(--market)]" name="acceptedTerms" type="checkbox" />
         <span>
-          J&apos;accepte les{" "}
-          <Link className="font-black text-market hover:text-market-strong" href="/terms">
-            conditions d&apos;utilisation
+          {t("J'accepte les")} {" "}
+          <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/terms")}>
+            {t("Conditions d'utilisation").toLowerCase()}
           </Link>{" "}
-          et la{" "}
-          <Link className="font-black text-market hover:text-market-strong" href="/privacy-policy">
-            politique de confidentialite
+          {t("et la")} {" "}
+          <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/privacy-policy")}>
+            {t("Politique de confidentialite").toLowerCase()}
           </Link>
           .
         </span>
@@ -92,12 +100,12 @@ export function RegisterForm() {
         disabled={pending}
         type="submit"
       >
-        {pending ? "Verification..." : "Creer le compte"}
+        {t(pending ? "Verification..." : "Creer le compte")}
       </button>
       <p className="mt-5 text-center text-sm text-muted">
-        Tu as deja un compte ?{" "}
-        <Link className="font-black text-market hover:text-market-strong" href="/login">
-          Se connecter
+        {t("Vous avez deja un compte ?")} {" "}
+        <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/login")}>
+          {t("Se connecter")}
         </Link>
       </p>
     </form>

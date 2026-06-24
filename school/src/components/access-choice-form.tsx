@@ -3,6 +3,7 @@
 import { MessageCircle } from "lucide-react";
 import { useActionState } from "react";
 import { requestAccessAction, type AccessChoiceState } from "@/app/access-choice/actions";
+import { useTranslate } from "@/components/locale-provider";
 
 const initialState: AccessChoiceState = {
   ok: false,
@@ -11,6 +12,7 @@ const initialState: AccessChoiceState = {
 
 export function AccessChoiceForm() {
   const [state, formAction, pending] = useActionState(requestAccessAction, initialState);
+  const t = useTranslate();
 
   return (
     <form action={formAction} className="rounded-lg border border-line bg-surface p-6">
@@ -21,8 +23,8 @@ export function AccessChoiceForm() {
         ].map((choice) => (
           <label className="rounded-lg border border-line bg-foreground/[0.04] p-4" key={choice.value}>
             <input className="mr-2 accent-[var(--market)]" name="kind" type="radio" value={choice.value} />
-            <span className="font-black">{choice.label}</span>
-            <span className="mt-2 block text-xs leading-6 text-muted">{choice.text}</span>
+            <span className="font-black">{t(choice.label)}</span>
+            <span className="mt-2 block text-xs leading-6 text-muted">{t(choice.text)}</span>
           </label>
         ))}
       </div>
@@ -36,7 +38,7 @@ export function AccessChoiceForm() {
         ].map((field) => (
           <div key={field.id}>
             <label className="block text-sm font-black" htmlFor={field.id}>
-              {field.label}
+              {t(field.label)}
             </label>
             <input
               className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none transition focus:border-market"
@@ -67,7 +69,7 @@ export function AccessChoiceForm() {
           disabled={pending}
           type="submit"
         >
-          {pending ? "Preparation..." : "Preparer la demande"}
+          {t(pending ? "Preparation..." : "Preparer la demande")}
         </button>
         {state.whatsappUrl ? (
           <a
@@ -77,7 +79,7 @@ export function AccessChoiceForm() {
             target="_blank"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            Ouvrir WhatsApp
+            {t("Ouvrir WhatsApp")}
           </a>
         ) : null}
       </div>

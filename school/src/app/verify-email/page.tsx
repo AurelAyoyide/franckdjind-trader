@@ -4,6 +4,8 @@ import { PageHero } from "@/components/page-hero";
 import { ButtonLink } from "@/components/ui/button-link";
 import { hashToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { localePath, translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 export const dynamic = "force-dynamic";
 
@@ -78,27 +80,29 @@ export default async function VerifyEmailPage({
 }) {
   const { token } = await searchParams;
   const state = await verifyToken(token);
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
 
   return (
     <>
       <PageHero
-        eyebrow="Validation email"
-        title={state.ok ? "Compte valide." : "Verifier son email avant toute demande."}
-        description="Le token est stocke hashe, expire selon les parametres globaux et ne peut pas etre rejoue."
+        eyebrow={t("Validation email")}
+        title={t(state.ok ? "Compte valide." : "Verifier son email avant toute demande.")}
+        description={t("Le token est stocke hashe, expire selon les parametres globaux et ne peut pas etre rejoue.")}
       />
       <section className="site-shell py-12 md:py-16">
         <div className="rounded-lg border border-line bg-surface p-6 md:p-8">
           <MailCheck className="h-6 w-6 text-market" aria-hidden="true" />
-          <h2 className="mt-5 text-2xl font-black">{state.title}</h2>
+          <h2 className="mt-5 text-2xl font-black">{t(state.title)}</h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
-            {state.message}
+            {t(state.message)}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href={state.ok ? "/login" : "/register"} showArrow>
-              {state.ok ? "Se connecter" : "Creer un compte"}
+            <ButtonLink href={localePath(locale, state.ok ? "/login" : "/register")} showArrow>
+              {t(state.ok ? "Se connecter" : "Creer un compte")}
             </ButtonLink>
-            <ButtonLink href="/register" variant="secondary">
-              Renvoyer un lien
+            <ButtonLink href={localePath(locale, "/register")} variant="secondary">
+              {t("Renvoyer un lien")}
             </ButtonLink>
           </div>
         </div>

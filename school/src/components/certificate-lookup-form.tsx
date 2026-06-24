@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Search } from "lucide-react";
 import { useState } from "react";
+import { useLocale, useTranslate } from "@/components/locale-provider";
+import { localePath } from "@/lib/i18n";
 
 export function CertificateLookupForm({ initialCode = "" }: { initialCode?: string }) {
   const router = useRouter();
   const [code, setCode] = useState(initialCode);
+  const locale = useLocale();
+  const t = useTranslate();
 
   return (
     <form
@@ -15,19 +19,19 @@ export function CertificateLookupForm({ initialCode = "" }: { initialCode?: stri
         event.preventDefault();
         const normalizedCode = code.trim().toUpperCase();
         if (normalizedCode) {
-          router.push(`/certificates/verify/${encodeURIComponent(normalizedCode)}`);
+          router.push(localePath(locale, `/certificates/verify/${encodeURIComponent(normalizedCode)}`));
         }
       }}
     >
       <div className="flex items-center gap-3">
         <BadgeCheck className="h-5 w-5 text-market" aria-hidden="true" />
-        <h2 className="text-2xl font-black">Verifier un certificat</h2>
+        <h2 className="text-2xl font-black">{t("Verifier un certificat")}</h2>
       </div>
       <p className="mt-3 text-sm leading-7 text-muted">
-        Entre le code present sur le certificat pour confirmer qu&apos;il existe et qu&apos;il n&apos;a pas ete revoque.
+        {t("Entre le code present sur le certificat pour confirmer qu'il existe et qu'il n'a pas ete revoque.")}
       </p>
       <label className="mt-6 block text-sm font-black" htmlFor="certificateCode">
-        Code certificat
+        {t("Code certificat")}
       </label>
       <div className="mt-2 flex min-h-12 overflow-hidden rounded-lg border border-line bg-background transition focus-within:border-market">
         <input
@@ -39,9 +43,9 @@ export function CertificateLookupForm({ initialCode = "" }: { initialCode?: stri
           value={code}
         />
         <button
-          aria-label="Verifier le certificat"
+          aria-label={t("Verifier le certificat")}
           className="inline-flex w-12 items-center justify-center border-l border-line text-market transition hover:bg-market/10"
-          title="Verifier"
+          title={t("Verifier")}
           type="submit"
         >
           <Search className="h-4 w-4" aria-hidden="true" />

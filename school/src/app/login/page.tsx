@@ -1,7 +1,8 @@
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
-import { StatusBadge } from "@/components/status-badge";
 import { LoginForm } from "@/components/login-form";
+import { translate } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 const errorMessages: Record<string, string> = {
   invalid: "Renseigne un email valide et ton mot de passe.",
@@ -17,34 +18,30 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; next?: string; reset?: string }>;
 }) {
   const { error, next, reset } = await searchParams;
-  const errorMessage = error ? errorMessages[error] ?? "Connexion impossible pour le moment." : null;
+  const locale = await getRequestLocale();
+  const t = (source: string) => translate(locale, source);
+  const errorMessage = error ? t(errorMessages[error] ?? "Connexion impossible pour le moment.") : null;
 
   return (
     <>
       <PageHero
-        eyebrow="Connexion"
-        title="Retrouver ton espace."
-        description="Cours, demandes, certificats et suivi restent accessibles depuis un seul compte."
+        eyebrow={t("Connexion")}
+        title={t("Retrouvez votre espace.")}
+        description={t("Accedez a vos formations, vos documents et a votre suivi depuis un point unique.")}
       />
       <section className="site-shell py-12 md:py-16">
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div className="rounded-lg border border-line bg-surface p-6">
             <ShieldCheck className="h-6 w-6 text-market" aria-hidden="true" />
-            <h2 className="mt-5 text-2xl font-black">Acces prive</h2>
+            <h2 className="mt-5 text-2xl font-black">{t("Acces securise")}</h2>
             <p className="mt-4 text-sm leading-7 text-muted">
-              Les apprenants creent leur compte ici. Les comptes formateur et admin sont crees depuis l&apos;espace
-              administrateur, ou fournis au demarrage du projet.
+              {t("Votre espace affiche uniquement les informations et les actions associees a votre parcours.")}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <StatusBadge tone="market">Apprenant</StatusBadge>
-              <StatusBadge tone="cyan">Formateur</StatusBadge>
-              <StatusBadge tone="amber">Admin</StatusBadge>
-            </div>
             <div className="mt-6 rounded-lg border border-line bg-foreground/[0.04] p-4">
               <UserPlus className="h-5 w-5 text-cyan" aria-hidden="true" />
-              <h3 className="mt-3 text-base font-black">Nouveau sur la plateforme ?</h3>
+              <h3 className="mt-3 text-base font-black">{t("Premiere visite ?")}</h3>
               <p className="mt-2 text-sm leading-7 text-muted">
-                Cree d&apos;abord un compte apprenant, valide ton email, puis demande l&apos;acces a une formation.
+                {t("Creez votre compte, confirmez votre adresse email, puis deposez votre demande d'acces.")}
               </p>
             </div>
           </div>

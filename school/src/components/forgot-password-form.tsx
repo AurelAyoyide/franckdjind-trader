@@ -7,6 +7,8 @@ import {
   forgotPasswordAction,
   type ForgotPasswordState,
 } from "@/app/forgot-password/actions";
+import { useLocale, useTranslate } from "@/components/locale-provider";
+import { localePath } from "@/lib/i18n";
 
 const initialState: ForgotPasswordState = {
   ok: false,
@@ -15,22 +17,28 @@ const initialState: ForgotPasswordState = {
 
 export function ForgotPasswordForm() {
   const [state, formAction, pending] = useActionState(forgotPasswordAction, initialState);
+  const locale = useLocale();
+  const t = useTranslate();
 
   return (
     <form action={formAction} className="max-w-2xl rounded-lg border border-line bg-surface p-6">
+      <div aria-hidden="true" className="hidden">
+        <label htmlFor="website">Site web</label>
+        <input autoComplete="off" id="website" name="website" tabIndex={-1} type="text" />
+      </div>
       <KeyRound className="h-5 w-5 text-market" aria-hidden="true" />
-      <h2 className="mt-4 text-2xl font-black">Recevoir un lien de connexion</h2>
+      <h2 className="mt-4 text-2xl font-black">{t("Recevoir un lien de connexion")}</h2>
       <p className="mt-3 text-sm leading-7 text-muted">
-        Entre l&apos;email de ton compte. Si le compte existe, un lien temporaire sera prepare.
+        {t("Saisissez l'adresse email de votre compte. Si elle est reconnue, un lien temporaire sera prepare.")}
       </p>
       <label className="mt-5 block text-sm font-black" htmlFor="email">
-        Email du compte
+        {t("Email du compte")}
       </label>
       <input
         className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none transition focus:border-market"
         id="email"
         name="email"
-        placeholder="apprenant@example.com"
+        placeholder="vous@example.com"
         type="email"
       />
       {state.errors?.email ? <p className="mt-2 text-xs font-semibold text-danger">{state.errors.email[0]}</p> : null}
@@ -48,12 +56,12 @@ export function ForgotPasswordForm() {
         disabled={pending}
         type="submit"
       >
-        {pending ? "Preparation..." : "Preparer le lien"}
+        {t(pending ? "Preparation..." : "Preparer le lien")}
       </button>
       <p className="mt-5 text-center text-sm text-muted">
-        Tu connais ton mot de passe ?{" "}
-        <Link className="font-black text-market hover:text-market-strong" href="/login">
-          Retour connexion
+        {t("Vous connaissez votre mot de passe ?")} {" "}
+        <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/login")}>
+          {t("Retour connexion")}
         </Link>
       </p>
     </form>
