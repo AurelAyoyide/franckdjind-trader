@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { ProgressBar } from "@/components/progress-bar";
 import { Pagination } from "@/components/pagination";
 import { StatusBadge } from "@/components/status-badge";
+import { ButtonLink } from "@/components/ui/button-link";
 import { requirePageSession } from "@/lib/authorization";
 import { getStudentCourseCards } from "@/lib/platform-data";
 import { paginate, parsePage } from "@/lib/pagination";
@@ -22,6 +23,7 @@ export default async function StudentCoursesPage({ searchParams }: { searchParam
       role="student"
       title="Mes formations"
       description="Les formations apparaissent ici uniquement apres attribution par le formateur."
+      action={<ButtonLink href="/access-choice" showArrow>Demander une autre formation</ButtonLink>}
     >
       <div className="grid gap-5 md:grid-cols-3">
         {pagedCourses.items.map((course) => (

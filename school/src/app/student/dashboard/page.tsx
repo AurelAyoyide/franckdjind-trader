@@ -24,7 +24,7 @@ export default async function StudentDashboardPage() {
       role="student"
       title="Dashboard apprenant"
       description="Vue rapide des formations attribuees, de la progression, des quiz et des relances utiles."
-      action={<ButtonLink href="/student/courses" showArrow>Continuer</ButtonLink>}
+      action={<div className="flex flex-wrap gap-3"><ButtonLink href="/student/courses" variant="secondary">Mes formations</ButtonLink><ButtonLink href="/access-choice" showArrow>Demander une formation</ButtonLink></div>}
     >
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard icon={BookOpen} label="Formations" value={String(dashboard.courses.length)} detail="Acces actifs attribues." />
