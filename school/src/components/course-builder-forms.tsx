@@ -76,11 +76,14 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
   const [assignmentState, assignmentAction, assignmentPending] = useActionState(assignLearnerAction, initialState);
   const [lessonType, setLessonType] = useState<"TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ">("TEXT");
   const [learnerSearch, setLearnerSearch] = useState("");
+  const [step, setStep] = useState(1);
   const matchingLearners = learners.filter((learner) => `${learner.name} ${learner.email}`.toLowerCase().includes(learnerSearch.trim().toLowerCase()));
 
   return (
     <div className="grid gap-5">
-      <form action={courseAction} className="rounded-lg border border-line bg-surface p-5">
+      <nav aria-label="Etapes de creation" className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface p-3 sm:grid-cols-4">{[[1,"1. Informations"],[2,"2. Modules & lecons"],[3,"3. Quiz"],[4,"4. Publication"]].map(([number,label]) => <button className={`min-h-10 rounded-lg px-2 text-xs font-black ${step === number ? "bg-market text-on-market" : "bg-foreground/[0.05] text-muted"}`} key={number} onClick={() => setStep(number as number)} type="button">{label}</button>)}</nav>
+      <p className="rounded-lg border border-cyan/25 bg-cyan/10 p-3 text-sm text-cyan">Etape {step} sur 4. Termine cette section, puis passe a la suivante quand tu es pret.</p>
+      <form action={courseAction} className={step === 1 ? "rounded-lg border border-line bg-surface p-5" : "hidden"}>
         <input name="courseId" type="hidden" value={course.id} />
         <div className="flex items-center gap-3">
           <Save className="h-5 w-5 text-market" aria-hidden="true" />
@@ -121,7 +124,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         </button>
       </form>
 
-      <form action={questionAction} className="rounded-lg border border-line bg-surface p-5">
+      <form action={questionAction} className={step === 3 ? "rounded-lg border border-line bg-surface p-5" : "hidden"}>
         <h2 className="text-xl font-black">Ajouter une question</h2>
         <label className="mt-4 block text-sm font-black">Quiz<select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="quizId">{configuredQuizzes.map((quiz) => <option key={quiz.id} value={quiz.id}>{quiz.title}</option>)}</select></label>
         <label className="mt-4 block text-sm font-black">Question<input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="questionText" required /></label>
@@ -131,7 +134,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={questionPending || !configuredQuizzes.length} type="submit">Ajouter la question</button>
       </form>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={step === 4 ? "grid gap-3 sm:grid-cols-2" : "hidden"}>
         {course.status !== "PUBLISHED" ? (
           <form action={setCourseStatusAction} className="rounded-lg border border-line bg-surface p-4">
             <input name="courseId" type="hidden" value={course.id} />
@@ -152,7 +155,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         ) : null}
       </div>
 
-      <form action={moduleAction} className="rounded-lg border border-line bg-surface p-5">
+      <form action={moduleAction} className={step === 2 ? "rounded-lg border border-line bg-surface p-5" : "hidden"}>
         <input name="courseId" type="hidden" value={course.id} />
         <div className="flex items-center gap-3">
           <Layers3 className="h-5 w-5 text-cyan" aria-hidden="true" />
@@ -175,7 +178,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         </button>
       </form>
 
-      <form action={lessonAction} className="rounded-lg border border-line bg-surface p-5" encType="multipart/form-data">
+      <form action={lessonAction} className={step === 2 ? "rounded-lg border border-line bg-surface p-5" : "hidden"} encType="multipart/form-data">
         <div className="flex items-center gap-3">
           <FilePlus2 className="h-5 w-5 text-amber" aria-hidden="true" />
           <h2 className="text-xl font-black">Ajouter une lecon</h2>
@@ -240,7 +243,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         </button>
       </form>
 
-      <form action={quizAction} className="rounded-lg border border-line bg-surface p-5">
+      <form action={quizAction} className={step === 3 ? "rounded-lg border border-line bg-surface p-5" : "hidden"}>
         <h2 className="text-xl font-black">Configurer un quiz</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <label className="text-sm font-black">
@@ -293,7 +296,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
         </button>
       </form>
 
-      <form action={assignmentAction} className="rounded-lg border border-line bg-surface p-5">
+      <form action={assignmentAction} className={step === 4 ? "rounded-lg border border-line bg-surface p-5" : "hidden"}>
         <input name="courseId" type="hidden" value={course.id} />
         <h2 className="text-xl font-black">Inscrire un apprenant</h2>
         <label className="mt-5 block text-sm font-black">
