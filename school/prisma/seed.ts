@@ -20,10 +20,10 @@ async function main() {
 
   // Création du compte administrateur unique (Pas de fausses données)
   await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: "contact@bonotrading.com" },
     update: {},
     create: {
-      email: "admin@example.com",
+      email: "contact@bonotrading.com",
       firstName: "Super",
       lastName: "Admin",
       phone: "+22900000000",
