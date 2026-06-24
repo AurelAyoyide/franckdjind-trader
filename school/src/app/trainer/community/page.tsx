@@ -25,14 +25,19 @@ export default async function TrainerCommunityPage({
   searchParams: Promise<{ notice?: string }>;
 }) {
   const { notice } = await searchParams;
-  await requirePageSession(["trainer", "admin"], "/trainer/community");
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/community");
   const [communityPosts, courses] = await Promise.all([
     getCommunityPosts(undefined, true),
-    getTrainerCourses(),
+    getTrainerCourses({ userId: session.userId, isAdmin: session.role === "admin" }),
   ]);
 
   return (
-    <DashboardShell role="trainer" title="Moderation communaute" description="Annonces, commentaires autorises et moderation.">
+    <DashboardShell
+      role={session.role}
+      isAssistantTrainer={session.prismaRole === "ASSISTANT_TRAINER"}
+      title="Moderation communaute"
+      description="Annonces, commentaires autorises et moderation."
+    >
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <CommunityPostForm courses={courses.map((course) => ({ id: course.id, title: course.title }))} />
       <div className="grid gap-4">

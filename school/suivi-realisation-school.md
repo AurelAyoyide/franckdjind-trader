@@ -69,6 +69,10 @@ Derniere mise a jour : 2026-06-19
 - [x] Route video privee controlee cote serveur.
 - [x] Route video privee avec verification session, statut compte, inscription active, dossier prive et Range headers.
 - [x] Route document privee avec verification session, statut compte, inscription active/completed et dossier prive.
+- [x] Bloquer la publication d'une formation tant que ses lecons ou quiz ne sont pas complets.
+- [x] Verifier la signature binaire des uploads et servir les documents avec telechargement securise.
+- [x] Enregistrer la duree video et borner la progression cote serveur par le temps ecoule.
+- [x] Refuser les mutations JSON de progression depuis une origine externe.
 - [x] Route cron pour les relances automatiques depuis les vrais etats apprenants.
 - [x] Generation PDF des certificats depuis la table Certificate.
 - [x] Export Excel apprenants et progressions depuis Prisma.
@@ -124,6 +128,7 @@ Derniere mise a jour : 2026-06-19
 - [x] Relancer `npm run typecheck`.
 - [x] Relancer `npm run build`.
 - [x] Appliquer la migration PostgreSQL locale `20260618221339_init_school_platform`.
+- [x] Appliquer la migration PostgreSQL locale `20260624000000_add_video_duration`.
 - [x] Relancer `npm run prisma:seed`.
 - [x] Demarrer le serveur dev sur `http://127.0.0.1:3002`.
 - [x] Verifier la page d'accueil dans le navigateur integre.
@@ -143,3 +148,4 @@ Note runtime 2026-06-19 : apres redemarrage du serveur, smoke test connecte OK s
 Note securite 2026-06-19 : audit npm production corrige. `xlsx` retire, exports/imports passes sur `exceljs`, `nodemailer` mis a jour, overrides `postcss` et `uuid` appliques. Build final OK.
 Note UI 2026-06-19 : accueil simplifie, faux catalogue public retire, footer ajoute, recherche certificat ajoutee, liens auth complets, bouton voir/masquer mot de passe et option rester connecte ajoutes. Lint, typecheck, build et audit OK.
 Note UX 2026-06-19 : audit des actions directes complete. Les actions de statut/moderation/lecture/profil affichent maintenant un retour clair apres clic. Smoke connecte des pages avec notices OK.
+Note livraison 2026-06-24 : correction de session appliquee. Le traitement du login sans case "Rester connecte" est corrige, la deconnexion ne repond plus au GET (donc aucun prechargement ne peut effacer la session), et les boutons utilisent POST. Navigation admin unifiee avec les operations formateur. Lint, typecheck, build, generation Prisma et audit npm production sont valides. Smoke HTTP production : accueil/login OK, espace prive redirige sans session, GET logout 405, POST logout supprime le cookie, video/document prives refuses sans session et progression video protegee contre origine externe.

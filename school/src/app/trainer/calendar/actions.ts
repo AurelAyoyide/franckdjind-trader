@@ -3,7 +3,7 @@
 import { AccountStatus, CallStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getAuthorizedSession } from "@/lib/authorization";
+import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import { callScheduleSchema, callStatusSchema } from "@/lib/validation";
 
@@ -14,7 +14,8 @@ export type CallScheduleState = {
 };
 
 async function requireTrainer() {
-  return getAuthorizedSession(["trainer", "admin"]);
+  const session = await getAuthorizedSession(["trainer", "admin"]);
+  return canManageTrainerData(session) ? session : null;
 }
 
 export async function scheduleCallAction(
@@ -50,6 +51,16 @@ export async function scheduleCallAction(
       id: parsed.data.learnerId,
       role: UserRole.STUDENT,
       status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
+      ...(session.role !== "admin"
+        ? {
+            enrollments: {
+              some: {
+                course: { trainerId: session.userId },
+                status: { in: ["ACTIVE", "COMPLETED"] },
+              },
+            },
+          }
+        : {}),
     },
     select: { id: true, firstName: true },
   });

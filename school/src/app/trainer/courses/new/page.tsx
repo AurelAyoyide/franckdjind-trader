@@ -12,7 +12,7 @@ export default async function NewCoursePage() {
   }
 
   return (
-    <DashboardShell role="trainer" title="Nouvelle formation" description="Prepare le titre, le type d'acces, la duree et la description du parcours.">
+    <DashboardShell role={session.role} title="Nouvelle formation" description="Prepare le titre, le type d'acces et la description du parcours.">
       <CourseForm />
     </DashboardShell>
   );

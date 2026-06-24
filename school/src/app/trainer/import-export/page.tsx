@@ -13,7 +13,7 @@ export default async function TrainerImportExportPage() {
   }
 
   return (
-    <DashboardShell role="trainer" title="Import / export Excel" description="Import apprenants, export progressions et controles de colonnes.">
+    <DashboardShell role={session.role} title="Import / export Excel" description="Import apprenants, export progressions et controles de colonnes.">
       <div className="grid gap-5 md:grid-cols-2">
         <ImportLearnersForm />
         <article className="rounded-lg border border-line bg-surface p-6">

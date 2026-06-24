@@ -36,7 +36,27 @@ export async function completeLessonAction(formData: FormData) {
     },
   });
 
-  if (!lesson || lesson.type === "QUIZ" || lesson.module.course.enrollments.length === 0) {
+  if (
+    !lesson ||
+    lesson.type === "QUIZ" ||
+    lesson.type === "VIDEO" ||
+    lesson.module.course.enrollments.length === 0
+  ) {
+    return;
+  }
+
+  const previousLessons = await prisma.lesson.findMany({
+    where: {
+      module: { courseId: lesson.module.courseId },
+      OR: [
+        { module: { position: { lt: lesson.module.position } } },
+        { moduleId: lesson.moduleId, position: { lt: lesson.position } },
+      ],
+    },
+    include: { progress: { where: { learnerId: session.userId } } },
+  });
+
+  if (previousLessons.some((item) => !item.progress.some((progress) => progress.completed))) {
     return;
   }
 

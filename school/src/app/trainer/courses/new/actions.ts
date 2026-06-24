@@ -57,7 +57,7 @@ export async function createCourseAction(
       slug,
       type: parsed.data.type,
       priceLabel: parsed.data.priceLabel || null,
-      duration: parsed.data.duration,
+      duration: parsed.data.duration || null,
       description: parsed.data.description,
       status: CourseStatus.DRAFT,
       trainerId: session.userId,

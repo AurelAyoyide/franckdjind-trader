@@ -59,10 +59,16 @@ export const trainerAccountSchema = z.object({
   role: z.enum(["MAIN_TRAINER", "ASSISTANT_TRAINER"]),
 });
 
+const httpsUrlSchema = z
+  .string()
+  .url("Lien invalide")
+  .trim()
+  .refine((value) => new URL(value).protocol === "https:", "Utilise un lien HTTPS.");
+
 export const liveAnnouncementSchema = z.object({
   title: z.string().min(4, "Titre trop court").trim(),
   body: z.string().min(10, "Description trop courte").trim(),
-  externalUrl: z.string().url("Lien invalide").trim(),
+  externalUrl: httpsUrlSchema,
   scheduledAt: z.coerce.date(),
   courseId: z.string().optional(),
 });
@@ -72,7 +78,7 @@ export const courseUpdateSchema = z.object({
   title: z.string().min(4, "Titre trop court").trim(),
   type: z.enum(["FREE", "PAID"]),
   priceLabel: z.string().trim().optional(),
-  duration: z.string().min(2, "Duree requise").trim(),
+  duration: z.string().trim().max(80, "Duree trop longue").optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 
@@ -94,6 +100,7 @@ export const lessonCreateSchema = z.object({
   content: z.string().trim().optional(),
   videoPath: z.string().trim().optional(),
   documentPath: z.string().trim().optional(),
+  durationSeconds: z.coerce.number().int().min(1).max(24 * 60 * 60).optional(),
 });
 
 export const quizCreateSchema = z.object({
@@ -155,16 +162,14 @@ export const learnerAssignmentSchema = z.object({
 
 export const accessChoiceSchema = z.object({
   kind: z.enum(["free", "paid"]),
-  name: z.string().min(3, "Nom complet requis").trim(),
-  email: z.string().email("Email invalide").trim().toLowerCase(),
-  phone: z.string().min(8, "WhatsApp requis").trim(),
+  courseId: z.string().min(1).optional(),
 });
 
 export const courseSchema = z.object({
   title: z.string().min(4, "Titre trop court").trim(),
   type: z.enum(["FREE", "PAID"]),
   priceLabel: z.string().trim().optional(),
-  duration: z.string().min(2, "Duree requise").trim(),
+  duration: z.string().trim().max(80, "Duree trop longue").optional(),
   description: z.string().min(20, "Description trop courte").trim(),
 });
 

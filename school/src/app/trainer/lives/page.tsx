@@ -2,21 +2,26 @@ import { Radio } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { LiveAnnouncementForm } from "@/components/live-announcement-form";
 import { StatusBadge } from "@/components/status-badge";
-import { requirePageSession } from "@/lib/authorization";
-import { getTrainerCourses, getVisibleLiveAnnouncements, statusLabel } from "@/lib/platform-data";
+import { canManageTrainerData, requirePageSession } from "@/lib/authorization";
+import { getTrainerCourses, getTrainerLiveAnnouncements, statusLabel } from "@/lib/platform-data";
+import { redirect } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function TrainerLivesPage() {
-  await requirePageSession(["trainer", "admin"], "/trainer/lives");
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/lives");
+  if (!canManageTrainerData(session)) {
+    redirect("/trainer/dashboard");
+  }
+  const scope = { userId: session.userId, isAdmin: session.role === "admin" };
   const [liveAnnouncements, courses] = await Promise.all([
-    getVisibleLiveAnnouncements(),
-    getTrainerCourses(),
+    getTrainerLiveAnnouncements(scope),
+    getTrainerCourses(scope),
   ]);
 
   return (
-    <DashboardShell role="trainer" title="Annonces live" description="Creation et diffusion de sessions externes ciblees.">
+    <DashboardShell role={session.role} title="Annonces live" description="Creation et diffusion de sessions externes ciblees.">
       <LiveAnnouncementForm courses={courses.map((course) => ({ id: course.id, title: course.title }))} />
       <div className="grid gap-5 md:grid-cols-2">
         {liveAnnouncements.map((live) => (

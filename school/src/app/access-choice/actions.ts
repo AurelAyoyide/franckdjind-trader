@@ -1,6 +1,6 @@
 "use server";
 
-import { AccountStatus, TrainingRequestType } from "@prisma/client";
+import { AccountStatus, CourseStatus, CourseType, TrainingRequestType } from "@prisma/client";
 import { getAuthorizedSession } from "@/lib/authorization";
 import { accessChoiceSchema } from "@/lib/validation";
 import { buildTrainingRequestMessage, buildWhatsAppLink } from "@/lib/whatsapp";
@@ -19,9 +19,7 @@ export async function requestAccessAction(
 ): Promise<AccessChoiceState> {
   const parsed = accessChoiceSchema.safeParse({
     kind: formData.get("kind"),
-    name: formData.get("name"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
+    courseId: formData.get("courseId") || undefined,
   });
 
   if (!parsed.success) {
@@ -41,20 +39,6 @@ export async function requestAccessAction(
     };
   }
 
-  if (parsed.data.email !== session.email) {
-    return {
-      ok: false,
-      message: "Utilise l'email de ton compte connecte.",
-      errors: { email: ["Email different du compte connecte"] },
-    };
-  }
-
-  const message = buildTrainingRequestMessage(
-    parsed.data.kind,
-    parsed.data.name,
-    parsed.data.email,
-    parsed.data.phone,
-  );
   const requestType =
     parsed.data.kind === "free"
       ? TrainingRequestType.FREE
@@ -62,7 +46,7 @@ export async function requestAccessAction(
 
   const learner = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, status: true },
+    select: { id: true, firstName: true, lastName: true, email: true, phone: true, status: true },
   });
 
   if (!learner) {
@@ -88,10 +72,38 @@ export async function requestAccessAction(
     };
   }
 
+  const course = parsed.data.courseId
+    ? await prisma.course.findFirst({
+        where: {
+          id: parsed.data.courseId,
+          status: CourseStatus.PUBLISHED,
+          type: parsed.data.kind === "free" ? CourseType.FREE : CourseType.PAID,
+        },
+        select: { id: true, title: true },
+      })
+    : null;
+
+  if (parsed.data.courseId && !course) {
+    return {
+      ok: false,
+      message: "La formation selectionnee n'est plus disponible pour cette demande.",
+      errors: { courseId: ["Formation indisponible"] },
+    };
+  }
+
+  const message = buildTrainingRequestMessage(
+    parsed.data.kind,
+    `${learner.firstName} ${learner.lastName}`.trim(),
+    learner.email,
+    learner.phone,
+    course?.title,
+  );
+
   const recentPendingRequest = await prisma.trainingRequest.findFirst({
     where: {
       learnerId: learner.id,
       type: requestType,
+      courseId: course?.id ?? null,
       status: "PENDING",
       createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) },
     },
@@ -110,6 +122,7 @@ export async function requestAccessAction(
     data: {
       learnerId: learner.id,
       type: requestType,
+      courseId: course?.id ?? null,
       whatsappText: message,
     },
   });
@@ -119,7 +132,7 @@ export async function requestAccessAction(
       actorId: learner.id,
       action: "TRAINING_REQUEST_CREATED",
       target: parsed.data.kind,
-      metadata: { email: parsed.data.email, phone: parsed.data.phone },
+      metadata: { type: requestType, courseId: course?.id ?? null },
     },
   });
 

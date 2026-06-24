@@ -1,6 +1,35 @@
 import { AccountStatus, CourseStatus, EnrollmentStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
+export type TrainerDataScope = {
+  userId: string;
+  isAdmin: boolean;
+};
+
+function courseScope(scope?: TrainerDataScope) {
+  return scope && !scope.isAdmin ? { trainerId: scope.userId } : {};
+}
+
+function learnerScope(scope?: TrainerDataScope) {
+  return scope && !scope.isAdmin
+    ? {
+        enrollments: {
+          some: {
+            course: { trainerId: scope.userId },
+          },
+        },
+      }
+    : {};
+}
+
+function requestScope(scope?: TrainerDataScope) {
+  return scope && !scope.isAdmin
+    ? {
+        OR: [{ course: { trainerId: scope.userId } }, { courseId: null }],
+      }
+    : {};
+}
+
 function fullName(user: { firstName: string; lastName: string }) {
   return `${user.firstName} ${user.lastName}`.trim();
 }
@@ -52,7 +81,7 @@ export async function getStudentCourseCards(userId: string) {
       progress: percent(completed, lessons.length),
       lessons: lessons.length,
       modules: course.modules.length,
-      duration: course.duration ?? "A definir",
+      duration: course.duration || "A votre rythme",
       description: course.description,
     };
   });
@@ -144,7 +173,7 @@ export async function getStudentCourseDetail(userId: string, courseId: string) {
       modules: enrollment.course.modules.length,
       lessons: lessons.length,
       level: enrollment.course.type === "FREE" ? "Debutant" : "Intermediaire",
-      duration: enrollment.course.duration ?? "A definir",
+      duration: enrollment.course.duration || "A votre rythme",
     },
     modules: (() => {
       let unlockedSoFar = true;
@@ -241,6 +270,7 @@ export async function getStudentLesson(userId: string, lessonId: string) {
     courseTitle: lesson.module.course.title,
     completed: lesson.progress.some((item) => item.completed),
     videoPosition: lesson.progress[0]?.videoPosition ?? 0,
+    durationSeconds: lesson.durationSeconds,
   };
 }
 
@@ -361,6 +391,20 @@ export async function getVisibleLiveAnnouncements(userId?: string) {
   });
 }
 
+export async function getTrainerLiveAnnouncements(scope: TrainerDataScope) {
+  return prisma.liveAnnouncement.findMany({
+    where:
+      scope.isAdmin
+        ? {}
+        : {
+            OR: [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }],
+          },
+    include: { course: true },
+    orderBy: { scheduledAt: "asc" },
+    take: 50,
+  });
+}
+
 export async function getCommunityPosts(userId?: string, includeHidden = false) {
   const now = new Date();
   return prisma.communityPost.findMany({
@@ -398,18 +442,24 @@ export async function getCommunityPosts(userId?: string, includeHidden = false) 
   });
 }
 
-export async function getTrainerDashboardData() {
+export async function getTrainerDashboardData(scope?: TrainerDataScope) {
+  const courseFilter = courseScope(scope);
+  const requestFilter = requestScope(scope);
+  const callFilter = scope && !scope.isAdmin ? { trainerId: scope.userId } : {};
+
   const [learners, courses, requests, calls, recentRequests] = await Promise.all([
     prisma.user.count({
       where: {
         role: UserRole.STUDENT,
         status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
+        ...learnerScope(scope),
       },
     }),
-    prisma.course.count(),
-    prisma.trainingRequest.count({ where: { status: "PENDING" } }),
+    prisma.course.count({ where: courseFilter }),
+    prisma.trainingRequest.count({ where: { status: "PENDING", ...requestFilter } }),
     prisma.callSchedule.count({
       where: {
+        ...callFilter,
         scheduledAt: {
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
           lt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -417,6 +467,7 @@ export async function getTrainerDashboardData() {
       },
     }),
     prisma.trainingRequest.findMany({
+      where: requestFilter,
       include: { learner: true, course: true },
       orderBy: { createdAt: "desc" },
       take: 5,
@@ -426,8 +477,9 @@ export async function getTrainerDashboardData() {
   return { learners, courses, requests, calls, recentRequests };
 }
 
-export async function getTrainerCourses() {
+export async function getTrainerCourses(scope?: TrainerDataScope) {
   return prisma.course.findMany({
+    where: courseScope(scope),
     include: {
       modules: { include: { lessons: true } },
     },
@@ -435,10 +487,11 @@ export async function getTrainerCourses() {
   });
 }
 
-export async function getTrainerCourseBuilder(courseId: string) {
+export async function getTrainerCourseBuilder(courseId: string, scope?: TrainerDataScope) {
   return prisma.course.findFirst({
     where: {
       OR: [{ id: courseId }, { slug: courseId }],
+      ...courseScope(scope),
     },
     include: {
       trainer: true,
@@ -466,19 +519,21 @@ export async function getTrainerCourseBuilder(courseId: string) {
   });
 }
 
-export async function getTrainingRequests() {
+export async function getTrainingRequests(scope?: TrainerDataScope) {
   return prisma.trainingRequest.findMany({
+    where: requestScope(scope),
     include: { learner: true, course: true },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
 }
 
-export async function getLearnerRows() {
+export async function getLearnerRows(scope?: TrainerDataScope) {
   const learners = await prisma.user.findMany({
     where: {
       role: UserRole.STUDENT,
       status: { not: AccountStatus.DELETED },
+      ...learnerScope(scope),
     },
     include: {
       enrollments: {
@@ -522,8 +577,9 @@ export async function getLearnerRows() {
   });
 }
 
-export async function getTrainerCalls() {
+export async function getTrainerCalls(scope?: TrainerDataScope) {
   return prisma.callSchedule.findMany({
+    where: scope && !scope.isAdmin ? { trainerId: scope.userId } : {},
     include: { learner: true, trainer: true },
     orderBy: { scheduledAt: "asc" },
     take: 50,
@@ -543,6 +599,18 @@ export async function getAdminDashboardData() {
 
 export async function getAdminUsers() {
   return prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      lastLoginAt: true,
+    },
     orderBy: { createdAt: "desc" },
     take: 200,
   });

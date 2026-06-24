@@ -12,13 +12,17 @@ import {
 } from "@/lib/session-core";
 import { getAppSession } from "@/lib/session";
 
-type AuthorizedSession = AppSession & {
+export type AuthorizedSession = AppSession & {
   userId: string;
   email: string;
   name: string;
   role: AppRole;
   prismaRole: UserRole;
 };
+
+export function canManageTrainerData(session: AuthorizedSession | null): session is AuthorizedSession {
+  return Boolean(session && (session.role === "admin" || session.prismaRole === "MAIN_TRAINER"));
+}
 
 function isAllowed(role: AppRole, allowedRoles: AppRole[]) {
   return allowedRoles.includes(role);

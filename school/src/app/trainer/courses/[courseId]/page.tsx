@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { UserRole } from "@prisma/client";
+import { notFound, redirect } from "next/navigation";
 import { BookOpen, FileText, HelpCircle, PlayCircle, UsersRound } from "lucide-react";
 import { CourseBuilderForms } from "@/components/course-builder-forms";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
@@ -19,11 +20,15 @@ export default async function TrainerCourseBuilderPage({
 }) {
   const { courseId } = await params;
   const { notice } = await searchParams;
-  await requirePageSession(["trainer", "admin"], `/trainer/courses/${courseId}`);
+  const session = await requirePageSession(["trainer", "admin"], `/trainer/courses/${courseId}`);
+
+  if (session.role !== "admin" && session.prismaRole !== UserRole.MAIN_TRAINER) {
+    redirect("/trainer/dashboard");
+  }
 
   const [course, learners] = await Promise.all([
-    getTrainerCourseBuilder(courseId),
-    getLearnerRows(),
+    getTrainerCourseBuilder(courseId, { userId: session.userId, isAdmin: session.role === "admin" }),
+    getLearnerRows({ userId: session.userId, isAdmin: session.role === "admin" }),
   ]);
 
   if (!course) {
@@ -42,7 +47,7 @@ export default async function TrainerCourseBuilderPage({
 
   return (
     <DashboardShell
-      role="trainer"
+      role={session.role}
       title={course.title}
       description="Gestion de la formation, des modules, des lecons, des quiz et des apprenants inscrits."
     >
@@ -50,6 +55,8 @@ export default async function TrainerCourseBuilderPage({
         message={
           notice === "course-status"
             ? "Statut de la formation mis a jour."
+            : notice === "course-incomplete"
+              ? "Ajoute au moins une lecon complete : texte rempli, quiz configure ou fichier prive valide avant publication."
             : notice === "enrollment-status"
               ? "Acces apprenant mis a jour et notification envoyee."
               : null

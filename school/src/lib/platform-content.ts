@@ -14,7 +14,15 @@ import {
   Settings,
   ShieldCheck,
   UsersRound,
+  type LucideIcon,
 } from "lucide-react";
+
+type NavigationItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  section?: string;
+};
 
 export const siteConfig = {
   name: "School",
@@ -74,7 +82,7 @@ export const publicCourseHighlights = [
   },
 ];
 
-export const studentNav = [
+export const studentNav: NavigationItem[] = [
   { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/student/courses", label: "Formations", icon: LibraryBig },
   { href: "/student/certificates", label: "Certificats", icon: BadgeCheck },
@@ -84,7 +92,7 @@ export const studentNav = [
   { href: "/student/profile", label: "Profil", icon: Settings },
 ];
 
-export const trainerNav = [
+export const trainerNav: NavigationItem[] = [
   { href: "/trainer/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/trainer/courses", label: "Formations", icon: BookOpen },
   { href: "/trainer/requests", label: "Demandes", icon: ShieldCheck },
@@ -96,20 +104,26 @@ export const trainerNav = [
   { href: "/trainer/notifications", label: "Notifications", icon: Bell },
 ];
 
-export const adminNav = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Utilisateurs", icon: UsersRound },
-  { href: "/trainer/courses", label: "Formations", icon: BookOpen },
-  { href: "/trainer/requests", label: "Demandes", icon: ShieldCheck },
-  { href: "/trainer/students", label: "Apprenants", icon: UsersRound },
-  { href: "/trainer/calendar", label: "Appels", icon: CalendarDays },
-  { href: "/trainer/lives", label: "Lives", icon: Radio },
+export const assistantTrainerNav: NavigationItem[] = [
+  { href: "/trainer/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/trainer/community", label: "Communaute", icon: MessageCircle },
-  { href: "/trainer/import-export", label: "Excel", icon: FileSpreadsheet },
-  { href: "/trainer/notifications", label: "Notifications", icon: Bell },
-  { href: "/admin/certificates", label: "Certificats", icon: BadgeCheck },
-  { href: "/admin/settings", label: "Parametres", icon: Settings },
-  { href: "/admin/logs", label: "Audit", icon: Activity },
+];
+
+export const adminNav: NavigationItem[] = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Administration" },
+  { href: "/admin/users", label: "Utilisateurs", icon: UsersRound, section: "Administration" },
+  { href: "/trainer/dashboard", label: "Vue operations", icon: LayoutDashboard, section: "Gestion des formations" },
+  { href: "/trainer/courses", label: "Formations", icon: BookOpen, section: "Gestion des formations" },
+  { href: "/trainer/requests", label: "Demandes", icon: ShieldCheck, section: "Gestion des formations" },
+  { href: "/trainer/students", label: "Apprenants", icon: UsersRound, section: "Gestion des formations" },
+  { href: "/trainer/calendar", label: "Appels", icon: CalendarDays, section: "Gestion des formations" },
+  { href: "/trainer/lives", label: "Lives", icon: Radio, section: "Gestion des formations" },
+  { href: "/trainer/community", label: "Communaute", icon: MessageCircle, section: "Gestion des formations" },
+  { href: "/trainer/import-export", label: "Excel", icon: FileSpreadsheet, section: "Gestion des formations" },
+  { href: "/trainer/notifications", label: "Notifications", icon: Bell, section: "Gestion des formations" },
+  { href: "/admin/certificates", label: "Certificats", icon: BadgeCheck, section: "Plateforme" },
+  { href: "/admin/settings", label: "Parametres", icon: Settings, section: "Plateforme" },
+  { href: "/admin/logs", label: "Audit", icon: Activity, section: "Plateforme" },
 ];
 
 export const roleCards = [

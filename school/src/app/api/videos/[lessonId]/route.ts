@@ -47,6 +47,20 @@ function parseRange(rangeHeader: string | null, size: number) {
   return { start, end };
 }
 
+function videoContentType(filePath: string) {
+  const extension = path.extname(filePath).toLowerCase();
+
+  if (extension === ".webm") {
+    return "video/webm";
+  }
+
+  if (extension === ".mov") {
+    return "video/quicktime";
+  }
+
+  return "video/mp4";
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ lessonId: string }> },
@@ -102,7 +116,35 @@ export async function GET(
     return NextResponse.json({ error: "Video introuvable" }, { status: 404 });
   }
 
-  const canAccess = session.role === "trainer" || session.role === "admin" || lesson.module.course.enrollments.length > 0;
+  if (session.role === "student") {
+    const previousLessons = await prisma.lesson.findMany({
+      where: {
+        module: { courseId: lesson.module.courseId },
+        OR: [
+          { module: { position: { lt: lesson.module.position } } },
+          { moduleId: lesson.moduleId, position: { lt: lesson.position } },
+        ],
+      },
+      include: { progress: { where: { learnerId: session.userId } } },
+    });
+
+    if (previousLessons.some((item) => !item.progress.some((progress) => progress.completed))) {
+      await prisma.auditLog.create({
+        data: {
+          actorId: session.userId,
+          action: "VIDEO_ACCESS_DENIED",
+          target: lessonId,
+          metadata: { reason: "LOCKED_LESSON" },
+        },
+      });
+      return NextResponse.json({ error: "Lecon verrouillee" }, { status: 403 });
+    }
+  }
+
+  const canAccess =
+    session.role === "admin" ||
+    (session.role === "trainer" && lesson.module.course.trainerId === session.userId) ||
+    lesson.module.course.enrollments.length > 0;
 
   if (!canAccess) {
     await prisma.auditLog.create({
@@ -137,7 +179,7 @@ export async function GET(
   }
 
   const range = parseRange(request.headers.get("range"), fileStat.size);
-  const mimeType = asset?.mimeType ?? "video/mp4";
+  const mimeType = videoContentType(filePath);
 
   if (!range || range.start === 0) {
     await prisma.auditLog.create({

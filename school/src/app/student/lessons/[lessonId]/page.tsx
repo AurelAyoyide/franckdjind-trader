@@ -32,7 +32,11 @@ export default async function StudentLessonPage({
     <DashboardShell
       role="student"
       title={lesson.title}
-      description="Consulte la ressource, puis marque la lecon comme terminee pour continuer le parcours."
+      description={
+        lesson.kind === "VIDEO"
+          ? "La progression video est enregistree pendant la lecture."
+          : "Consulte la ressource, puis marque la lecon comme terminee pour continuer le parcours."
+      }
     >
       <NoticeBanner message={notice === "completed" ? "Lecon marquee comme terminee. Ta progression a ete mise a jour." : null} />
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -99,12 +103,18 @@ export default async function StudentLessonPage({
             <ButtonLink href={`/student/courses/${lesson.courseId}`} variant="secondary">
               Retour formation
             </ButtonLink>
-            <form action={completeLessonAction}>
-              <input name="lessonId" type="hidden" value={lesson.id} />
-              <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market" type="submit">
-                {lesson.completed ? "Lecon terminee" : "Marquer comme termine"}
-              </button>
-            </form>
+            {lesson.kind !== "VIDEO" ? (
+              <form action={completeLessonAction}>
+                <input name="lessonId" type="hidden" value={lesson.id} />
+                <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market" type="submit">
+                  {lesson.completed ? "Lecon terminee" : "Marquer comme termine"}
+                </button>
+              </form>
+            ) : (
+              <p className="rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-semibold text-cyan">
+                Cette lecon se valide automatiquement apres 90 % de la lecture reelle de la video.
+              </p>
+            )}
           </div>
         </aside>
       </div>

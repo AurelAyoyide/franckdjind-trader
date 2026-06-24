@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Export non autorise" }, { status: 403 });
   }
 
-  const workbook = await createProgressWorkbook(await getLearnerRows());
+  const workbook = await createProgressWorkbook(
+    await getLearnerRows({ userId: session.userId, isAdmin: session.role === "admin" }),
+  );
 
   await prisma.auditLog.create({
     data: {

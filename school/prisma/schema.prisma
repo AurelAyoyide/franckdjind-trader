@@ -184,6 +184,7 @@ model Lesson {
   content      String?
   videoPath    String?
   documentPath String?
+  durationSeconds Int?
   position     Int
   moduleId     String
   module       CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)

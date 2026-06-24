@@ -2,7 +2,7 @@
 
 import { AccountStatus, EnrollmentStatus, NotificationType, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { getAuthorizedSession } from "@/lib/authorization";
+import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { notificationSchema } from "@/lib/validation";
@@ -33,25 +33,29 @@ export async function sendNotificationAction(
 
   const session = await getAuthorizedSession(["trainer", "admin"]);
 
-  if (!session) {
+  if (!canManageTrainerData(session)) {
     return {
       ok: false,
-      message: "Connexion formateur requise.",
+      message: "Action reservee a l'administrateur ou au formateur principal.",
     };
   }
 
   const inactiveLimit = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const mustFilterEnrollment = session.role !== "admin" || parsed.data.target === "Formation payante";
   const learners = await prisma.user.findMany({
     where: {
       role: UserRole.STUDENT,
       status: { notIn: [AccountStatus.SUSPENDED, AccountStatus.DELETED] },
-      ...(parsed.data.target === "Formation payante"
+      ...(mustFilterEnrollment
         ? {
             enrollments: {
               some: {
                 status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
                 OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-                course: { type: "PAID" },
+                course: {
+                  ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
+                  ...(parsed.data.target === "Formation payante" ? { type: "PAID" } : {}),
+                },
               },
             },
           }

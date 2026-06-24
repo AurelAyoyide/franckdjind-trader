@@ -18,23 +18,18 @@ export function VideoLessonPlayer({
 }: VideoLessonPlayerProps) {
   const lastSyncAt = useRef(0);
 
-  function syncProgress(video: HTMLVideoElement, forceComplete = false) {
+  function syncProgress(video: HTMLVideoElement, forceSync = false) {
     const now = Date.now();
-    if (!forceComplete && now - lastSyncAt.current < 5000) {
+    if (!forceSync && now - lastSyncAt.current < 5000) {
       return;
     }
 
     lastSyncAt.current = now;
-    const watchedPercent = forceComplete || !Number.isFinite(video.duration) || video.duration === 0
-      ? 100
-      : Math.min(100, Math.round((video.currentTime / video.duration) * 100));
-
     void fetch(`/api/videos/${lessonId}/progress`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         videoPosition: Math.floor(video.currentTime),
-        watchedPercent,
       }),
     });
   }

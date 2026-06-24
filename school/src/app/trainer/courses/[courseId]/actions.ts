@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { AccountStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
+import { AccountStatus, CourseStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthorizedSession } from "@/lib/authorization";
@@ -61,24 +61,86 @@ function getPrivateUploadRoot() {
     : path.join(/*turbopackIgnore: true*/ process.cwd(), configuredUploadDir ?? "private_uploads");
 }
 
-function getSafeExtension(fileName: string, mimeType: string, type: LessonType) {
+const lessonFileTypes = {
+  VIDEO: {
+    extensions: new Set([".mp4", ".webm", ".mov"]),
+    mimeTypes: new Set(["video/mp4", "video/webm", "video/quicktime"]),
+  },
+  DOCUMENT: {
+    extensions: new Set([".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xlsx", ".png", ".jpg", ".jpeg"]),
+    mimeTypes: new Set([
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "image/png",
+      "image/jpeg",
+    ]),
+  },
+} as const;
+
+function getSafeExtension(fileName: string, type: LessonType) {
   const extension = path.extname(fileName).toLowerCase();
-  const allowedExtensions =
-    type === LessonType.VIDEO ? new Set([".mp4", ".webm", ".mov"]) : new Set([".pdf", ".doc", ".docx", ".ppt", ".pptx"]);
+  const allowedExtensions = type === LessonType.VIDEO ? lessonFileTypes.VIDEO.extensions : lessonFileTypes.DOCUMENT.extensions;
 
   if (allowedExtensions.has(extension)) {
     return extension;
   }
 
-  if (mimeType === "application/pdf") {
-    return ".pdf";
+  return null;
+}
+
+function mimeTypeForExtension(extension: string) {
+  const types: Record<string, string> = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".ppt": "application/vnd.ms-powerpoint",
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+  };
+
+  return types[extension] ?? "application/octet-stream";
+}
+
+function hasBytes(buffer: Buffer, bytes: number[], offset = 0) {
+  return bytes.every((byte, index) => buffer[offset + index] === byte);
+}
+
+function hasFileSignature(buffer: Buffer, extension: string) {
+  if (extension === ".pdf") {
+    return buffer.subarray(0, 5).toString("ascii") === "%PDF-";
   }
 
-  if (mimeType === "video/webm") {
-    return ".webm";
+  if (extension === ".png") {
+    return hasBytes(buffer, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   }
 
-  return type === LessonType.VIDEO ? ".mp4" : ".pdf";
+  if (extension === ".jpg" || extension === ".jpeg") {
+    return hasBytes(buffer, [0xff, 0xd8, 0xff]);
+  }
+
+  if (extension === ".doc" || extension === ".ppt") {
+    return hasBytes(buffer, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+  }
+
+  if (extension === ".docx" || extension === ".pptx" || extension === ".xlsx") {
+    return hasBytes(buffer, [0x50, 0x4b, 0x03, 0x04]) || hasBytes(buffer, [0x50, 0x4b, 0x05, 0x06]);
+  }
+
+  if (extension === ".webm") {
+    return hasBytes(buffer, [0x1a, 0x45, 0xdf, 0xa3]);
+  }
+
+  return buffer.subarray(4, 8).toString("ascii") === "ftyp";
 }
 
 async function savePrivateLessonFile(file: File, type: LessonType) {
@@ -97,25 +159,21 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
     return { ok: false as const, message: `Fichier trop lourd. Limite: ${maxMegabytes} Mo.` };
   }
 
-  const allowedMimeTypes =
-    type === LessonType.VIDEO
-      ? new Set(["video/mp4", "video/webm", "video/quicktime"])
-      : new Set([
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "application/vnd.ms-powerpoint",
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        ]);
+  const allowedMimeTypes = type === LessonType.VIDEO ? lessonFileTypes.VIDEO.mimeTypes : lessonFileTypes.DOCUMENT.mimeTypes;
+  const extension = getSafeExtension(file.name, type);
 
-  if (file.type && !allowedMimeTypes.has(file.type)) {
+  if (!extension || (file.type && !allowedMimeTypes.has(file.type))) {
     return { ok: false as const, message: "Type de fichier non autorise pour cette lecon." };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  if (!hasFileSignature(buffer, extension)) {
+    return { ok: false as const, message: "Le contenu du fichier ne correspond pas au format annonce." };
   }
 
   const privateRoot = getPrivateUploadRoot();
   await mkdir(/*turbopackIgnore: true*/ privateRoot, { recursive: true });
 
-  const extension = getSafeExtension(file.name, file.type, type);
   const relativePath = `${type.toLowerCase()}-${randomUUID()}${extension}`;
   const destination = path.resolve(privateRoot, relativePath);
 
@@ -123,12 +181,12 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
     return { ok: false as const, message: "Chemin de fichier non autorise." };
   }
 
-  await writeFile(/*turbopackIgnore: true*/ destination, Buffer.from(await file.arrayBuffer()));
+  await writeFile(/*turbopackIgnore: true*/ destination, buffer);
 
   return {
     ok: true as const,
     relativePath,
-    mimeType: file.type || (type === LessonType.VIDEO ? "video/mp4" : "application/pdf"),
+    mimeType: mimeTypeForExtension(extension),
     size: file.size,
   };
 }
@@ -166,7 +224,7 @@ export async function updateCourseAction(
       title: parsed.data.title,
       type: parsed.data.type,
       priceLabel: parsed.data.priceLabel || null,
-      duration: parsed.data.duration,
+      duration: parsed.data.duration || null,
       description: parsed.data.description,
     },
   });
@@ -203,6 +261,27 @@ export async function setCourseStatusAction(formData: FormData) {
   const course = await canManageCourse(parsed.data.courseId, session.userId, session.role);
   if (!course) {
     return;
+  }
+
+  if (parsed.data.status === CourseStatus.PUBLISHED) {
+    const lessons = await prisma.lesson.findMany({
+      where: { module: { courseId: course.id } },
+      include: { quiz: { select: { id: true } }, fileAssets: { select: { type: true } } },
+    });
+    const hasIncompleteLesson = lessons.some((lesson) =>
+      (lesson.type === LessonType.TEXT && !lesson.content?.trim()) ||
+      (lesson.type === LessonType.QUIZ && !lesson.quiz) ||
+      (lesson.type === LessonType.VIDEO &&
+        (!lesson.videoPath ||
+          !lesson.durationSeconds ||
+          !lesson.fileAssets.some((asset) => asset.type === FileAssetType.VIDEO))) ||
+      (lesson.type === LessonType.DOCUMENT &&
+        (!lesson.documentPath || !lesson.fileAssets.some((asset) => asset.type === FileAssetType.DOCUMENT))),
+    );
+
+    if (!lessons.length || hasIncompleteLesson) {
+      redirect(`/trainer/courses/${course.id}?notice=course-incomplete`);
+    }
   }
 
   await prisma.course.update({
@@ -289,9 +368,10 @@ export async function createLessonAction(
     moduleId: formData.get("moduleId"),
     title: formData.get("title"),
     type: formData.get("type"),
-    content: formData.get("content"),
-    videoPath: formData.get("videoPath"),
-    documentPath: formData.get("documentPath"),
+    content: formData.get("content") || undefined,
+    videoPath: formData.get("videoPath") || undefined,
+    documentPath: formData.get("documentPath") || undefined,
+    durationSeconds: formData.get("durationSeconds") || undefined,
   });
 
   if (!parsed.success) {
@@ -324,6 +404,18 @@ export async function createLessonAction(
     return { ok: false, message: upload.message };
   }
 
+  if ((lessonType === LessonType.VIDEO || lessonType === LessonType.DOCUMENT) && !upload?.relativePath) {
+    return { ok: false, message: "Ajoute le fichier prive associe a cette lecon." };
+  }
+
+  if (lessonType === LessonType.VIDEO && !parsed.data.durationSeconds) {
+    return { ok: false, message: "Indique la duree reelle de la video en secondes." };
+  }
+
+  if (lessonType === LessonType.TEXT && !parsed.data.content) {
+    return { ok: false, message: "Ajoute le contenu de la lecon texte." };
+  }
+
   const lesson = await prisma.lesson.create({
     data: {
       moduleId: parsed.data.moduleId,
@@ -335,6 +427,7 @@ export async function createLessonAction(
         parsed.data.type === "DOCUMENT"
           ? upload?.relativePath || parsed.data.documentPath || parsed.data.videoPath || null
           : null,
+      durationSeconds: lessonType === LessonType.VIDEO ? parsed.data.durationSeconds : null,
       position: (lastLesson?.position ?? 0) + 1,
     },
   });

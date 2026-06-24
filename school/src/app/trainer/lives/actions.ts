@@ -2,7 +2,7 @@
 
 import { EnrollmentStatus, LiveStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { getAuthorizedSession } from "@/lib/authorization";
+import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { liveAnnouncementSchema } from "@/lib/validation";
@@ -18,8 +18,8 @@ export async function createLiveAnnouncementAction(
   formData: FormData,
 ): Promise<LiveAnnouncementState> {
   const session = await getAuthorizedSession(["trainer", "admin"]);
-  if (!session) {
-    return { ok: false, message: "Connexion formateur requise." };
+  if (!canManageTrainerData(session)) {
+    return { ok: false, message: "Action reservee a l'administrateur ou au formateur principal." };
   }
 
   const parsed = liveAnnouncementSchema.safeParse({
@@ -38,6 +38,20 @@ export async function createLiveAnnouncementAction(
     };
   }
 
+  const course = parsed.data.courseId
+    ? await prisma.course.findFirst({
+        where: {
+          id: parsed.data.courseId,
+          ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
+        },
+        select: { id: true },
+      })
+    : null;
+
+  if (parsed.data.courseId && !course) {
+    return { ok: false, message: "Formation introuvable ou non autorisee." };
+  }
+
   const live = await prisma.liveAnnouncement.create({
     data: {
       title: parsed.data.title,
@@ -45,7 +59,7 @@ export async function createLiveAnnouncementAction(
       externalUrl: parsed.data.externalUrl,
       scheduledAt: parsed.data.scheduledAt,
       status: LiveStatus.SCHEDULED,
-      courseId: parsed.data.courseId || null,
+      courseId: course?.id ?? null,
       creatorId: session.userId,
     },
   });
@@ -59,6 +73,17 @@ export async function createLiveAnnouncementAction(
             enrollments: {
               some: {
                 courseId: live.courseId,
+                status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+                OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
+              },
+            },
+          }
+        : {}),
+      ...(session.role !== "admin" && !live.courseId
+        ? {
+            enrollments: {
+              some: {
+                course: { trainerId: session.userId },
                 status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
                 OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
               },

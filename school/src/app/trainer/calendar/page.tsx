@@ -3,7 +3,8 @@ import { CallScheduleForm } from "@/components/call-schedule-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
 import { StatusBadge } from "@/components/status-badge";
-import { requirePageSession } from "@/lib/authorization";
+import { canManageTrainerData, requirePageSession } from "@/lib/authorization";
+import { redirect } from "next/navigation";
 import { fullName, getLearnerRows, getTrainerCalls, statusLabel } from "@/lib/platform-data";
 import { formatDate } from "@/lib/utils";
 import { setCallStatusAction } from "./actions";
@@ -20,11 +21,15 @@ export default async function TrainerCalendarPage({
   searchParams: Promise<{ notice?: string }>;
 }) {
   const { notice } = await searchParams;
-  await requirePageSession(["trainer", "admin"], "/trainer/calendar");
-  const [calls, learners] = await Promise.all([getTrainerCalls(), getLearnerRows()]);
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/calendar");
+  if (!canManageTrainerData(session)) {
+    redirect("/trainer/dashboard");
+  }
+  const scope = { userId: session.userId, isAdmin: session.role === "admin" };
+  const [calls, learners] = await Promise.all([getTrainerCalls(scope), getLearnerRows(scope)]);
 
   return (
-    <DashboardShell role="trainer" title="Calendrier d'appels" description="Appels programmes et suggestions automatiques selon l'inactivite.">
+    <DashboardShell role={session.role} title="Calendrier d'appels" description="Appels programmes et suggestions automatiques selon l'inactivite.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <CallScheduleForm learners={learners.map((learner) => ({ id: learner.id, name: learner.name, email: learner.email }))} />
       <div className="grid gap-5 md:grid-cols-2">

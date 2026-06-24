@@ -1,7 +1,7 @@
 "use client";
 
 import { Archive, CheckCircle2, FilePlus2, Layers3, Save } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   assignLearnerAction,
   createLessonAction,
@@ -70,6 +70,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
   const [lessonState, lessonAction, lessonPending] = useActionState(createLessonAction, initialState);
   const [quizState, quizAction, quizPending] = useActionState(createQuizAction, initialState);
   const [assignmentState, assignmentAction, assignmentPending] = useActionState(assignLearnerAction, initialState);
+  const [lessonType, setLessonType] = useState<"TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ">("TEXT");
 
   return (
     <div className="grid gap-5">
@@ -97,8 +98,15 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
             <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" defaultValue={course.priceLabel ?? ""} name="priceLabel" />
           </label>
           <label className="text-sm font-black">
-            Duree
-            <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" defaultValue={course.duration ?? ""} name="duration" />
+            Duree estimee <span className="font-medium text-muted">(facultatif)</span>
+            <input
+              className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm"
+              defaultValue={course.duration ?? ""}
+              maxLength={80}
+              name="duration"
+              placeholder="Ex. 6 semaines ou 12 h"
+            />
+            <span className="mt-2 block text-xs font-medium text-muted">Laisse vide si le parcours est libre.</span>
             {courseState.errors?.duration ? <span className="mt-2 block text-xs text-danger">{courseState.errors.duration[0]}</span> : null}
           </label>
         </div>
@@ -175,7 +183,12 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
           </label>
           <label className="text-sm font-black">
             Type
-            <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="type">
+            <select
+              className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm"
+              name="type"
+              onChange={(event) => setLessonType(event.target.value as "TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ")}
+              value={lessonType}
+            >
               <option value="TEXT">Texte</option>
               <option value="VIDEO">Video privee</option>
               <option value="DOCUMENT">Document</option>
@@ -187,20 +200,45 @@ export function CourseBuilderForms({ course, modules, quizLessons, learners }: C
             <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="title" />
             {lessonState.errors?.title ? <span className="mt-2 block text-xs text-danger">{lessonState.errors.title[0]}</span> : null}
           </label>
-          <label className="text-sm font-black">
-            Chemin video/document prive
-            <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="videoPath" placeholder="videos/lesson.mp4" />
-          </label>
-          <label className="text-sm font-black">
-            Fichier prive
-            <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 py-2 text-sm" name="asset" type="file" />
-          </label>
+          {lessonType === "VIDEO" || lessonType === "DOCUMENT" ? (
+            <label className="text-sm font-black">
+              Fichier prive
+              <input
+                accept={lessonType === "VIDEO" ? "video/mp4,video/webm,video/quicktime" : ".pdf,.doc,.docx,.ppt,.pptx,.xlsx,image/png,image/jpeg"}
+                className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 py-2 text-sm"
+                name="asset"
+                required
+                type="file"
+              />
+              <span className="mt-2 block text-xs font-medium text-muted">Le fichier est stocke hors de l&apos;espace public.</span>
+            </label>
+          ) : null}
+          {lessonType === "VIDEO" ? (
+            <label className="text-sm font-black">
+              Duree reelle (secondes)
+              <input
+                className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm"
+                min="1"
+                name="durationSeconds"
+                placeholder="Ex. 900 pour 15 min"
+                required
+                type="number"
+              />
+              <span className="mt-2 block text-xs font-medium text-muted">Cette duree sert a valider la lecture sans faire confiance au navigateur.</span>
+              {lessonState.errors?.durationSeconds ? <span className="mt-2 block text-xs text-danger">{lessonState.errors.durationSeconds[0]}</span> : null}
+            </label>
+          ) : null}
         </div>
-        <label className="mt-4 block text-sm font-black">
-          Contenu texte
-          <textarea className="mt-2 min-h-24 w-full rounded-lg border border-line bg-background p-3 text-sm" name="content" />
-        </label>
-        <input name="documentPath" type="hidden" value="" />
+        {lessonType === "TEXT" ? (
+          <label className="mt-4 block text-sm font-black">
+            Contenu texte
+            <textarea className="mt-2 min-h-24 w-full rounded-lg border border-line bg-background p-3 text-sm" name="content" required />
+          </label>
+        ) : lessonType === "QUIZ" ? (
+          <p className="mt-4 rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-medium text-cyan">
+            Cree d&apos;abord la lecon, puis configure les questions dans la section quiz.
+          </p>
+        ) : null}
         <StateMessage state={lessonState} />
         <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={lessonPending || modules.length === 0} type="submit">
           {lessonPending ? "Creation..." : "Creer la lecon"}

@@ -93,7 +93,9 @@ Durcissements securite inclus : session revalidee en base, blocage des comptes s
 limite de tentatives login, tokens hashes, reset password a usage unique, emails HTML echappes,
 garde anti-spam des relances, logs d'audit, certificats revoques, suppression logique, invalidation des
 anciennes sessions, headers de securite, routes documents/videos privees et verification MIME/extension/taille
-des uploads.
+des uploads. Les fichiers sont aussi controles par signature binaire, et une video doit declarer sa duree reelle :
+la progression est ensuite bornee cote serveur par le temps ecoule, sans faire confiance au pourcentage envoye par
+le navigateur.
 
 Pour tester les flux dynamiques en developpement, appliquer le schema puis lancer le seed avec les deux variables
 `SEED_DEMO_DATA=true` et `SEED_DEMO_PASSWORD` definies :
@@ -118,6 +120,13 @@ Verification runtime relancee le 2026-06-19 apres migration PostgreSQL, seed, ro
 dependances : smoke test connecte apprenant/formateur/admin OK, exports Excel OK, audit npm production a 0
 vulnerabilite.
 
+Verification de livraison relancee le 2026-06-24 : migration locale
+`20260624000000_add_video_duration` appliquee, `npm run prisma:generate`, `npm run lint`, `npm run typecheck`,
+`npm run build` et `npm audit --audit-level=moderate --omit=dev` passent. Le smoke HTTP de production locale
+confirme les pages publiques, la redirection des espaces prives, `GET /logout` refuse (405), `POST /logout` qui
+supprime la session, et les routes video/document privees refusees sans session. L'endpoint de progression refuse
+une origine externe (403) avant toute ecriture.
+
 Apres toute modification du schema Prisma, relancer dans cet ordre :
 
 ```bash
@@ -125,6 +134,12 @@ npm run prisma:generate
 npm run lint
 npm run typecheck
 npm run build
+```
+
+En production, appliquer egalement les migrations avant le demarrage :
+
+```bash
+npx prisma migrate deploy
 ```
 
 ## Deploiement et sauvegardes

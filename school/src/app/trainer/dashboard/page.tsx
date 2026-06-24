@@ -10,15 +10,28 @@ import { formatDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function TrainerDashboardPage() {
-  await requirePageSession(["trainer", "admin"], "/trainer/dashboard");
-  const [dashboard, callRows] = await Promise.all([getTrainerDashboardData(), getTrainerCalls()]);
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/dashboard");
+  const scope = { userId: session.userId, isAdmin: session.role === "admin" };
+  const [dashboard, callRows] = await Promise.all([
+    getTrainerDashboardData(scope),
+    getTrainerCalls(scope),
+  ]);
 
   return (
     <DashboardShell
-      role="trainer"
-      title="Dashboard formateur"
-      description="Une vue operationnelle pour traiter les demandes, suivre les apprenants inactifs et programmer les prochaines actions."
-      action={<ButtonLink href="/trainer/courses/new" showArrow>Nouvelle formation</ButtonLink>}
+      role={session.role}
+      isAssistantTrainer={session.prismaRole === "ASSISTANT_TRAINER"}
+      title={session.role === "admin" ? "Operations formation" : "Dashboard formateur"}
+      description={
+        session.role === "admin"
+          ? "Vue operationnelle des formations, demandes, apprenants et prochaines actions, sans quitter l'administration."
+          : "Une vue operationnelle pour traiter les demandes, suivre les apprenants inactifs et programmer les prochaines actions."
+      }
+      action={
+        session.role === "admin" || session.prismaRole === "MAIN_TRAINER" ? (
+          <ButtonLink href="/trainer/courses/new" showArrow>Nouvelle formation</ButtonLink>
+        ) : undefined
+      }
     >
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard icon={UsersRound} label="Apprenants" value={String(dashboard.learners)} detail="Comptes actifs." />

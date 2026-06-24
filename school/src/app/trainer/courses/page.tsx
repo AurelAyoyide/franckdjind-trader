@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { UserRole } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { StatusBadge } from "@/components/status-badge";
@@ -9,12 +11,16 @@ import { getTrainerCourses, statusLabel } from "@/lib/platform-data";
 export const dynamic = "force-dynamic";
 
 export default async function TrainerCoursesPage() {
-  await requirePageSession(["trainer", "admin"], "/trainer/courses");
-  const courses = await getTrainerCourses();
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/courses");
+
+  if (session.role !== "admin" && session.prismaRole !== UserRole.MAIN_TRAINER) {
+    redirect("/trainer/dashboard");
+  }
+  const courses = await getTrainerCourses({ userId: session.userId, isAdmin: session.role === "admin" });
 
   return (
     <DashboardShell
-      role="trainer"
+      role={session.role}
       title="Gestion des formations"
       description="Creation, publication, archivage, modules, lecons, quiz et supports."
       action={<ButtonLink href="/trainer/courses/new"><Plus className="h-4 w-4" /> Creer</ButtonLink>}

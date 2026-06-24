@@ -3,12 +3,13 @@
 import { AccountStatus, EnrollmentStatus, TrainingRequestStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getAuthorizedSession } from "@/lib/authorization";
+import { canManageTrainerData, getAuthorizedSession } from "@/lib/authorization";
 import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 
 async function requireTrainer() {
-  return getAuthorizedSession(["trainer", "admin"]);
+  const session = await getAuthorizedSession(["trainer", "admin"]);
+  return canManageTrainerData(session) ? session : null;
 }
 
 export async function approveTrainingRequestAction(formData: FormData) {
@@ -23,7 +24,11 @@ export async function approveTrainingRequestAction(formData: FormData) {
     include: { learner: true, course: true },
   });
 
-  if (!request || request.status !== TrainingRequestStatus.PENDING) {
+  if (
+    !request ||
+    request.status !== TrainingRequestStatus.PENDING ||
+    (session.role !== "admin" && request.course && request.course.trainerId !== session.userId)
+  ) {
     return;
   }
 
@@ -33,6 +38,7 @@ export async function approveTrainingRequestAction(formData: FormData) {
       where: {
         status: "PUBLISHED",
         type: request.type === "FREE" ? "FREE" : "PAID",
+        ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
       },
       orderBy: { createdAt: "asc" },
     }));
@@ -111,9 +117,17 @@ export async function rejectTrainingRequestAction(formData: FormData) {
   }
 
   const requestId = String(formData.get("requestId") ?? "");
+  const request = await prisma.trainingRequest.findUnique({
+    where: { id: requestId },
+    include: { course: { select: { trainerId: true } } },
+  });
+
+  if (!request || (session.role !== "admin" && request.course && request.course.trainerId !== session.userId)) {
+    return;
+  }
 
   await prisma.trainingRequest.update({
-    where: { id: requestId },
+    where: { id: request.id },
     data: {
       status: TrainingRequestStatus.REJECTED,
       reviewedById: session.userId,
@@ -125,7 +139,7 @@ export async function rejectTrainingRequestAction(formData: FormData) {
     data: {
       actorId: session.userId,
       action: "TRAINING_REQUEST_REJECTED",
-      target: requestId,
+      target: request.id,
     },
   });
 

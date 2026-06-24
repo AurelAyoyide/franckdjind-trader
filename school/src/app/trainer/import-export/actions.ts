@@ -172,6 +172,7 @@ export async function importLearnersAction(
     if (courseLabel) {
       const course = await prisma.course.findFirst({
         where: {
+          ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
           OR: [
             { title: { equals: courseLabel, mode: "insensitive" } },
             { slug: { equals: courseLabel, mode: "insensitive" } },

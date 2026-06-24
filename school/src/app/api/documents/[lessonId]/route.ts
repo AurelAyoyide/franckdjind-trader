@@ -27,6 +27,23 @@ function resolvePrivateFile(filePath: string) {
   return resolved;
 }
 
+function documentContentType(filePath: string) {
+  const extension = path.extname(filePath).toLowerCase();
+  const types: Record<string, string> = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".ppt": "application/vnd.ms-powerpoint",
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+  };
+
+  return types[extension] ?? "application/octet-stream";
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ lessonId: string }> },
@@ -65,7 +82,27 @@ export async function GET(
     return NextResponse.json({ error: "Document introuvable" }, { status: 404 });
   }
 
-  const canAccess = session.role === "trainer" || session.role === "admin" || lesson.module.course.enrollments.length > 0;
+  if (session.role === "student") {
+    const previousLessons = await prisma.lesson.findMany({
+      where: {
+        module: { courseId: lesson.module.courseId },
+        OR: [
+          { module: { position: { lt: lesson.module.position } } },
+          { moduleId: lesson.moduleId, position: { lt: lesson.position } },
+        ],
+      },
+      include: { progress: { where: { learnerId: session.userId } } },
+    });
+
+    if (previousLessons.some((item) => !item.progress.some((progress) => progress.completed))) {
+      return NextResponse.json({ error: "Lecon verrouillee" }, { status: 403 });
+    }
+  }
+
+  const canAccess =
+    session.role === "admin" ||
+    (session.role === "trainer" && lesson.module.course.trainerId === session.userId) ||
+    lesson.module.course.enrollments.length > 0;
   if (!canAccess) {
     await prisma.auditLog.create({
       data: {
@@ -109,8 +146,8 @@ export async function GET(
   return new Response(Readable.toWeb(stream) as ReadableStream, {
     headers: {
       "Content-Length": String(fileStat.size),
-      "Content-Type": asset?.mimeType ?? "application/pdf",
-      "Content-Disposition": `inline; filename="${lesson.id}.pdf"`,
+      "Content-Type": documentContentType(filePath),
+      "Content-Disposition": `attachment; filename="${lesson.id}${path.extname(filePath).toLowerCase()}"`,
     },
   });
 }

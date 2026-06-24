@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { requestAccessAction, type AccessChoiceState } from "@/app/access-choice/actions";
 import { useTranslate } from "@/components/locale-provider";
 
@@ -10,9 +10,17 @@ const initialState: AccessChoiceState = {
   message: "",
 };
 
-export function AccessChoiceForm() {
+export function AccessChoiceForm({
+  account,
+  courses,
+}: {
+  account: { name: string; email: string; phone: string };
+  courses: { id: string; title: string; type: "FREE" | "PAID" }[];
+}) {
   const [state, formAction, pending] = useActionState(requestAccessAction, initialState);
+  const [kind, setKind] = useState<"free" | "paid">("free");
   const t = useTranslate();
+  const matchingCourses = courses.filter((course) => course.type === (kind === "free" ? "FREE" : "PAID"));
 
   return (
     <form action={formAction} className="rounded-lg border border-line bg-surface p-6">
@@ -22,7 +30,15 @@ export function AccessChoiceForm() {
           { value: "paid", label: "Payee hors plateforme", text: "Paiement signale puis verifie manuellement." },
         ].map((choice) => (
           <label className="rounded-lg border border-line bg-foreground/[0.04] p-4" key={choice.value}>
-            <input className="mr-2 accent-[var(--market)]" name="kind" type="radio" value={choice.value} />
+            <input
+              checked={kind === choice.value}
+              className="mr-2 accent-[var(--market)]"
+              name="kind"
+              onChange={() => setKind(choice.value as "free" | "paid")}
+              required
+              type="radio"
+              value={choice.value}
+            />
             <span className="font-black">{t(choice.label)}</span>
             <span className="mt-2 block text-xs leading-6 text-muted">{t(choice.text)}</span>
           </label>
@@ -30,27 +46,28 @@ export function AccessChoiceForm() {
       </div>
       {state.errors?.kind ? <p className="mt-2 text-xs font-semibold text-danger">{state.errors.kind[0]}</p> : null}
 
-      <div className="mt-5 grid gap-4 md:grid-cols-3">
-        {[
-          { id: "name", label: "Nom complet", type: "text" },
-          { id: "email", label: "Email", type: "email" },
-          { id: "phone", label: "WhatsApp", type: "tel" },
-        ].map((field) => (
-          <div key={field.id}>
-            <label className="block text-sm font-black" htmlFor={field.id}>
-              {t(field.label)}
-            </label>
-            <input
-              className="mt-2 min-h-12 w-full rounded-lg border border-line bg-background px-4 text-sm outline-none transition focus:border-market"
-              id={field.id}
-              name={field.id}
-              type={field.type}
-            />
-            {state.errors?.[field.id]?.length ? (
-              <p className="mt-2 text-xs font-semibold text-danger">{state.errors[field.id]?.[0]}</p>
-            ) : null}
-          </div>
-        ))}
+      {matchingCourses.length ? (
+        <label className="mt-5 block text-sm font-black">
+          Formation souhaitee <span className="font-medium text-muted">(facultatif)</span>
+          <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm" name="courseId">
+            <option value="">Je laisse le formateur choisir</option>
+            {matchingCourses.map((course) => (
+              <option key={course.id} value={course.id}>{course.title}</option>
+            ))}
+          </select>
+          <span className="mt-2 block text-xs font-medium text-muted">Seules les formations publiees correspondant a ta demande sont proposees.</span>
+          {state.errors?.courseId ? <span className="mt-2 block text-xs text-danger">{state.errors.courseId[0]}</span> : null}
+        </label>
+      ) : null}
+
+      <div className="mt-5 rounded-lg border border-line bg-foreground/[0.04] p-4">
+        <p className="text-sm font-black">Coordonnees utilisees pour la demande</p>
+        <div className="mt-3 grid gap-2 text-sm text-muted md:grid-cols-3">
+          <p><span className="font-semibold text-foreground">{t("Nom complet")} :</span> {account.name}</p>
+          <p><span className="font-semibold text-foreground">Email :</span> {account.email}</p>
+          <p><span className="font-semibold text-foreground">WhatsApp :</span> {account.phone || "Non renseigne"}</p>
+        </div>
+        <p className="mt-3 text-xs leading-6 text-muted">Mets a jour ton profil avant la demande si une information est incorrecte.</p>
       </div>
 
       {state.message ? (

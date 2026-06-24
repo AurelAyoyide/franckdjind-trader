@@ -8,11 +8,15 @@ import { formatDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function TrainerStudentsPage() {
-  await requirePageSession(["trainer", "admin"], "/trainer/students");
-  const learners = await getLearnerRows();
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/students");
+
+  if (session.role !== "admin" && session.prismaRole !== UserRole.MAIN_TRAINER) {
+    redirect("/trainer/dashboard");
+  }
+  const learners = await getLearnerRows({ userId: session.userId, isAdmin: session.role === "admin" });
 
   return (
-    <DashboardShell role="trainer" title="Apprenants" description="Fiches rapides, progression et statut de relance.">
+    <DashboardShell role={session.role} title="Apprenants" description="Fiches rapides, progression et statut de relance.">
       <div className="grid gap-4">
         {learners.map((learner) => (
           <article className="rounded-lg border border-line bg-surface p-5" key={learner.email}>
@@ -38,3 +42,5 @@ export default async function TrainerStudentsPage() {
     </DashboardShell>
   );
 }
+import { UserRole } from "@prisma/client";
+import { redirect } from "next/navigation";

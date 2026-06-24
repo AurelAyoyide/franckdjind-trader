@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { LogOut } from "lucide-react";
-import { adminNav, studentNav, trainerNav } from "@/lib/platform-content";
+import { adminNav, assistantTrainerNav, studentNav, trainerNav } from "@/lib/platform-content";
 import { localePath, translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 import type { AppRole } from "@/lib/session-core";
@@ -12,6 +13,7 @@ type DashboardShellProps = {
   description: string;
   children: React.ReactNode;
   action?: React.ReactNode;
+  isAssistantTrainer?: boolean;
 };
 
 const navByRole = {
@@ -20,8 +22,8 @@ const navByRole = {
   admin: adminNav,
 };
 
-export async function DashboardShell({ role, title, description, children, action }: DashboardShellProps) {
-  const navItems = navByRole[role];
+export async function DashboardShell({ role, title, description, children, action, isAssistantTrainer = false }: DashboardShellProps) {
+  const navItems = role === "trainer" && isAssistantTrainer ? assistantTrainerNav : navByRole[role];
   const locale = await getRequestLocale();
   const t = (source: string) => translate(locale, source);
 
@@ -34,16 +36,26 @@ export async function DashboardShell({ role, title, description, children, actio
               {t(roleLabels[role])}
             </p>
             <nav className="grid gap-1">
-              {navItems.map((item) => (
-                <Link
-                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
-                  href={localePath(locale, item.href)}
-                  key={item.href}
-                >
-                  <item.icon className="h-4 w-4" aria-hidden="true" />
-                  {t(item.label)}
-                </Link>
-              ))}
+              {navItems.map((item, index) => {
+                const section = item.section !== navItems[index - 1]?.section ? item.section : undefined;
+
+                return (
+                  <Fragment key={item.href}>
+                    {section ? (
+                      <p className="px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-[0.18em] text-muted">
+                        {t(section)}
+                      </p>
+                    ) : null}
+                    <Link
+                      className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted transition hover:bg-foreground/[0.06] hover:text-foreground"
+                      href={localePath(locale, item.href)}
+                    >
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
+                      {t(item.label)}
+                    </Link>
+                  </Fragment>
+                );
+              })}
             </nav>
             <div className="mt-3 border-t border-line pt-3">
               <form action={localePath(locale, "/logout")} method="post">

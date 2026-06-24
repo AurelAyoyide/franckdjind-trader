@@ -1,8 +1,9 @@
 import { CheckCircle2, XCircle } from "lucide-react";
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
 import { StatusBadge } from "@/components/status-badge";
-import { requirePageSession } from "@/lib/authorization";
+import { canManageTrainerData, requirePageSession } from "@/lib/authorization";
 import { fullName, getTrainingRequests, statusLabel } from "@/lib/platform-data";
 import { formatDate } from "@/lib/utils";
 import { approveTrainingRequestAction, rejectTrainingRequestAction } from "@/app/trainer/requests/actions";
@@ -20,11 +21,14 @@ export default async function TrainerRequestsPage({
   searchParams: Promise<{ notice?: string }>;
 }) {
   const { notice } = await searchParams;
-  await requirePageSession(["trainer", "admin"], "/trainer/requests");
-  const trainingRequests = await getTrainingRequests();
+  const session = await requirePageSession(["trainer", "admin"], "/trainer/requests");
+  if (!canManageTrainerData(session)) {
+    redirect("/trainer/dashboard");
+  }
+  const trainingRequests = await getTrainingRequests({ userId: session.userId, isAdmin: session.role === "admin" });
 
   return (
-    <DashboardShell role="trainer" title="Demandes de formation" description="Validation manuelle apres verification du paiement hors plateforme.">
+    <DashboardShell role={session.role} title="Demandes de formation" description="Validation manuelle apres verification du paiement hors plateforme.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
       <div className="grid gap-4">
         {trainingRequests.map((request) => (
