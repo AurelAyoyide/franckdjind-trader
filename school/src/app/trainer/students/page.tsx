@@ -36,14 +36,13 @@ export default async function TrainerStudentsPage({ searchParams }: { searchPara
           name="status"
           defaultValue={status}
           className="h-11 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm focus:border-market focus:ring-1 focus:ring-market"
-          onChange={(e) => e.currentTarget.form?.submit()}
         >
           <option value="">Tous les statuts</option>
           <option value="Actif">Actif</option>
           <option value="A relancer">A relancer</option>
           <option value="Suspendu">Suspendu</option>
         </select>
-        <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1] sm:hidden">
+        <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1]">
           Filtrer
         </button>
       </form>

@@ -1,7 +1,11 @@
 "use client";
 
 import { MessageCirclePlus } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import {
   createCommunityPostAction,
   type CommunityPostState,
@@ -19,6 +23,7 @@ const initialState: CommunityPostState = {
 
 export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
   const [state, formAction, pending] = useActionState(createCommunityPostAction, initialState);
+  const [body, setBody] = useState("");
 
   return (
     <form action={formAction} className="mb-8 rounded-2xl border border-line bg-surface p-1 shadow-sm transition-all focus-within:border-market/40 focus-within:ring-2 focus-within:ring-market/20 hover:shadow-md">

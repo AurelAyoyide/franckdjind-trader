@@ -26,7 +26,7 @@ export default async function StudentCommunityPage({ searchParams }: { searchPar
               {post.pinned ? <StatusBadge tone="amber">Epingle</StatusBadge> : null}
             </div>
             <h2 className="mt-5 text-xl font-black">{post.title}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">{post.body}</p>
+            <div className="mt-3 text-sm leading-7 text-muted [&_p]:mb-2 [&_h1]:text-lg [&_h1]:font-black [&_h2]:text-base [&_h2]:font-bold [&_a]:text-market [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4" dangerouslySetInnerHTML={{ __html: post.body }} />
             <p className="mt-3 text-sm text-muted">
               Par {fullName(post.author)} - {post.course?.title ?? "Tous les apprenants"} - {post.comments.length} commentaire(s)
             </p>
