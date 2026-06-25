@@ -6,6 +6,7 @@ import { LanguageSwitch } from "@/components/language-switch";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ButtonLink } from "@/components/ui/button-link";
 import { localePath, translate, type Locale } from "@/lib/i18n";
+import { getRequestPathname, getRequestSearch } from "@/lib/i18n-server";
 import { siteConfig } from "@/lib/platform-content";
 import { getAuthorizedSession } from "@/lib/authorization";
 import { roleHome } from "@/lib/session-core";
@@ -13,7 +14,11 @@ import { roleHome } from "@/lib/session-core";
 const navItems = [{ href: "/certificates/verify", label: "Verifier certificat" }];
 
 export async function SiteHeader({ locale }: { locale: Locale }) {
-  const session = await getAuthorizedSession(["student", "trainer", "admin"]);
+  const [session, currentPathname, currentSearch] = await Promise.all([
+    getAuthorizedSession(["student", "trainer", "admin"]),
+    getRequestPathname(),
+    getRequestSearch(),
+  ]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-background/86 backdrop-blur-xl">
@@ -47,7 +52,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
         <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
-          <LanguageSwitch locale={locale} />
+          <LanguageSwitch currentPathname={currentPathname} currentSearch={currentSearch} locale={locale} />
           {session ? (
             <>
               <ButtonLink href={localePath(locale, roleHome[session.role])} variant="secondary">
@@ -77,7 +82,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           )}
         </div>
 
-        <MobileMenu session={session ? { role: session.role } : null} />
+        <MobileMenu currentPathname={currentPathname} currentSearch={currentSearch} session={session ? { role: session.role } : null} />
       </div>
     </header>
   );

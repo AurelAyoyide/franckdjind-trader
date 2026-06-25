@@ -17,7 +17,15 @@ const navItems = [
   { href: "/privacy-policy", label: "Confidentialite" },
 ];
 
-export function MobileMenu({ session }: { session: { role: AppRole } | null }) {
+export function MobileMenu({
+  currentPathname,
+  currentSearch,
+  session,
+}: {
+  currentPathname: string;
+  currentSearch: string;
+  session: { role: AppRole } | null;
+}) {
   const [open, setOpen] = useState(false);
   const locale = useLocale();
   const t = useTranslate();
@@ -26,7 +34,7 @@ export function MobileMenu({ session }: { session: { role: AppRole } | null }) {
     <div className="lg:hidden">
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <LanguageSwitch locale={locale} />
+        <LanguageSwitch currentPathname={currentPathname} currentSearch={currentSearch} locale={locale} />
         <button
           type="button"
           aria-label={t(open ? "Fermer le menu" : "Ouvrir le menu")}

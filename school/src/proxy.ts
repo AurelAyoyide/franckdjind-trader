@@ -4,6 +4,9 @@ import { localeFromPath } from "@/lib/i18n";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const language = request.nextUrl.searchParams.get("lang");
+  const searchParams = new URLSearchParams(request.nextUrl.searchParams);
+  searchParams.delete("lang");
+  const normalizedSearch = searchParams.toString() ? `?${searchParams.toString()}` : "";
 
   if (language === "fr") {
     const destination = request.nextUrl.clone();
@@ -15,6 +18,7 @@ export async function proxy(request: NextRequest) {
   const normalizedPath = pathLocale.pathname;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-school-pathname", normalizedPath);
+  requestHeaders.set("x-school-search", normalizedSearch);
 
   if (pathLocale.locale !== "en") {
     return NextResponse.next({ request: { headers: requestHeaders } });
