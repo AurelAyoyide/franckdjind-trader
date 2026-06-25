@@ -4,6 +4,7 @@ import { CommunityPostStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthorizedSession } from "@/lib/authorization";
+import { communityPlainText, sanitizeCommunityHtml } from "@/lib/community-content";
 import { prisma } from "@/lib/prisma";
 import {
   communityCommentDeleteSchema,
@@ -65,6 +66,16 @@ export async function createCommunityPostAction(
     };
   }
 
+  const cleanBody = sanitizeCommunityHtml(parsed.data.body);
+
+  if (communityPlainText(cleanBody).length < 10) {
+    return {
+      ok: false,
+      message: "Publication invalide.",
+      errors: { body: ["Message trop court"] },
+    };
+  }
+
   if (parsed.data.courseId) {
     const course = await prisma.course.findUnique({
       where: { id: parsed.data.courseId },
@@ -79,7 +90,7 @@ export async function createCommunityPostAction(
   const post = await prisma.communityPost.create({
     data: {
       title: parsed.data.title,
-      body: parsed.data.body,
+      body: cleanBody,
       courseId: parsed.data.courseId || null,
       pinned: Boolean(parsed.data.pinned),
       commentsEnabled: parsed.data.commentsEnabled !== false,
@@ -146,13 +157,15 @@ export async function updateCommunityPostAction(formData: FormData) {
   const session = await requireModerator();
   const parsed = communityPostUpdateSchema.safeParse({ postId: formData.get("postId"), title: formData.get("title"), body: formData.get("body"), courseId: formData.get("courseId") || undefined, pinned: formData.get("pinned") === "on", commentsEnabled: formData.get("commentsEnabled") === "on" });
   if (!session || !parsed.success) return;
+  const cleanBody = sanitizeCommunityHtml(parsed.data.body);
+  if (communityPlainText(cleanBody).length < 10) return;
   const post = await canModeratePost(parsed.data.postId, session.userId, session.role);
   if (!post) return;
   if (parsed.data.courseId) {
     const course = await prisma.course.findFirst({ where: { id: parsed.data.courseId, ...(session.role !== "admin" ? { trainerId: session.userId } : {}) }, select: { id: true } });
     if (!course) return;
   }
-  await prisma.communityPost.update({ where: { id: post.id }, data: { title: parsed.data.title, body: parsed.data.body, courseId: parsed.data.courseId || null, pinned: Boolean(parsed.data.pinned), commentsEnabled: parsed.data.commentsEnabled !== false } });
+  await prisma.communityPost.update({ where: { id: post.id }, data: { title: parsed.data.title, body: cleanBody, courseId: parsed.data.courseId || null, pinned: Boolean(parsed.data.pinned), commentsEnabled: parsed.data.commentsEnabled !== false } });
   await prisma.auditLog.create({ data: { actorId: session.userId, action: "COMMUNITY_POST_UPDATED", target: post.id } });
   revalidatePath("/trainer/community"); revalidatePath("/student/community"); redirect("/trainer/community?notice=post-updated");
 }

@@ -2,14 +2,11 @@
 
 import { MessageCirclePlus } from "lucide-react";
 import { useActionState, useState } from "react";
-import dynamic from "next/dynamic";
-import "react-quill-new/dist/quill.snow.css";
-
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import {
   createCommunityPostAction,
   type CommunityPostState,
 } from "@/app/trainer/community/actions";
+import { CommunityRichTextEditor } from "@/components/community-rich-text-editor";
 
 type CourseOption = {
   id: string;
@@ -28,7 +25,7 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
   return (
     <form action={formAction} className="mb-8 rounded-2xl border border-line bg-surface p-1 shadow-sm transition-all focus-within:border-market/40 focus-within:ring-2 focus-within:ring-market/20 hover:shadow-md">
       <div className="rounded-xl bg-background p-4 sm:p-5">
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-market/10 text-market">
             <MessageCirclePlus className="h-6 w-6" aria-hidden="true" />
           </div>
@@ -39,23 +36,23 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
               required
               className="w-full bg-transparent text-lg font-black text-foreground placeholder-muted focus:outline-none mb-2"
             />
-            <textarea
-              name="body"
+            <input name="body" type="hidden" value={body} />
+            <CommunityRichTextEditor
+              onChange={setBody}
               placeholder="Partagez quelque chose avec la communaute..."
-              required
-              className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder-muted focus:outline-none min-h-[100px]"
+              value={body}
             />
           </div>
         </div>
 
         {(state.errors?.title || state.errors?.body) && (
-          <div className="mb-4 ml-16">
+          <div className="mb-4 sm:ml-16">
             {state.errors.title && <span className="block text-xs font-bold text-danger">{state.errors.title[0]}</span>}
             {state.errors.body && <span className="block text-xs font-bold text-danger">{state.errors.body[0]}</span>}
           </div>
         )}
 
-        <div className="ml-16 mt-2 flex flex-col gap-4 border-t border-line/40 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-2 flex flex-col gap-4 border-t border-line/40 pt-4 sm:ml-16 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <select name="courseId" className="h-9 cursor-pointer rounded-full border border-line bg-surface px-4 text-xs font-bold text-foreground focus:border-market focus:outline-none focus:ring-1 focus:ring-market transition hover:bg-foreground/[0.04]">
               <option value="">Public general</option>
@@ -86,7 +83,7 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
       </div>
 
       {state.message && (
-        <div className="px-5 pb-3 pt-1 ml-16">
+        <div className="px-5 pb-3 pt-1 sm:ml-16">
           <p className={`text-xs font-bold ${state.ok ? "text-market" : "text-danger"}`}>
             {state.message}
           </p>

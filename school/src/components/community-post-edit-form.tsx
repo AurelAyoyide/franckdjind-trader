@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
-import dynamic from "next/dynamic";
-import "react-quill-new/dist/quill.snow.css";
-
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import { updateCommunityPostAction } from "@/app/trainer/community/actions";
+import { CommunityRichTextEditor } from "@/components/community-rich-text-editor";
 
 type CourseOption = { id: string; title: string };
 type PostShape = { id: string; title: string; body: string; courseId: string | null; pinned: boolean; commentsEnabled: boolean };
@@ -29,11 +26,10 @@ export function CommunityPostEditForm({ post, courses }: { post: PostShape; cour
             <input className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm font-black" defaultValue={post.title} name="title" required />
 
             <input type="hidden" name="body" value={body} />
-            <ReactQuill
-                theme="snow"
-                value={body}
+            <CommunityRichTextEditor
                 onChange={setBody}
-                className="w-full bg-background [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-sm [&_.ql-editor]:leading-relaxed"
+                placeholder="Modifie le contenu de la publication..."
+                value={body}
             />
 
             <select className="min-h-11 rounded-lg border border-line bg-background px-3 text-sm" defaultValue={post.courseId ?? ""} name="courseId">
