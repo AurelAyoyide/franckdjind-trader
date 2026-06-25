@@ -21,9 +21,9 @@ const mediaAccepts: Record<CommunityMediaKind, string> = {
 };
 
 const uploadButtonClass =
-  "inline-flex min-h-9 items-center justify-center rounded-full border border-market/20 bg-market/10 px-3 text-xs font-black text-market transition hover:bg-market/15 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-9 items-center justify-center rounded-lg border border-market/25 bg-market/10 px-3 text-xs font-black text-market transition hover:bg-market/15 disabled:cursor-not-allowed disabled:opacity-60";
 const linkButtonClass =
-  "inline-flex min-h-9 items-center justify-center rounded-full border border-line bg-background px-3 text-xs font-black transition hover:border-market/40 hover:bg-foreground/[0.04] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-9 items-center justify-center rounded-lg border border-line bg-background px-3 text-xs font-black transition hover:border-market/40 hover:bg-foreground/[0.04] disabled:cursor-not-allowed disabled:opacity-60";
 
 function escapeAttribute(value: string) {
   return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -203,7 +203,7 @@ export function CommunityRichTextEditor({ value, onChange, placeholder }: Commun
   }
 
   return (
-    <div className="grid gap-3 rounded-[1.35rem] border border-line bg-surface/80 p-3 shadow-sm">
+    <div className="grid gap-3 rounded-lg border border-line bg-surface p-3">
       <input
         ref={imageInputRef}
         accept={mediaAccepts.image}
@@ -238,7 +238,7 @@ export function CommunityRichTextEditor({ value, onChange, placeholder }: Commun
         type="file"
       />
 
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-background/70 p-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-foreground/[0.03] p-2">
         <span className="px-2 text-[11px] font-black uppercase tracking-[0.18em] text-muted">Importer</span>
         <button className={uploadButtonClass} disabled={Boolean(uploadingKind)} onClick={() => imageInputRef.current?.click()} type="button">
           {uploadingKind === "image" ? "Image..." : "Image"}
@@ -262,7 +262,7 @@ export function CommunityRichTextEditor({ value, onChange, placeholder }: Commun
       </div>
 
       <ReactQuill
-        className="w-full overflow-hidden rounded-2xl bg-background shadow-inner [&_.ql-container]:min-h-[210px] [&_.ql-container]:rounded-b-2xl [&_.ql-container]:border-line [&_.ql-editor]:min-h-[210px] [&_.ql-editor]:px-4 [&_.ql-editor]:py-4 [&_.ql-editor]:text-sm [&_.ql-editor]:leading-relaxed [&_.ql-toolbar]:rounded-t-2xl [&_.ql-toolbar]:border-line [&_.ql-toolbar]:bg-foreground/[0.03]"
+        className="w-full overflow-hidden rounded-lg bg-background [&_.ql-container]:min-h-[210px] [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-line [&_.ql-editor]:min-h-[210px] [&_.ql-editor]:px-4 [&_.ql-editor]:py-4 [&_.ql-editor]:text-sm [&_.ql-editor]:leading-relaxed [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-line [&_.ql-toolbar]:bg-foreground/[0.03]"
         formats={formats}
         modules={modules}
         onChange={onChange}

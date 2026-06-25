@@ -23,8 +23,8 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
   const [body, setBody] = useState("");
 
   return (
-    <form action={formAction} className="mb-8 rounded-2xl border border-line bg-surface p-1 shadow-sm transition-all focus-within:border-market/40 focus-within:ring-2 focus-within:ring-market/20 hover:shadow-md">
-      <div className="rounded-xl bg-background p-4 sm:p-5">
+    <form action={formAction} className="mb-8 rounded-lg border border-line bg-surface p-1 shadow-sm transition-all focus-within:border-market/40 focus-within:ring-2 focus-within:ring-market/20 hover:shadow-md">
+      <div className="rounded-lg bg-background p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-market/10 text-market">
             <MessageCirclePlus className="h-6 w-6" aria-hidden="true" />
@@ -54,7 +54,7 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
 
         <div className="mt-2 flex flex-col gap-4 border-t border-line/40 pt-4 sm:ml-16 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
-            <select name="courseId" className="h-9 cursor-pointer rounded-full border border-line bg-surface px-4 text-xs font-bold text-foreground focus:border-market focus:outline-none focus:ring-1 focus:ring-market transition hover:bg-foreground/[0.04]">
+            <select name="courseId" className="h-9 cursor-pointer rounded-lg border border-line bg-surface px-3 text-xs font-bold text-foreground transition hover:bg-foreground/[0.04] focus:border-market focus:outline-none focus:ring-1 focus:ring-market">
               <option value="">Public general</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
@@ -62,18 +62,18 @@ export function CommunityPostForm({ courses }: { courses: CourseOption[] }) {
                 </option>
               ))}
             </select>
-            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
               <input className="accent-[var(--market)]" name="pinned" type="checkbox" />
               Epingler
             </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-xs font-bold transition hover:bg-foreground/[0.04]">
               <input className="accent-[var(--market)]" defaultChecked name="commentsEnabled" type="checkbox" />
               Commentaires
             </label>
           </div>
 
           <button
-            className="inline-flex min-h-10 items-center justify-center rounded-full bg-market px-6 text-sm font-black text-on-market shadow-sm transition hover:bg-market-strong disabled:opacity-60"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-sm transition hover:bg-market-strong disabled:opacity-60"
             disabled={pending}
             type="submit"
           >
