@@ -55,3 +55,7 @@ export function sanitizeCommunityHtml(dirtyHtml: string) {
 export function communityPlainText(html: string) {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim();
 }
+
+export function hasCommunityMedia(html: string) {
+  return /<(audio|iframe|img|video)\b/i.test(sanitizeCommunityHtml(html));
+}

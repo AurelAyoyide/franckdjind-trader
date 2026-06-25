@@ -4,7 +4,7 @@ import { CommunityPostStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthorizedSession } from "@/lib/authorization";
-import { communityPlainText, sanitizeCommunityHtml } from "@/lib/community-content";
+import { communityPlainText, hasCommunityMedia, sanitizeCommunityHtml } from "@/lib/community-content";
 import { prisma } from "@/lib/prisma";
 import {
   communityCommentDeleteSchema,
@@ -68,7 +68,7 @@ export async function createCommunityPostAction(
 
   const cleanBody = sanitizeCommunityHtml(parsed.data.body);
 
-  if (communityPlainText(cleanBody).length < 10) {
+  if (communityPlainText(cleanBody).length < 10 && !hasCommunityMedia(cleanBody)) {
     return {
       ok: false,
       message: "Publication invalide.",
@@ -158,7 +158,7 @@ export async function updateCommunityPostAction(formData: FormData) {
   const parsed = communityPostUpdateSchema.safeParse({ postId: formData.get("postId"), title: formData.get("title"), body: formData.get("body"), courseId: formData.get("courseId") || undefined, pinned: formData.get("pinned") === "on", commentsEnabled: formData.get("commentsEnabled") === "on" });
   if (!session || !parsed.success) return;
   const cleanBody = sanitizeCommunityHtml(parsed.data.body);
-  if (communityPlainText(cleanBody).length < 10) return;
+  if (communityPlainText(cleanBody).length < 10 && !hasCommunityMedia(cleanBody)) return;
   const post = await canModeratePost(parsed.data.postId, session.userId, session.role);
   if (!post) return;
   if (parsed.data.courseId) {

@@ -9,9 +9,10 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV !== "production" ? "'unsafe-eval'" : ""}`.trim(),
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
+  "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
   "font-src 'self' data:",
   "connect-src 'self'",
-  "media-src 'self'",
+  "media-src 'self' https:",
 ].join("; ");
 
 const nextConfig: NextConfig = {
