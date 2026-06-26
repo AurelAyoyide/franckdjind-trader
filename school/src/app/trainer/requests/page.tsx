@@ -43,7 +43,7 @@ export default async function TrainerRequestsPage({
   const pagedRequests = paginate(trainingRequests, parsePage(pageParam));
 
   return (
-    <DashboardShell role={session.role} title="Demandes de formation" description="Validation manuelle apres verification du paiement hors plateforme.">
+    <DashboardShell role={session.role} title="Demandes de formation" description="Validation manuelle des demandes gratuites et verification des paiements hors plateforme pour les formations payantes.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
 
       <form method="get" className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -107,7 +107,9 @@ export default async function TrainerRequestsPage({
                 <div className="mt-6 rounded-lg border border-amber/30 bg-amber/5 p-4 md:p-5">
                   <p className="text-sm font-black text-amber-900 dark:text-amber-300">Action requise</p>
                   <p className="mt-1 text-xs font-medium text-amber-800/70 dark:text-amber-200/70 mb-4">
-                    Assurez-vous que le paiement hors plateforme a bien ete recu sur vos canaux de reception avant d'attribuer definitivement l'acces a cet apprenant.
+                    {request.type === "FREE"
+                      ? "Demande gratuite : verifiez simplement le compte et la formation souhaitee avant d'activer l'acces."
+                      : "Formation payante : assurez-vous que le paiement hors plateforme a bien ete recu avant d'attribuer definitivement l'acces a cet apprenant."}
                   </p>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <form action={approveTrainingRequestAction} className="flex flex-1 flex-col sm:flex-row sm:items-end gap-3">
@@ -117,14 +119,14 @@ export default async function TrainerRequestsPage({
                           <span className="mb-2 block text-xs font-black text-foreground">Selectionner la formation precise</span>
                           <select className="h-11 w-full rounded-lg border border-amber/30 bg-background px-3 text-sm focus:border-amber focus:ring-1 focus:ring-amber" name="courseId" required>
                             <option value="">-- Assigner --</option>
-                            {publishedCourses.map((c) => (
+                            {publishedCourses.filter((c) => c.type === (request.type === "FREE" ? "FREE" : "PAID")).map((c) => (
                               <option key={c.id} value={c.id}>{c.title}</option>
                             ))}
                           </select>
                         </label>
                       ) : null}
                       <button className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-market px-6 text-sm font-black text-on-market shadow-market transition hover:bg-market-strong focus:outline-none focus:ring-2 focus:ring-market focus:ring-offset-2" type="submit">
-                        <CheckCircle2 className="h-4 w-4" /> Attribuer l'acces
+                        <CheckCircle2 className="h-4 w-4" /> Attribuer l&apos;acces
                       </button>
                     </form>
                     <form action={rejectTrainingRequestAction}>

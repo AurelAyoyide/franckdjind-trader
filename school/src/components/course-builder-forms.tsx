@@ -235,13 +235,17 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
                   <label className="text-sm font-black">
                     Fichier prive
                     <input
-                      accept={lessonType === "VIDEO" ? "video/mp4,video/webm,video/quicktime" : ".pdf,.doc,.docx,.ppt,.pptx,.xlsx,image/png,image/jpeg"}
+                      accept={lessonType === "VIDEO" ? "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" : ".pdf,.doc,.docx,.ppt,.pptx,.xlsx,image/png,image/jpeg"}
                       className="mt-2 w-full rounded-lg border border-line bg-background px-3 py-2 text-sm focus:border-market"
                       name="asset"
                       required
                       type="file"
                     />
-                    <span className="mt-2 block text-xs font-medium text-muted">A uploader en toute securite.</span>
+                    <span className="mt-2 block text-xs font-medium text-muted">
+                      {lessonType === "VIDEO"
+                        ? "Formats acceptes : MP4, WebM ou MOV. La duree est lue automatiquement avant publication."
+                        : "A uploader en toute securite."}
+                    </span>
                   </label>
                 ) : null}
                 {lessonType === "TEXT" ? (

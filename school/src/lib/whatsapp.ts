@@ -11,10 +11,12 @@ export function buildTrainingRequestMessage(
   phone: string,
   courseTitle?: string,
 ) {
-  const label = kind === "free" ? "formation gratuite" : "formation payante deja reglee";
+  const intro = kind === "free"
+    ? "Bonjour, j'ai cree mon compte et je viens de demander l'acces a une formation gratuite. Peux-tu verifier et activer mon acces si tout est correct ?"
+    : "Bonjour, j'ai cree mon compte et je souhaite finaliser ou verifier l'acces a une formation payante.";
 
   return [
-    `Bonjour, je souhaite demander l'acces a une ${label}.`,
+    intro,
     ...(courseTitle ? [`Formation souhaitee: ${courseTitle}`] : []),
     `Nom: ${name}`,
     `Email: ${email}`,

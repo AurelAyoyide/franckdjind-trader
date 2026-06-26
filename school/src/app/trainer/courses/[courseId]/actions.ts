@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { AccountStatus, CourseStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
@@ -90,15 +90,227 @@ const lessonFileTypes = {
   },
 } as const;
 const execFile = promisify(execFileCallback);
+const genericUploadMimeTypes = new Set(["", "application/octet-stream", "binary/octet-stream"]);
+const mp4ContainerBoxes = new Set(["moov", "trak", "mdia", "minf", "stbl"]);
+
+function normalizeDurationSeconds(value: number) {
+  const duration = Math.round(value);
+  return Number.isFinite(duration) && duration > 0 && duration <= 24 * 60 * 60 ? duration : null;
+}
 
 async function getVideoDurationSeconds(filePath: string) {
   try {
     const { stdout } = await execFile(process.env.FFPROBE_PATH ?? "ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filePath], { timeout: 30_000 });
-    const duration = Math.round(Number(stdout.trim()));
-    return Number.isFinite(duration) && duration > 0 && duration <= 24 * 60 * 60 ? duration : null;
+    return normalizeDurationSeconds(Number(stdout.trim()));
   } catch {
     return null;
   }
+}
+
+function readUInt64AsNumber(buffer: Buffer, offset: number) {
+  if (offset + 8 > buffer.length) {
+    return null;
+  }
+
+  const value = buffer.readBigUInt64BE(offset);
+  return value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null;
+}
+
+function getMp4BoxSize(buffer: Buffer, offset: number, limit: number) {
+  if (offset + 8 > limit) {
+    return null;
+  }
+
+  const size32 = buffer.readUInt32BE(offset);
+  const type = buffer.subarray(offset + 4, offset + 8).toString("ascii");
+
+  if (!/^[\x20-\x7e]{4}$/.test(type)) {
+    return null;
+  }
+
+  if (size32 === 1) {
+    const size64 = readUInt64AsNumber(buffer, offset + 8);
+    if (!size64 || size64 < 16) {
+      return null;
+    }
+    return { type, size: size64, headerSize: 16 };
+  }
+
+  if (size32 === 0) {
+    return { type, size: limit - offset, headerSize: 8 };
+  }
+
+  if (size32 < 8) {
+    return null;
+  }
+
+  return { type, size: size32, headerSize: 8 };
+}
+
+function parseMp4DurationBox(buffer: Buffer, contentStart: number, contentEnd: number) {
+  if (contentStart + 24 > contentEnd) {
+    return null;
+  }
+
+  const version = buffer[contentStart];
+
+  if (version === 1) {
+    if (contentStart + 32 > contentEnd) {
+      return null;
+    }
+
+    const timescale = buffer.readUInt32BE(contentStart + 20);
+    const duration = readUInt64AsNumber(buffer, contentStart + 24);
+    return timescale && duration ? normalizeDurationSeconds(duration / timescale) : null;
+  }
+
+  const timescale = buffer.readUInt32BE(contentStart + 12);
+  const duration = buffer.readUInt32BE(contentStart + 16);
+  return timescale && duration ? normalizeDurationSeconds(duration / timescale) : null;
+}
+
+function getMp4DurationSeconds(buffer: Buffer, start = 0, limit = buffer.length, depth = 0): number | null {
+  if (depth > 6) {
+    return null;
+  }
+
+  let offset = start;
+
+  while (offset + 8 <= limit) {
+    const box = getMp4BoxSize(buffer, offset, limit);
+
+    if (!box || offset + box.size > limit) {
+      return null;
+    }
+
+    const contentStart = offset + box.headerSize;
+    const boxEnd = offset + box.size;
+
+    if (box.type === "mvhd" || box.type === "mdhd") {
+      const duration = parseMp4DurationBox(buffer, contentStart, boxEnd);
+      if (duration) {
+        return duration;
+      }
+    }
+
+    if (mp4ContainerBoxes.has(box.type)) {
+      const duration = getMp4DurationSeconds(buffer, contentStart, boxEnd, depth + 1);
+      if (duration) {
+        return duration;
+      }
+    }
+
+    offset = boxEnd;
+  }
+
+  return null;
+}
+
+function readEbmlSize(buffer: Buffer, offset: number) {
+  if (offset >= buffer.length) {
+    return null;
+  }
+
+  const firstByte = buffer[offset];
+  let mask = 0x80;
+  let length = 1;
+
+  while (length <= 8 && (firstByte & mask) === 0) {
+    mask >>= 1;
+    length += 1;
+  }
+
+  if (length > 8 || offset + length > buffer.length) {
+    return null;
+  }
+
+  let value = firstByte & (mask - 1);
+  for (let index = 1; index < length; index += 1) {
+    value = (value * 256) + buffer[offset + index];
+  }
+
+  return { value, length };
+}
+
+function readEbmlUnsignedInteger(buffer: Buffer, offset: number, size: number) {
+  if (size <= 0 || size > 8 || offset + size > buffer.length) {
+    return null;
+  }
+
+  let value = 0;
+  for (let index = 0; index < size; index += 1) {
+    value = (value * 256) + buffer[offset + index];
+  }
+
+  return value;
+}
+
+function findEbmlNumericElement(buffer: Buffer, elementId: Buffer, readValue: (offset: number, size: number) => number | null) {
+  let searchOffset = 0;
+
+  while (searchOffset < buffer.length) {
+    const idOffset = buffer.indexOf(elementId, searchOffset);
+    if (idOffset === -1) {
+      return null;
+    }
+
+    const sizeInfo = readEbmlSize(buffer, idOffset + elementId.length);
+    if (!sizeInfo) {
+      searchOffset = idOffset + 1;
+      continue;
+    }
+
+    const dataOffset = idOffset + elementId.length + sizeInfo.length;
+    if (dataOffset + sizeInfo.value > buffer.length) {
+      searchOffset = idOffset + 1;
+      continue;
+    }
+
+    const value = readValue(dataOffset, sizeInfo.value);
+    if (value !== null && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+
+    searchOffset = idOffset + 1;
+  }
+
+  return null;
+}
+
+function getWebmDurationSeconds(buffer: Buffer) {
+  const timecodeScale = findEbmlNumericElement(
+    buffer,
+    Buffer.from([0x2a, 0xd7, 0xb1]),
+    (offset, size) => readEbmlUnsignedInteger(buffer, offset, size),
+  ) ?? 1_000_000;
+
+  const duration = findEbmlNumericElement(
+    buffer,
+    Buffer.from([0x44, 0x89]),
+    (offset, size) => {
+      if (size === 4) {
+        return buffer.readFloatBE(offset);
+      }
+      if (size === 8) {
+        return buffer.readDoubleBE(offset);
+      }
+      return null;
+    },
+  );
+
+  return duration ? normalizeDurationSeconds((duration * timecodeScale) / 1_000_000_000) : null;
+}
+
+function getVideoDurationSecondsFromBuffer(buffer: Buffer, extension: string) {
+  if (extension === ".webm") {
+    return getWebmDurationSeconds(buffer);
+  }
+
+  if (extension === ".mp4" || extension === ".mov") {
+    return getMp4DurationSeconds(buffer);
+  }
+
+  return null;
 }
 
 function getSafeExtension(fileName: string, type: LessonType) {
@@ -129,6 +341,22 @@ function mimeTypeForExtension(extension: string) {
   };
 
   return types[extension] ?? "application/octet-stream";
+}
+
+function isAllowedMimeType(fileType: string, type: LessonType) {
+  const normalized = fileType.trim().toLowerCase();
+
+  if (genericUploadMimeTypes.has(normalized)) {
+    return true;
+  }
+
+  const allowedMimeTypes = type === LessonType.VIDEO ? lessonFileTypes.VIDEO.mimeTypes : lessonFileTypes.DOCUMENT.mimeTypes;
+
+  if (allowedMimeTypes.has(normalized)) {
+    return true;
+  }
+
+  return type === LessonType.VIDEO && normalized.startsWith("video/");
 }
 
 function hasBytes(buffer: Buffer, bytes: number[], offset = 0) {
@@ -179,10 +407,9 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
     return { ok: false as const, message: `Fichier trop lourd. Limite: ${maxMegabytes} Mo.` };
   }
 
-  const allowedMimeTypes = type === LessonType.VIDEO ? lessonFileTypes.VIDEO.mimeTypes : lessonFileTypes.DOCUMENT.mimeTypes;
   const extension = getSafeExtension(file.name, type);
 
-  if (!extension || (file.type && !allowedMimeTypes.has(file.type))) {
+  if (!extension || !isAllowedMimeType(file.type, type)) {
     return { ok: false as const, message: "Type de fichier non autorise pour cette lecon." };
   }
 
@@ -208,7 +435,23 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
     relativePath,
     mimeType: mimeTypeForExtension(extension),
     size: file.size,
+    durationSeconds: type === LessonType.VIDEO ? getVideoDurationSecondsFromBuffer(buffer, extension) : null,
   };
+}
+
+async function removePrivateLessonFile(relativePath: string) {
+  const privateRoot = getPrivateUploadRoot();
+  const destination = path.resolve(privateRoot, relativePath);
+
+  if (destination === privateRoot || !destination.startsWith(`${privateRoot}${path.sep}`)) {
+    return;
+  }
+
+  try {
+    await unlink(/*turbopackIgnore: true*/ destination);
+  } catch {
+    // Rien a faire : l'upload a deja echoue ou le fichier a ete supprime.
+  }
 }
 
 export async function updateCourseAction(
@@ -479,9 +722,16 @@ export async function createLessonAction(
   }
 
   const durationSeconds = lessonType === LessonType.VIDEO && upload?.relativePath
-    ? await getVideoDurationSeconds(path.resolve(getPrivateUploadRoot(), upload.relativePath))
+    ? upload.durationSeconds ?? await getVideoDurationSeconds(path.resolve(getPrivateUploadRoot(), upload.relativePath))
     : null;
-  if (lessonType === LessonType.VIDEO && !durationSeconds) return { ok: false, message: "Impossible de lire la duree de cette video. Verifie le fichier MP4, WebM ou MOV." };
+
+  if (lessonType === LessonType.VIDEO && upload?.relativePath && !durationSeconds) {
+    await removePrivateLessonFile(upload.relativePath);
+    return {
+      ok: false,
+      message: "Impossible de lire la duree de cette video. Utilise un fichier MP4, WebM ou MOV finalise, avec des metadonnees de duree lisibles.",
+    };
+  }
 
   if (lessonType === LessonType.TEXT && !parsed.data.content) {
     return { ok: false, message: "Ajoute le contenu de la lecon texte." };

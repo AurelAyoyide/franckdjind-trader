@@ -26,8 +26,8 @@ export function AccessChoiceForm({
     <form action={formAction} className="rounded-lg border border-line bg-surface p-6">
       <div className="grid gap-3 md:grid-cols-2">
         {[
-          { value: "free", label: "Formation gratuite", text: "Demande simple a valider par le formateur." },
-          { value: "paid", label: "Payee hors plateforme", text: "Paiement signale puis verifie manuellement." },
+          { value: "free", label: "Formation gratuite", text: "Demande l'activation gratuite, puis previens le formateur sur WhatsApp." },
+          { value: "paid", label: "Formation payante", text: "Demande l'acces apres paiement ou pour finaliser le paiement avec le formateur." },
         ].map((choice) => (
           <label className="rounded-lg border border-line bg-foreground/[0.04] p-4" key={choice.value}>
             <input
@@ -45,6 +45,12 @@ export function AccessChoiceForm({
         ))}
       </div>
       {state.errors?.kind ? <p className="mt-2 text-xs font-semibold text-danger">{state.errors.kind[0]}</p> : null}
+
+      <div className="mt-5 rounded-lg border border-cyan/25 bg-cyan/10 p-4 text-sm leading-7 text-cyan">
+        {kind === "free"
+          ? "Formation gratuite : tu ne paies rien ici. La plateforme enregistre ta demande, puis WhatsApp sert uniquement a prevenir le formateur pour qu'il active ton acces."
+          : "Formation payante : la plateforme enregistre ta demande, puis WhatsApp sert a finaliser le paiement hors plateforme ou a verifier ta preuve."}
+      </div>
 
       {matchingCourses.length ? (
         <label className="mt-5 block text-sm font-black">
@@ -87,20 +93,30 @@ export function AccessChoiceForm({
         >
           {t(pending ? "Preparation..." : "Preparer la demande")}
         </button>
-        {state.whatsappUrl ? (
-          <a
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-4 text-sm font-black transition hover:border-line-strong hover:bg-foreground/[0.1]"
-            href={state.whatsappUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            {kind === "paid"
-              ? t("Discuter avec le formateur afin de payer ma formation")
-              : t("Ouvrir WhatsApp pour envoyer la demande")}
-          </a>
-        ) : null}
       </div>
+
+      {state.whatsappUrl ? (
+        <a
+          className="mt-5 flex min-h-24 items-center gap-4 rounded-xl border border-market/40 bg-market/10 p-5 text-market shadow-sm transition hover:-translate-y-0.5 hover:border-market hover:bg-market/15 focus:outline-none focus:ring-2 focus:ring-market focus:ring-offset-2"
+          href={state.whatsappUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-market text-on-market">
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-base font-black">
+              {t(state.whatsappInstruction ?? "Etape 2 : ouvrir WhatsApp")}
+            </span>
+            <span className="mt-1 block text-sm font-semibold text-foreground">
+              {kind === "paid"
+                ? t("Clique ici pour parler au formateur et finaliser l'acces payant.")
+                : t("Clique ici pour envoyer le message pre-rempli et demander l'activation gratuite.")}
+            </span>
+          </span>
+        </a>
+      ) : null}
     </form>
   );
 }

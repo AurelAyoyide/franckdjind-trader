@@ -38,7 +38,12 @@ export async function approveTrainingRequestAction(formData: FormData) {
     request.course ??
     (formCourseId
       ? await prisma.course.findFirst({
-        where: { id: formCourseId, status: "PUBLISHED" },
+        where: {
+          id: formCourseId,
+          status: "PUBLISHED",
+          type: request.type === "FREE" ? "FREE" : "PAID",
+          ...(session.role !== "admin" ? { trainerId: session.userId } : {}),
+        },
       })
       : await prisma.course.findFirst({
         where: {

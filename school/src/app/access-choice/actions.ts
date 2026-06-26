@@ -10,6 +10,7 @@ export type AccessChoiceState = {
   ok: boolean;
   message: string;
   whatsappUrl?: string;
+  whatsappInstruction?: string;
   errors?: Record<string, string[] | undefined>;
 };
 
@@ -114,9 +115,12 @@ export async function requestAccessAction(
     return {
       ok: true,
       message: parsed.data.kind === "paid"
-        ? "Une demande est deja en attente. Tu peux rouvrir WhatsApp pour le paiement."
-        : "Une demande recente est deja en attente. Tu peux rouvrir WhatsApp avec le meme message.",
+        ? "Une demande payante est deja en attente. Rouvre WhatsApp pour finaliser ou verifier le paiement avec le formateur."
+        : "Une demande gratuite est deja en attente. Rouvre WhatsApp pour prevenir le formateur et accelerer l'activation.",
       whatsappUrl: buildWhatsAppLink(message),
+      whatsappInstruction: parsed.data.kind === "paid"
+        ? "Etape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandee."
+        : "Etape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton acces.",
     };
   }
 
@@ -141,8 +145,11 @@ export async function requestAccessAction(
   return {
     ok: true,
     message: parsed.data.kind === "paid"
-      ? "Demande enregistree. Continue vers WhatsApp pour discuter avec le formateur et finaliser ton paiement hors plateforme."
-      : "Demande enregistree. Ouvre WhatsApp pour envoyer ton message pre-rempli.",
+      ? "Demande enregistree. Continue sur WhatsApp pour finaliser le paiement ou confirmer ta preuve avec le formateur."
+      : "Demande gratuite enregistree. Continue sur WhatsApp pour prevenir le formateur et demander l'activation de ton acces.",
     whatsappUrl: buildWhatsAppLink(message),
+    whatsappInstruction: parsed.data.kind === "paid"
+      ? "Etape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandee."
+      : "Etape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton acces.",
   };
 }

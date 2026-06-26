@@ -93,9 +93,10 @@ Durcissements securite inclus : session revalidee en base, blocage des comptes s
 limite de tentatives login, tokens hashes, reset password a usage unique, emails HTML echappes,
 garde anti-spam des relances, logs d'audit, certificats revoques, suppression logique, invalidation des
 anciennes sessions, headers de securite, routes documents/videos privees et verification MIME/extension/taille
-des uploads. Les fichiers sont aussi controles par signature binaire, et une video doit declarer sa duree reelle :
-la progression est ensuite bornee cote serveur par le temps ecoule, sans faire confiance au pourcentage envoye par
-le navigateur.
+des uploads. Les fichiers sont aussi controles par signature binaire. Pour les videos MP4, WebM et MOV, la duree
+est lue depuis les metadonnees du fichier cote serveur ; `ffprobe` peut rester installe sur le VPS comme secours,
+mais les conteneurs standards ne dependent plus uniquement de lui. La progression est ensuite bornee cote serveur
+par le temps ecoule, sans faire confiance au pourcentage envoye par le navigateur.
 
 Pour tester les flux dynamiques en developpement, appliquer le schema puis lancer le seed avec les deux variables
 `SEED_DEMO_DATA=true` et `SEED_DEMO_PASSWORD` definies :
