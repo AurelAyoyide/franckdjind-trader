@@ -15,7 +15,7 @@ export function buildMetadata({
   title = siteConfig.title,
   description = siteConfig.description,
   path = "/",
-  image = siteConfig.heroImage,
+  image = siteConfig.ogImage,
   noIndex = false,
   follow = true
 }: SeoInput = {}): Metadata {

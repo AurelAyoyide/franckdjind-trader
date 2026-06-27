@@ -11,7 +11,8 @@ export const siteConfig = {
   telegramPath: "/go/telegram",
   whatsappPath: "/go/whatsapp",
   email: process.env.CONTACT_TO_EMAIL ?? "contact@bonotrading.com",
-  heroImage: "/og-image.png"
+  heroImage: "/hero-trading-desk.png",
+  ogImage: "/og-image.png"
 };
 
 export type Category = {
