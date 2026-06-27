@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { AccountStatus, CourseStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
@@ -707,11 +707,28 @@ export async function createLessonAction(
   });
 
   const lessonType = parsed.data.type as LessonType;
+  const uploadedFileName = String(formData.get("uploadedFileName") ?? "");
   const uploadedFile = formData.get("asset");
-  const upload =
-    uploadedFile instanceof File && uploadedFile.size > 0
-      ? await savePrivateLessonFile(uploadedFile, lessonType)
-      : null;
+
+  let upload = null;
+  if (uploadedFileName) {
+    const p = path.resolve(getPrivateUploadRoot(), uploadedFileName);
+    try {
+      const st = await stat(p);
+      const ext = path.extname(uploadedFileName).toLowerCase();
+      upload = {
+        ok: true as const,
+        relativePath: uploadedFileName,
+        mimeType: mimeTypeForExtension(ext as any) || "application/octet-stream",
+        size: st.size,
+        durationSeconds: null,
+      };
+    } catch {
+      return { ok: false, message: "Fichier pré-uploadé introuvable." };
+    }
+  } else if (uploadedFile instanceof File && uploadedFile.size > 0) {
+    upload = await savePrivateLessonFile(uploadedFile, lessonType);
+  }
 
   if (upload && !upload.ok) {
     return { ok: false, message: upload.message };

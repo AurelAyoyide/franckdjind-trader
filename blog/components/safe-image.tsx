@@ -35,5 +35,6 @@ export function SafeImage({ src, alt, className, fill, priority, ...props }: Saf
     );
   }
 
-  return <Image alt={alt} className={className} fill={fill} priority={priority} src={src} {...props} />;
+  const isUpload = typeof src === "string" && (src as string).startsWith("/uploads/");
+  return <Image alt={alt} className={className} fill={fill} priority={priority} src={src} unoptimized={isUpload} {...props} />;
 }

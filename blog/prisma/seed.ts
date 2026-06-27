@@ -16,7 +16,7 @@ const permissions = [
   ["manage_links", "Gerer les liens"],
   ["manage_contact_messages", "Gerer les messages contact"],
   ["manage_redirects", "Gerer les redirections"],
-  ["manage_settings", "Gerer les parametres"],
+  ["manage_settings", "Gerer les paramètres"],
   ["manage_users", "Gerer les utilisateurs"]
 ] as const;
 

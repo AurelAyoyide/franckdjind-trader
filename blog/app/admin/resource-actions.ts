@@ -80,7 +80,7 @@ async function saveUploadedMedia(file: File) {
     return "";
   }
 
-  const maxUploadBytes = 5 * 1024 * 1024;
+  const maxUploadBytes = 20 * 1024 * 1024;
   const allowedTypes = new Map<string, string[]>([
     ["image/jpeg", [".jpg", ".jpeg"]],
     ["image/png", [".png"]],

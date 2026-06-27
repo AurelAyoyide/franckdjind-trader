@@ -24,8 +24,8 @@ export type AdminResourceConfig = {
 const statusOptions = [
   { label: "Brouillon", value: "DRAFT" },
   { label: "Relecture", value: "REVIEW" },
-  { label: "Publie", value: "PUBLISHED" },
-  { label: "Archive", value: "ARCHIVED" }
+  { label: "Publié", value: "PUBLISHED" },
+  { label: "Archivé", value: "ARCHIVED" }
 ];
 
 export const adminResources = {
@@ -38,7 +38,7 @@ export const adminResources = {
     titleField: "title",
     fields: [
       { name: "title", label: "Titre", type: "text", required: true },
-      { name: "categorySlug", label: "Categorie", type: "text", required: true, help: "Choisis la categorie de l'article." },
+      { name: "categorySlug", label: "Catégorie", type: "text", required: true, help: "Choisis la categorie de l'article." },
       { name: "tagSlugs", label: "Tags", type: "text", help: "Selectionne un ou plusieurs tags." },
       { name: "content", label: "Contenu visuel", type: "textarea", required: true },
       { name: "status", label: "Statut", type: "select", options: statusOptions, required: true },
@@ -50,7 +50,7 @@ export const adminResources = {
   },
   categories: {
     slug: "categories",
-    label: "Categories",
+    label: "Catégories",
     singular: "categorie",
     collection: "categories",
     description: "Organisation editoriale et SEO des categories.",
@@ -103,15 +103,15 @@ export const adminResources = {
   },
   testimonials: {
     slug: "testimonials",
-    label: "Temoignages",
+    label: "Témoignages",
     singular: "temoignage",
     collection: "testimonials",
     description: "Preuves sociales publiees sur le site.",
     titleField: "name",
     fields: [
       { name: "name", label: "Nom", type: "text", required: true },
-      { name: "role", label: "Profil", type: "select", options: ["Apprenant", "Membre de la communaute", "Client formation", "Client accompagnement"].map((value) => ({ label: value, value })) },
-      { name: "quote", label: "Temoignage", type: "textarea", required: true },
+      { name: "role", label: "Profil", type: "select", options: ["Apprenant", "Membre de la communauté", "Client formation", "Client accompagnement"].map((value) => ({ label: value, value })) },
+      { name: "quote", label: "Témoignage", type: "textarea", required: true },
       { name: "rating", label: "Note", type: "number", help: "Note affichée entre 1 et 5." },
       {
         name: "published",
@@ -146,7 +146,7 @@ export const adminResources = {
       { name: "currency", label: "Devise", type: "select", options: ["XOF", "EUR", "USD"].map((value) => ({ label: value, value })) },
       { name: "ctaLabel", label: "CTA", type: "text" },
       { name: "ctaUrl", label: "Lien CTA", type: "text", help: "Choisis une page interne ou colle une URL HTTPS." },
-      { name: "published", label: "Publie", type: "checkbox" },
+      { name: "published", label: "Publié", type: "checkbox" },
     ]
   },
   links: {
@@ -221,8 +221,8 @@ export const adminResources = {
   },
   settings: {
     slug: "settings",
-    label: "Parametres",
-    singular: "parametre",
+    label: "Paramètres",
+    singular: "paramètre",
     collection: "settings",
     description: "Réglages techniques historiques, consultables seulement. Les réglages actifs du site sont gérés par les variables de déploiement (domaine, email, sécurité) et les rubriques dédiées ; cette zone est verrouillée pour éviter des modifications sans effet.",
     titleField: "key",

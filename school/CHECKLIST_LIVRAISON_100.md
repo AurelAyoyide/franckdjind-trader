@@ -111,6 +111,7 @@ Preuve : tableau interne des comptes de test, sans mots de passe dans le dépôt
 - [ ] Retirer une formation : supprimer seulement si aucun apprenant/donnée liée n’existe ; sinon archiver.
 - [ ] Confirmer le retrait dans une modale.
 - [ ] Une formation brouillon ou archivée n’est jamais visible ni accessible à un apprenant.
+- [ ] Refonte toute la partie formation.
 
 ### Modules et leçons
 

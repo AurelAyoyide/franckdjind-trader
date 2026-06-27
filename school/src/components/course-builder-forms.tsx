@@ -3,6 +3,7 @@
 import { Archive, CheckCircle2, FilePlus2, Layers3, Save, Info, Users } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { ConfirmButton } from "@/components/confirm-button";
+import { UploadProgressForm } from "@/components/upload-progress-form";
 import {
   assignLearnerAction,
   bulkAssignLearnersAction,
@@ -198,7 +199,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               </button>
             </form>
 
-            <form action={lessonAction} className="rounded-lg border border-line bg-surface p-5 shadow-sm" encType="multipart/form-data">
+            <UploadProgressForm action={lessonAction} pending={lessonPending} state={lessonState} className="rounded-lg border border-line bg-surface p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <FilePlus2 className="h-5 w-5 text-amber" aria-hidden="true" />
                 <h2 className="text-xl font-black">Ajouter une lecon</h2>
@@ -263,7 +264,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               <button className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={lessonPending || modules.length === 0} type="submit">
                 {lessonPending ? "Creation..." : "Creer la lecon"}
               </button>
-            </form>
+            </UploadProgressForm>
           </div>
         </div>
       ) : null}

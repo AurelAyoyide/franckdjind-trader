@@ -46,7 +46,7 @@ export const uiCopy = {
     join: "Join",
     traderTrainer: "Trader & educator",
     navigation: "Navigation",
-    categories: "Categories",
+    categories: "Catégories",
     legal: "Legal",
     privacy: "Privacy",
     terms: "Terms",

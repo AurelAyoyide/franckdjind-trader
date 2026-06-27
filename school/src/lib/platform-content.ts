@@ -88,7 +88,7 @@ export const studentNav: NavigationItem[] = [
   { href: "/student/certificates", label: "Certificats", icon: BadgeCheck },
   { href: "/student/notifications", label: "Notifications", icon: Bell },
   { href: "/student/live-announcements", label: "Lives", icon: Radio },
-  { href: "/student/community", label: "Communaute", icon: MessageCircle },
+  { href: "/student/community", label: "Communauté", icon: MessageCircle },
   { href: "/student/profile", label: "Profil", icon: Settings },
 ];
 
@@ -99,14 +99,14 @@ export const trainerNav: NavigationItem[] = [
   { href: "/trainer/students", label: "Apprenants", icon: UsersRound },
   { href: "/trainer/calendar", label: "Appels", icon: CalendarDays },
   { href: "/trainer/lives", label: "Lives", icon: Radio },
-  { href: "/trainer/community", label: "Communaute", icon: MessageCircle },
+  { href: "/trainer/community", label: "Communauté", icon: MessageCircle },
   { href: "/trainer/import-export", label: "Excel", icon: FileSpreadsheet },
   { href: "/trainer/notifications", label: "Notifications", icon: Bell },
 ];
 
 export const assistantTrainerNav: NavigationItem[] = [
   { href: "/trainer/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/trainer/community", label: "Communaute", icon: MessageCircle },
+  { href: "/trainer/community", label: "Communauté", icon: MessageCircle },
 ];
 
 export const adminNav: NavigationItem[] = [
@@ -118,16 +118,16 @@ export const adminNav: NavigationItem[] = [
   { href: "/trainer/students", label: "Apprenants", icon: UsersRound, section: "Gestion des formations" },
   { href: "/trainer/calendar", label: "Appels", icon: CalendarDays, section: "Gestion des formations" },
   { href: "/trainer/lives", label: "Lives", icon: Radio, section: "Gestion des formations" },
-  { href: "/trainer/community", label: "Communaute", icon: MessageCircle, section: "Gestion des formations" },
+  { href: "/trainer/community", label: "Communauté", icon: MessageCircle, section: "Gestion des formations" },
   { href: "/trainer/import-export", label: "Excel", icon: FileSpreadsheet, section: "Gestion des formations" },
   { href: "/trainer/notifications", label: "Notifications", icon: Bell, section: "Gestion des formations" },
   { href: "/admin/certificates", label: "Certificats", icon: BadgeCheck, section: "Plateforme" },
-  { href: "/admin/settings", label: "Parametres", icon: Settings, section: "Plateforme" },
+  { href: "/admin/settings", label: "Paramètres", icon: Settings, section: "Plateforme" },
   { href: "/admin/logs", label: "Audit", icon: Activity, section: "Plateforme" },
 ];
 
 export const roleCards = [
   { title: "Apprenant", href: "/student/dashboard", icon: GraduationCap, text: "Cours, quiz, progression et certificats." },
   { title: "Formateur", href: "/trainer/dashboard", icon: BookOpen, text: "Demandes, contenus, relances et appels." },
-  { title: "Admin", href: "/admin/dashboard", icon: LockKeyhole, text: "Utilisateurs, securite, parametres et logs." },
+  { title: "Admin", href: "/admin/dashboard", icon: LockKeyhole, text: "Utilisateurs, sécurité, paramètres et logs." },
 ];
