@@ -22,7 +22,7 @@ export function AffiliateCarousel({ links, title = "Opportunités partenaires", 
 
   useEffect(() => {
     if (links.length < 2) return;
-    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % links.length), 15_000);
+    const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % links.length), 10_000);
     return () => window.clearInterval(timer);
   }, [links.length]);
 

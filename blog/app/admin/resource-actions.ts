@@ -473,12 +473,12 @@ export async function saveResourceAction(formData: FormData) {
       });
     }
 
-    if (imageMode === "library" && nextItem.imageUrl && !data.media.some((media) => media.url === nextItem.imageUrl)) {
-      redirect(`${resourceFormPath(resource, id)}?error=image-source`);
-    }
-
-    if (nextItem.imageUrl && !isSafeMediaUrl(String(nextItem.imageUrl))) {
-      redirect(`${resourceFormPath(resource, id)}?error=media-url`);
+    if (imageMode === "library" || imageMode === "url") {
+      const candidateUrl = String(nextItem.imageUrl ?? "").trim();
+      if (candidateUrl && !isSafeMediaUrl(candidateUrl)) {
+        redirect(`${resourceFormPath(resource, id)}?error=media-url`);
+      }
+      nextItem.imageUrl = candidateUrl || undefined;
     }
   }
 
