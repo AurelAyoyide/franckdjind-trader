@@ -413,10 +413,6 @@ export async function readData(): Promise<BlogData> {
       prisma.linkClick.findMany({ orderBy: { createdAt: "desc" }, take: 500 }),
       prisma.subscriber.findMany({ orderBy: { createdAt: "desc" } })
     ]);
-  const actionLinkImages = await prisma.$queryRaw<Array<{ id: string; imageUrl: string | null }>>`
-    SELECT "id", "imageUrl" FROM "ActionLink"
-  `;
-  const actionLinkImageById = new Map(actionLinkImages.map((link) => [link.id, link.imageUrl]));
 
   return {
     posts: posts.map((post) => {
@@ -427,31 +423,31 @@ export async function readData(): Promise<BlogData> {
       };
 
       return {
-      id: post.id,
-      title: post.title,
-      titleEn: localizedPost.titleEn ?? undefined,
-      slug: post.slug,
-      excerpt: post.excerpt ?? "",
-      excerptEn: localizedPost.excerptEn ?? undefined,
-      content: post.content,
-      contentEn: localizedPost.contentEn ?? undefined,
-      status: post.status,
-      author: post.authorLabel ?? post.author.name ?? post.author.email,
-      publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
-      updatedAt: post.updatedAt.toISOString().slice(0, 10),
-      image: post.coverMedia?.url ?? defaultImage,
-      category: post.category
-        ? { id: post.category.id, title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
-        : { id: "uncategorized", title: "Non classe", slug: "non-classe", description: "" },
-      tags: post.tags.map(({ tag }) => ({ id: tag.id, title: tag.name, slug: tag.slug })),
-      sections: markdownToSections(post.content),
-      featured: post.featured,
-      readTime: estimateReadTime(post.content),
-      seoTitle: post.seoMetadata?.title ?? post.title,
-      seoDescription: post.seoMetadata?.description ?? post.excerpt ?? "",
-      robotsIndex: post.seoMetadata?.robotsIndex ?? true,
-      robotsFollow: post.seoMetadata?.robotsFollow ?? true
-    };
+        id: post.id,
+        title: post.title,
+        titleEn: localizedPost.titleEn ?? undefined,
+        slug: post.slug,
+        excerpt: post.excerpt ?? "",
+        excerptEn: localizedPost.excerptEn ?? undefined,
+        content: post.content,
+        contentEn: localizedPost.contentEn ?? undefined,
+        status: post.status,
+        author: post.authorLabel ?? post.author.name ?? post.author.email,
+        publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
+        updatedAt: post.updatedAt.toISOString().slice(0, 10),
+        image: post.coverMedia?.url ?? defaultImage,
+        category: post.category
+          ? { id: post.category.id, title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
+          : { id: "uncategorized", title: "Non classe", slug: "non-classe", description: "" },
+        tags: post.tags.map(({ tag }) => ({ id: tag.id, title: tag.name, slug: tag.slug })),
+        sections: markdownToSections(post.content),
+        featured: post.featured,
+        readTime: estimateReadTime(post.content),
+        seoTitle: post.seoMetadata?.title ?? post.title,
+        seoDescription: post.seoMetadata?.description ?? post.excerpt ?? "",
+        robotsIndex: post.seoMetadata?.robotsIndex ?? true,
+        robotsFollow: post.seoMetadata?.robotsFollow ?? true
+      };
     }),
     categories: dbCategories.map((category) => ({
       id: category.id,
@@ -511,7 +507,7 @@ export async function readData(): Promise<BlogData> {
       type: link.type,
       description: link.description ?? undefined,
       ctaLabel: link.ctaLabel ?? undefined,
-      imageUrl: actionLinkImageById.get(link.id) ?? undefined,
+      imageUrl: link.imageUrl ?? undefined,
       brandColor: link.brandColor ?? undefined,
       placement: link.placement,
       noFollow: link.noFollow,
@@ -661,25 +657,25 @@ export async function writeData(data: BlogData, options: { prune?: boolean; pres
       const roleName = roles.has(input.role) ? input.role : "AUTHOR";
       const user = existing
         ? await tx.user.update({
-            where: { id: existing.id },
-            data: {
-              name: input.name || null,
-              email,
-              passwordHash: password.hash,
-              status: password.disabled ? "DISABLED" : input.status,
-              roleId: roles.get(roleName)
-            }
-          })
+          where: { id: existing.id },
+          data: {
+            name: input.name || null,
+            email,
+            passwordHash: password.hash,
+            status: password.disabled ? "DISABLED" : input.status,
+            roleId: roles.get(roleName)
+          }
+        })
         : await tx.user.create({
-            data: {
-              id: input.id,
-              name: input.name || null,
-              email,
-              passwordHash: password.hash,
-              status: password.disabled ? "DISABLED" : input.status,
-              roleId: roles.get(roleName)
-            }
-          });
+          data: {
+            id: input.id,
+            name: input.name || null,
+            email,
+            passwordHash: password.hash,
+            status: password.disabled ? "DISABLED" : input.status,
+            roleId: roles.get(roleName)
+          }
+        });
       storedUsers.set(input.id, user);
     }
 
@@ -703,12 +699,12 @@ export async function writeData(data: BlogData, options: { prune?: boolean; pres
       };
       const category = existingCategory
         ? await tx.category.update({
-            where: { id: existingCategory.id },
-            data: { ...baseData, seoMetadata: { upsert: { update: seo, create: seo } } }
-          })
+          where: { id: existingCategory.id },
+          data: { ...baseData, seoMetadata: { upsert: { update: seo, create: seo } } }
+        })
         : await tx.category.create({
-            data: { id: input.id, ...baseData, seoMetadata: { create: seo } }
-          });
+          data: { id: input.id, ...baseData, seoMetadata: { create: seo } }
+        });
       categoryIds.add(category.id);
       categoryBySlug.set(input.slug, category.id);
     }
@@ -857,6 +853,7 @@ export async function writeData(data: BlogData, options: { prune?: boolean; pres
         type: input.type,
         description: input.description || null,
         ctaLabel: input.ctaLabel || null,
+        imageUrl: isSafeMediaUrl(input.imageUrl ?? "") ? input.imageUrl ?? null : null,
         brandColor: input.brandColor || null,
         placement: input.placement ?? "ARTICLE_BOTH",
         noFollow: input.noFollow,
@@ -864,11 +861,6 @@ export async function writeData(data: BlogData, options: { prune?: boolean; pres
         active: input.active
       };
       await tx.actionLink.upsert({ where: { id: input.id }, update: baseData, create: { id: input.id, ...baseData } });
-      await tx.$executeRaw`
-        UPDATE "ActionLink"
-        SET "imageUrl" = ${isSafeMediaUrl(input.imageUrl ?? "") ? input.imageUrl ?? null : null}
-        WHERE "id" = ${input.id}
-      `;
     }
 
     const messageIds = new Set<string>();
@@ -982,10 +974,6 @@ async function loadPublicData() {
     prisma.testimonial.findMany({ where: { published: true }, orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
     prisma.actionLink.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } })
   ]);
-  const publicActionLinkImages = await prisma.$queryRaw<Array<{ id: string; imageUrl: string | null }>>`
-    SELECT "id", "imageUrl" FROM "ActionLink" WHERE "active" = true
-  `;
-  const publicActionLinkImageById = new Map(publicActionLinkImages.map((link) => [link.id, link.imageUrl]));
 
   return {
     posts: posts.map((post) => ({
@@ -1059,7 +1047,7 @@ async function loadPublicData() {
         type: link.type,
         description: link.description ?? undefined,
         ctaLabel: link.ctaLabel ?? undefined,
-        imageUrl: publicActionLinkImageById.get(link.id) ?? undefined,
+        imageUrl: link.imageUrl ?? undefined,
         brandColor: link.brandColor ?? undefined,
         placement: link.placement,
         noFollow: link.noFollow,
