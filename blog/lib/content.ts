@@ -11,7 +11,7 @@ export const siteConfig = {
   telegramPath: "/go/telegram",
   whatsappPath: "/go/whatsapp",
   email: process.env.CONTACT_TO_EMAIL ?? "contact@bonotrading.com",
-  heroImage: "/hero-trading-desk.png"
+  heroImage: "/og-image.png"
 };
 
 export type Category = {
@@ -74,7 +74,7 @@ export const tags: Tag[] = [
   { title: "Formation", slug: "formation" }
 ];
 
-const heroImage = siteConfig.heroImage;
+const articleCoverImage = "/hero-trading-desk.png";
 
 export const articles: Article[] = [
   {
@@ -87,7 +87,7 @@ export const articles: Article[] = [
     publishedAt: "2026-05-18",
     readTime: "7 min",
     featured: true,
-    image: heroImage,
+    image: articleCoverImage,
     author: "Bono Trading",
     sections: [
       {
@@ -116,7 +116,7 @@ export const articles: Article[] = [
     tags: [tags[2], tags[1]],
     publishedAt: "2026-05-08",
     readTime: "6 min",
-    image: heroImage,
+    image: articleCoverImage,
     author: "Bono Trading",
     sections: [
       {
@@ -140,7 +140,7 @@ export const articles: Article[] = [
     tags: [tags[0], tags[3]],
     publishedAt: "2026-04-27",
     readTime: "8 min",
-    image: heroImage,
+    image: articleCoverImage,
     author: "Bono Trading",
     sections: [
       {
@@ -164,7 +164,7 @@ export const articles: Article[] = [
     tags: [tags[3], tags[1]],
     publishedAt: "2026-04-12",
     readTime: "5 min",
-    image: heroImage,
+    image: articleCoverImage,
     author: "Bono Trading",
     sections: [
       {

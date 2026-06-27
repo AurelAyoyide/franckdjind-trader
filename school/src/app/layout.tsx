@@ -18,11 +18,25 @@ const themeBootstrapScript = `
 
 export const metadata: Metadata = {
   title: {
-    default: "School - Plateforme privee de formation",
-    template: "%s | School",
+    default: "Bono School — Plateforme privée de formation",
+    template: "%s | Bono School",
   },
   description:
-    "Plateforme privee de formation en ligne pour apprenants, formateurs et administrateurs.",
+    "Plateforme privée de formation en ligne pour apprenants, formateurs et administrateurs.",
+  openGraph: {
+    title: "Bono School — Plateforme privée de formation",
+    description: "Plateforme privée de formation en ligne pour apprenants, formateurs et administrateurs.",
+    siteName: "Bono School",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Bono School" }],
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bono School — Plateforme privée de formation",
+    description: "Plateforme privée de formation en ligne pour apprenants, formateurs et administrateurs.",
+    images: ["/og-image.png"],
+  },
   robots: {
     index: false,
     follow: false,
