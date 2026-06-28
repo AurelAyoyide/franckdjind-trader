@@ -202,7 +202,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
             <UploadProgressForm action={lessonAction} pending={lessonPending} state={lessonState} className="rounded-lg border border-line bg-surface p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <FilePlus2 className="h-5 w-5 text-amber" aria-hidden="true" />
-                <h2 className="text-xl font-black">Ajouter une lecon</h2>
+                <h2 className="text-xl font-black">Ajouter une leçon</h2>
               </div>
               <div className="mt-5 grid gap-4">
                 <label className="text-sm font-black">
@@ -222,19 +222,19 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
                     value={lessonType}
                   >
                     <option value="TEXT">Texte</option>
-                    <option value="VIDEO">Video privee</option>
+                    <option value="VIDEO">Vidéo privée</option>
                     <option value="DOCUMENT">Document</option>
                     <option value="QUIZ">Quiz</option>
                   </select>
                 </label>
                 <label className="text-sm font-black">
-                  Titre de la lecon
+                  Titre de la leçon
                   <input className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm focus:border-market" name="title" />
                   {lessonState.errors?.title ? <span className="mt-2 block text-xs text-danger">{lessonState.errors.title[0]}</span> : null}
                 </label>
                 {lessonType === "VIDEO" || lessonType === "DOCUMENT" ? (
                   <label className="text-sm font-black">
-                    Fichier prive
+                    Fichier privé
                     <input
                       accept={lessonType === "VIDEO" ? "video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" : ".pdf,.doc,.docx,.ppt,.pptx,.xlsx,image/png,image/jpeg"}
                       className="mt-2 w-full rounded-lg border border-line bg-background px-3 py-2 text-sm focus:border-market"
@@ -244,8 +244,8 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
                     />
                     <span className="mt-2 block text-xs font-medium text-muted">
                       {lessonType === "VIDEO"
-                        ? "Formats acceptes : MP4, WebM ou MOV. La duree est lue automatiquement avant publication."
-                        : "A uploader en toute securite."}
+                        ? "Formats acceptés : MP4, WebM ou MOV. La durée est lue automatiquement avant publication."
+                        : "À uploader en toute sécurité."}
                     </span>
                   </label>
                 ) : null}
@@ -256,13 +256,13 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
                   </label>
                 ) : lessonType === "QUIZ" ? (
                   <p className="mt-4 rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-medium text-cyan">
-                    Cree d&apos;abord la lecon, puis va a l'etape 3 pour y ajouter des questions.
+                    Crée d&apos;abord la leçon, puis va à l&apos;étape 3 pour y ajouter des questions.
                   </p>
                 ) : null}
               </div>
               <StateMessage state={lessonState} />
               <button className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market disabled:opacity-60" disabled={lessonPending || modules.length === 0} type="submit">
-                {lessonPending ? "Creation..." : "Creer la lecon"}
+                {lessonPending ? "Création..." : "Créer la leçon"}
               </button>
             </UploadProgressForm>
           </div>
@@ -272,15 +272,15 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
       {step === 3 ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr] items-start">
           <form action={quizAction} className="rounded-lg border border-line bg-surface p-5">
-            <h2 className="text-xl font-black">Creer un quiz</h2>
+            <h2 className="text-xl font-black">Créer un quiz</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <label className="text-sm font-black">
-                Associer a la lecon (de type Quiz)
+                Associer à la leçon (de type Quiz)
                 <select className="mt-2 min-h-11 w-full rounded-lg border border-line bg-background px-3 text-sm focus:border-market disabled:opacity-50" disabled={quizLessons.length === 0} name="lessonId">
                   {quizLessons.map((lesson) => (
                     <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
                   ))}
-                  {quizLessons.length === 0 && <option value="">Aucune lecon en attente</option>}
+                  {quizLessons.length === 0 && <option value="">Aucune leçon en attente</option>}
                 </select>
               </label>
               <label className="text-sm font-black">
@@ -305,7 +305,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               <div className="mt-6 flex items-start gap-3 rounded-lg border border-cyan/30 bg-cyan/10 p-4 text-cyan">
                 <Info className="mt-0.5 h-5 w-5 flex-shrink-0" />
                 <p className="text-sm font-medium leading-6">
-                  Aucune lecon de type "Quiz interactif" n'est en attente de configuration. Retourne a <strong>l'etape 2 (Modules & Lecons)</strong> pour ajouter la coquille de ta lecon, puis reviens ici concevoir ses questions !
+                  Aucune leçon de type "Quiz interactif" n'est en attente de configuration. Retournez à <strong>l'étape 2 (Modules & Leçons)</strong> pour ajouter la coquille de votre leçon, puis revenez ici concevoir ses questions !
                 </p>
               </div>
             ) : null}

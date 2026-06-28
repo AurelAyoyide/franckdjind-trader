@@ -27,9 +27,9 @@ export default async function AccessChoicePage() {
   return (
     <>
       <PageHero
-        eyebrow={t("Demande d'acces")}
-        title={t("Finalisez votre demande d'acces.")}
-        description={t("Selectionnez le parcours qui vous a ete propose. Votre demande sera ensuite examinee avant l'ouverture de l'acces.")}
+        eyebrow={t("Demande d'accès")}
+        title={t("Finalisez votre demande d'accès.")}
+        description={t("Sélectionnez le parcours qui vous a été proposé. Votre demande sera ensuite examinée avant l'ouverture de l'accès.")}
       />
       <section className="site-shell py-12 md:py-16">
         <AccessChoiceForm

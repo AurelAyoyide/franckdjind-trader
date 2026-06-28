@@ -39,19 +39,19 @@ export default async function StudentQuizPage({
         {result ? (
           <div
             className={`mt-6 rounded-lg border p-6 text-center ${result === "passed"
-                ? "border-market/30 bg-market/10"
-                : "border-danger/30 bg-danger/10"
+              ? "border-market/30 bg-market/10"
+              : "border-danger/30 bg-danger/10"
               }`}
           >
             <h2 className={`text-xl font-black ${result === "passed" ? "text-market" : "text-danger"}`}>
-              {result === "passed" ? "Felicitations !" : "Seuil non atteint"}
+              {result === "passed" ? "Félicitations !" : "Seuil non atteint"}
             </h2>
             <p className="mt-3 text-sm font-semibold text-muted">
               {result === "passed"
                 ? `Quiz valide avec un excellent score de ${score ?? 0}%.`
                 : result === "failed"
-                  ? `Ton score est de ${score ?? 0}%. Revois les lecons correspondantes.`
-                  : "Quiz indisponible ou verrouille pour ce compte."}
+                  ? `Ton score est de ${score ?? 0}%. Revois les leçons correspondantes.`
+                  : "Quiz indisponible ou verrouillé pour ce compte."}
             </p>
             {result === "failed" && quiz.attempts > 0 ? (
               <a

@@ -12,7 +12,7 @@ export default async function NotFound() {
       <PageHero
         eyebrow="404"
         title={t("Page introuvable.")}
-        description={t("Le parcours demande n'existe pas ou n'est pas encore disponible.")}
+        description={t("Le parcours demandé n'existe pas ou n'est pas encore disponible.")}
       />
       <section className="site-shell py-12">
         <ButtonLink href={localePath(locale, "/")} variant="secondary">{t("Retour accueil")}</ButtonLink>

@@ -23,14 +23,14 @@ export default async function StudentDashboardPage() {
     <DashboardShell
       role="student"
       title="Dashboard apprenant"
-      description="Vue rapide des formations attribuees, de la progression, des quiz et des relances utiles."
+      description="Vue rapide des formations attribuées, de la progression, des quiz et des relance utiles."
       action={<div className="flex flex-wrap gap-3"><ButtonLink href="/student/courses" variant="secondary">Mes formations</ButtonLink><ButtonLink href="/access-choice" showArrow>Demander une formation</ButtonLink></div>}
     >
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard icon={BookOpen} label="Formations" value={String(dashboard.courses.length)} detail="Acces actifs attribues." />
+        <StatCard icon={BookOpen} label="Formations" value={String(dashboard.courses.length)} detail="Accès actifs attribués." />
         <StatCard icon={TrendingUp} label="Progression" value={`${activeCourse?.progress ?? 0}%`} detail="Parcours principal." tone="cyan" />
         <StatCard icon={Bell} label="Notifications" value={String(dashboard.unreadNotifications)} detail="Messages non lus." tone="amber" />
-        <StatCard icon={Award} label="Certificats" value={String(dashboard.certificates)} detail="Disponible au telechargement." />
+        <StatCard icon={Award} label="Certificats" value={String(dashboard.certificates)} detail="Disponible au téléchargement." />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
@@ -55,12 +55,12 @@ export default async function StudentDashboardPage() {
             </>
           ) : (
             <>
-              <StatusBadge tone="amber">Aucun acces</StatusBadge>
-              <h2 className="mt-4 text-2xl font-black">Aucune formation attribuee</h2>
-              <p className="mt-3 text-sm leading-7 text-muted">Une formation apparaitra ici des que le formateur validera ta demande.</p>
+              <StatusBadge tone="amber">Aucun accès</StatusBadge>
+              <h2 className="mt-4 text-2xl font-black">Aucune formation attribuée</h2>
+              <p className="mt-3 text-sm leading-7 text-muted">Une formation apparaîtra ici dès que le formateur validera ta demande.</p>
               <div className="mt-6">
                 <ButtonLink href="/access-choice" variant="secondary" showArrow>
-                  Demander un acces
+                  Demander un accès
                 </ButtonLink>
               </div>
             </>
@@ -85,11 +85,11 @@ export default async function StudentDashboardPage() {
 
       <section className="mt-6 rounded-lg border border-line bg-surface p-6">
         <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan">Prochain live</p>
-        <h2 className="mt-3 text-2xl font-black">{dashboard.nextLive?.title ?? "Aucun live programme"}</h2>
+        <h2 className="mt-3 text-2xl font-black">{dashboard.nextLive?.title ?? "Aucun live programmé"}</h2>
         <p className="mt-3 text-sm leading-7 text-muted">
           {dashboard.nextLive
             ? `${formatDate(dashboard.nextLive.scheduledAt)} - ${dashboard.nextLive.externalUrl}`
-            : "Les annonces apparaitront ici quand une session externe sera planifiee."}
+            : "Les annonces apparaîtront ici quand une session externe sera planifiée."}
         </p>
       </section>
     </DashboardShell>

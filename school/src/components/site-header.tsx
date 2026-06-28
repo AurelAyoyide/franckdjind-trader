@@ -65,7 +65,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                   type="submit"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  {translate(locale, "Deconnexion")}
+                  {translate(locale, "Déconnexion")}
                 </button>
               </form>
             </>

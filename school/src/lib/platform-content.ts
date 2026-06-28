@@ -26,7 +26,7 @@ type NavigationItem = {
 
 export const siteConfig = {
   name: "School",
-  tagline: "Formation privee",
+  tagline: "Formation privée",
   heroImage: "/hero-trading-desk.png",
   whatsappNumber: process.env.CONTACT_WHATSAPP_NUMBER ?? process.env.TRAINER_WHATSAPP_NUMBER ?? "22961835529",
   whatsappUrl: process.env.CONTACT_WHATSAPP_URL ?? "https://wa.me/22961835529",
@@ -34,51 +34,51 @@ export const siteConfig = {
 };
 
 export const publicMetrics = [
-  { value: "Prive", label: "espace securise" },
+  { value: "Privé", label: "espace sécurisé" },
   { value: "24/7", label: "suivi en ligne" },
   { value: "Quiz", label: "validation des acquis" },
-  { value: "PDF", label: "certificat verifiable" },
+  { value: "PDF", label: "certificat vérifiable" },
 ];
 
 export const publicCourseHighlights = [
   {
     id: "trading-fondations",
-    title: "Fondations trading prive",
+    title: "Fondations trading privé",
     type: "Gratuite",
     status: "PUBLIEE",
-    level: "Debutant",
+    level: "Débutant",
     progress: 68,
     lessons: 18,
     modules: 5,
     duration: "4 semaines",
     description:
-      "Comprendre le marche, structurer une routine et eviter les erreurs qui coutent cher.",
+      "Comprendre le marché, structurer une routine et éviter les erreurs qui coûtent cher.",
   },
   {
     id: "discipline-risque",
     title: "Discipline et gestion du risque",
     type: "Payante",
     status: "PUBLIEE",
-    level: "Intermediaire",
+    level: "Intermédiaire",
     progress: 34,
     lessons: 24,
     modules: 6,
     duration: "6 semaines",
     description:
-      "Un parcours cadre pour travailler les plans, la taille de position et les bilans.",
+      "Un parcours cadré pour travailler les plans, la taille de position et les bilans.",
   },
   {
     id: "coaching-live",
     title: "Coaching live et suivi",
     type: "Payante",
     status: "BROUILLON",
-    level: "Avance",
+    level: "Avancé",
     progress: 0,
     lessons: 12,
     modules: 3,
     duration: "8 semaines",
     description:
-      "Sessions externes, appels programmes et feedback sur les executions.",
+      "Sessions externes, appels programmés et feedback sur les exécutions.",
   },
 ];
 

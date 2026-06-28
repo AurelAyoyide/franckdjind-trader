@@ -393,7 +393,7 @@ function hasFileSignature(buffer: Buffer, extension: string) {
 
 async function savePrivateLessonFile(file: File, type: LessonType) {
   if (type !== LessonType.VIDEO && type !== LessonType.DOCUMENT) {
-    return { ok: false as const, message: "Les fichiers sont reserves aux lecons video ou document." };
+    return { ok: false as const, message: "Les fichiers sont réservés aux leçons vidéo ou document." };
   }
 
   const maxMegabytes = await getNumberSetting("maxPrivateUploadMb");
@@ -410,12 +410,12 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
   const extension = getSafeExtension(file.name, type);
 
   if (!extension || !isAllowedMimeType(file.type, type)) {
-    return { ok: false as const, message: "Type de fichier non autorise pour cette lecon." };
+    return { ok: false as const, message: "Type de fichier non autorisé pour cette leçon." };
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
   if (!hasFileSignature(buffer, extension)) {
-    return { ok: false as const, message: "Le contenu du fichier ne correspond pas au format annonce." };
+    return { ok: false as const, message: "Le contenu du fichier ne correspond pas au format annoncé." };
   }
 
   const privateRoot = getPrivateUploadRoot();
@@ -425,7 +425,7 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
   const destination = path.resolve(privateRoot, relativePath);
 
   if (destination !== privateRoot && !destination.startsWith(`${privateRoot}${path.sep}`)) {
-    return { ok: false as const, message: "Chemin de fichier non autorise." };
+    return { ok: false as const, message: "Chemin de fichier non autorisé." };
   }
 
   await writeFile(/*turbopackIgnore: true*/ destination, buffer);
@@ -480,7 +480,7 @@ export async function updateCourseAction(
 
   const course = await canManageCourse(parsed.data.courseId, session.userId, session.role);
   if (!course) {
-    return { ok: false, message: "Formation introuvable ou non autorisee." };
+    return { ok: false, message: "Formation introuvable ou non autorisée." };
   }
 
   await prisma.course.update({
@@ -506,7 +506,7 @@ export async function updateCourseAction(
   revalidatePath(`/trainer/courses/${parsed.data.courseId}`);
   revalidatePath("/trainer/courses");
 
-  return { ok: true, message: "Formation mise a jour." };
+  return { ok: true, message: "Formation mise à jour." };
 }
 
 export async function setCourseStatusAction(formData: FormData) {
@@ -608,7 +608,7 @@ export async function createModuleAction(
 
   const course = await canManageCourse(parsed.data.courseId, session.userId, session.role);
   if (!course) {
-    return { ok: false, message: "Formation introuvable ou non autorisee." };
+    return { ok: false, message: "Formation introuvable ou non autorisée." };
   }
 
   const lastModule = await prisma.courseModule.findFirst({
@@ -636,7 +636,7 @@ export async function createModuleAction(
 
   revalidatePath(`/trainer/courses/${parsed.data.courseId}`);
 
-  return { ok: true, message: "Module cree." };
+  return { ok: true, message: "Module créé." };
 }
 
 export async function updateModuleAction(formData: FormData) {
@@ -688,7 +688,7 @@ export async function createLessonAction(
   });
 
   if (!parsed.success) {
-    return { ok: false, message: "Lecon invalide.", errors: parsed.error.flatten().fieldErrors };
+    return { ok: false, message: "Leçon invalide.", errors: parsed.error.flatten().fieldErrors };
   }
 
   const courseModule = await prisma.courseModule.findUnique({
@@ -697,7 +697,7 @@ export async function createLessonAction(
   });
 
   if (!courseModule || (session.role !== "admin" && courseModule.course.trainerId !== session.userId)) {
-    return { ok: false, message: "Module introuvable ou non autorise." };
+    return { ok: false, message: "Module introuvable ou non autorisé." };
   }
 
   const lastLesson = await prisma.lesson.findFirst({
@@ -735,7 +735,7 @@ export async function createLessonAction(
   }
 
   if ((lessonType === LessonType.VIDEO || lessonType === LessonType.DOCUMENT) && !upload?.relativePath) {
-    return { ok: false, message: "Ajoute le fichier prive associe a cette lecon." };
+    return { ok: false, message: "Ajoute le fichier privé associé à cette leçon." };
   }
 
   const durationSeconds = lessonType === LessonType.VIDEO && upload?.relativePath
@@ -746,12 +746,12 @@ export async function createLessonAction(
     await removePrivateLessonFile(upload.relativePath);
     return {
       ok: false,
-      message: "Impossible de lire la duree de cette video. Utilise un fichier MP4, WebM ou MOV finalise, avec des metadonnees de duree lisibles.",
+      message: "Impossible de lire la durée de cette vidéo. Utilise un fichier MP4, WebM ou MOV finalisé, avec des métadonnées de durée lisibles.",
     };
   }
 
   if (lessonType === LessonType.TEXT && !parsed.data.content) {
-    return { ok: false, message: "Ajoute le contenu de la lecon texte." };
+    return { ok: false, message: "Ajoute le contenu de la leçon texte." };
   }
 
   const lesson = await prisma.lesson.create({
@@ -794,7 +794,7 @@ export async function createLessonAction(
 
   revalidatePath(`/trainer/courses/${courseModule.courseId}`);
 
-  return { ok: true, message: "Lecon creee." };
+  return { ok: true, message: "Leçon créée." };
 }
 
 export async function createQuizAction(
@@ -832,7 +832,7 @@ export async function createQuizAction(
   });
 
   if (!lesson || lesson.type !== "QUIZ" || lesson.quiz || (session.role !== "admin" && lesson.module.course.trainerId !== session.userId)) {
-    return { ok: false, message: "Lecon quiz introuvable, deja configuree ou non autorisee." };
+    return { ok: false, message: "Leçon quiz introuvable, déjà configurée ou non autorisée." };
   }
 
   const options = [parsed.data.optionA, parsed.data.optionB, parsed.data.optionC].filter(Boolean) as string[];
@@ -871,7 +871,7 @@ export async function createQuizAction(
 
   revalidatePath(`/trainer/courses/${lesson.module.courseId}`);
 
-  return { ok: true, message: "Quiz cree." };
+  return { ok: true, message: "Quiz créé." };
 }
 
 export async function addQuizQuestionAction(
@@ -882,15 +882,15 @@ export async function addQuizQuestionAction(
   const parsed = quizQuestionCreateSchema.safeParse({ quizId: formData.get("quizId"), questionText: formData.get("questionText"), optionA: formData.get("optionA"), optionB: formData.get("optionB"), optionC: formData.get("optionC"), correctOption: formData.get("correctOption") });
   if (!session || !parsed.success) return { ok: false, message: "Question invalide.", errors: parsed.success ? undefined : parsed.error.flatten().fieldErrors };
   const quiz = await prisma.quiz.findUnique({ where: { id: parsed.data.quizId }, include: { lesson: { include: { module: { include: { course: true } } } } } });
-  if (!quiz?.lesson || (session.role !== "admin" && quiz.lesson.module.course.trainerId !== session.userId)) return { ok: false, message: "Quiz introuvable ou non autorise." };
+  if (!quiz?.lesson || (session.role !== "admin" && quiz.lesson.module.course.trainerId !== session.userId)) return { ok: false, message: "Quiz introuvable ou non autorisé." };
   const options = [parsed.data.optionA, parsed.data.optionB, parsed.data.optionC].filter(Boolean) as string[];
   const correctIndex = parsed.data.correctOption === "A" ? 0 : parsed.data.correctOption === "B" ? 1 : 2;
-  if (!options[correctIndex]) return { ok: false, message: "La reponse correcte est absente." };
+  if (!options[correctIndex]) return { ok: false, message: "La réponse correcte est absente." };
   const last = await prisma.question.findFirst({ where: { quizId: quiz.id }, orderBy: { position: "desc" }, select: { position: true } });
   await prisma.question.create({ data: { quizId: quiz.id, type: "SINGLE_CHOICE", text: parsed.data.questionText, options, correctOptions: [options[correctIndex]], position: (last?.position ?? 0) + 1 } });
   await prisma.auditLog.create({ data: { actorId: session.userId, action: "QUIZ_QUESTION_CREATED", target: quiz.id } });
   revalidatePath(`/trainer/courses/${quiz.lesson.module.courseId}`);
-  return { ok: true, message: "Question ajoutee au quiz." };
+  return { ok: true, message: "Question ajoutée au quiz." };
 }
 
 export async function deleteQuizQuestionAction(formData: FormData) {
@@ -948,7 +948,7 @@ export async function setEnrollmentStatusAction(formData: FormData) {
     },
   });
 
-  await notifyUser(prisma, { userId: enrollment.learnerId, senderId: session.userId, title: parsed.data.status === "REVOKED" ? "Acces retire" : "Acces formation mis a jour", body: parsed.data.status === "REVOKED" ? `Ton acces a la formation ${enrollment.course.title} a ete retire.` : "Ton acces formation a ete mis a jour.", email: true });
+  await notifyUser(prisma, { userId: enrollment.learnerId, senderId: session.userId, title: parsed.data.status === "REVOKED" ? "Accès retiré" : "Accès formation mis à jour", body: parsed.data.status === "REVOKED" ? `Ton accès à la formation ${enrollment.course.title} a été retiré.` : "Ton accès formation a été mis à jour.", email: true });
 
   await prisma.auditLog.create({
     data: {
@@ -984,7 +984,7 @@ export async function assignLearnerAction(
 
   const course = await canManageCourse(parsed.data.courseId, session.userId, session.role);
   if (!course) {
-    return { ok: false, message: "Formation introuvable ou non autorisee." };
+    return { ok: false, message: "Formation introuvable ou non autorisée." };
   }
 
   const learner = await prisma.user.findFirst({
@@ -1028,8 +1028,8 @@ export async function assignLearnerAction(
         userId: learner.id,
         senderId: session.userId,
         type: "INTERNAL",
-        title: "Nouvel acces formation",
-        body: "Un formateur t'a inscrit a une formation.",
+        title: "Nouvel accès formation",
+        body: "Un formateur t'a inscrit à une formation.",
       },
     }),
     prisma.auditLog.create({
@@ -1045,8 +1045,8 @@ export async function assignLearnerAction(
   await deliverLoggedEmail(prisma, {
     to: learner.email,
     userId: learner.id,
-    subject: "Nouvel acces formation",
-    html: `<p>Bonjour ${escapeHtml(learner.firstName)},</p><p>Ton acces a la formation ${escapeHtml(course.title)} est maintenant actif.</p>`,
+    subject: "Nouvel accès formation",
+    html: `<p>Bonjour ${escapeHtml(learner.firstName)},</p><p>Ton accès à la formation ${escapeHtml(course.title)} est maintenant actif.</p>`,
   });
 
   revalidatePath(`/trainer/courses/${course.id}`);
@@ -1054,7 +1054,7 @@ export async function assignLearnerAction(
   revalidatePath("/student/courses");
   revalidatePath("/student/notifications");
 
-  return { ok: true, message: "Apprenant inscrit a la formation." };
+  return { ok: true, message: "Apprenant inscrit à la formation." };
 }
 
 export async function bulkAssignLearnersAction(
@@ -1069,7 +1069,7 @@ export async function bulkAssignLearnersAction(
   const courseId = String(formData.get("courseId") ?? "");
   const course = await canManageCourse(courseId, session.userId, session.role);
   if (!course) {
-    return { ok: false, message: "Formation introuvable ou non autorisee." };
+    return { ok: false, message: "Formation introuvable ou non autorisée." };
   }
 
   const existingEnrollments = await prisma.enrollment.findMany({
@@ -1088,7 +1088,7 @@ export async function bulkAssignLearnersAction(
   });
 
   if (eligibleLearners.length === 0) {
-    return { ok: false, message: "Tous les apprenants sont deja inscrits a cette formation." };
+    return { ok: false, message: "Tous les apprenants sont déjà inscrits à cette formation." };
   }
 
   const operations: any[] = eligibleLearners.flatMap((learner) => [
@@ -1108,8 +1108,8 @@ export async function bulkAssignLearnersAction(
         userId: learner.id,
         senderId: session.userId,
         type: "INTERNAL",
-        title: "Nouvel acces formation",
-        body: `Tu as ete inscrit a la formation ${course.title}.`,
+        title: "Nouvel accès formation",
+        body: `Tu as été inscrit à la formation ${course.title}.`,
       },
     }),
   ]);
@@ -1132,5 +1132,5 @@ export async function bulkAssignLearnersAction(
   revalidatePath("/student/courses");
   revalidatePath("/student/notifications");
 
-  return { ok: true, message: `${eligibleLearners.length} apprenant(s) inscrits a la formation.` };
+  return { ok: true, message: `${eligibleLearners.length} apprenant(s) inscrits à la formation.` };
 }

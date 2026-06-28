@@ -39,7 +39,7 @@ export default async function StudentCoursePage({
           </div>
           <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
             <span className="rounded-lg border border-line bg-foreground/[0.04] p-3 font-semibold">{course.modules} modules</span>
-            <span className="rounded-lg border border-line bg-foreground/[0.04] p-3 font-semibold">{course.lessons} lecons</span>
+            <span className="rounded-lg border border-line bg-foreground/[0.04] p-3 font-semibold">{course.lessons} leçons</span>
             <span className="rounded-lg border border-line bg-foreground/[0.04] p-3 font-semibold">{course.level}</span>
             <span className="rounded-lg border border-line bg-foreground/[0.04] p-3 font-semibold">{course.duration}</span>
           </div>
@@ -73,7 +73,7 @@ export default async function StudentCoursePage({
                         </span>
                       </span>
                       <StatusBadge tone={lesson.done ? "market" : lesson.locked ? "danger" : "muted"}>
-                        {lesson.done ? "Fait" : lesson.locked ? "Bloque" : "A faire"}
+                        {lesson.done ? "Fait" : lesson.locked ? "Bloqué" : "À faire"}
                       </StatusBadge>
                     </>
                   );

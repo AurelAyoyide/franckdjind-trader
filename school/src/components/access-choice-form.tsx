@@ -91,7 +91,7 @@ export function AccessChoiceForm({
           disabled={pending}
           type="submit"
         >
-          {t(pending ? "Preparation..." : "Preparer la demande")}
+          {t(pending ? "Préparation...": "Preparer la demande")}
         </button>
       </div>
 
@@ -111,8 +111,8 @@ export function AccessChoiceForm({
             </span>
             <span className="mt-1 block text-sm font-semibold text-foreground">
               {kind === "paid"
-                ? t("Clique ici pour parler au formateur et finaliser l'acces payant.")
-                : t("Clique ici pour envoyer le message pre-rempli et demander l'activation gratuite.")}
+                ? t("Clique ici pour parler au formateur et finaliser l'accès payant.")
+                : t("Clique ici pour envoyer le message pré-rempli et demander l'activation gratuite.")}
             </span>
           </span>
         </a>

@@ -53,7 +53,7 @@ export default async function TrainerCourseBuilderPage({
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <h2 className="text-xl font-black">Structure actuelle</h2>
-          <p className="mt-2 text-sm leading-7 text-muted">{course.modules.length} module(s), {course.modules.flatMap((module) => module.lessons).length} lecon(s).</p>
+          <p className="mt-2 text-sm leading-7 text-muted">{course.modules.length} module(s), {course.modules.flatMap((module) => module.lessons).length} leçon(s).</p>
         </div>
         <StatusBadge tone={course.status === "PUBLISHED" ? "market" : "muted"}>{statusLabel(course.status)}</StatusBadge>
       </div>
@@ -70,10 +70,10 @@ export default async function TrainerCourseBuilderPage({
                     {lesson.position}. {lesson.title}
                   </span>
                   <StatusBadge tone={lesson.quiz ? "market" : "muted"}>{lesson.type}</StatusBadge>
-                  <details><summary className="cursor-pointer text-xs font-black">Gerer</summary><form action={updateLessonAction} className="mt-2 grid gap-2"><input name="lessonId" type="hidden" value={lesson.id} /><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={lesson.title} name="title" /><input name="content" type="hidden" value={lesson.content ?? ""} /><button className="inline-flex min-h-8 items-center justify-center rounded-md bg-market px-3 text-xs font-black text-on-market hover:bg-market/90 transition-colors" type="submit">Modifier</button></form><form action={deleteLessonAction}><input name="lessonId" type="hidden" value={lesson.id} /><ConfirmButton className="mt-2 inline-flex w-full min-h-8 items-center justify-center rounded-md border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger hover:bg-danger/20 transition-colors">Supprimer</ConfirmButton></form></details>
+                  <details><summary className="cursor-pointer text-xs font-black">Gérer</summary><form action={updateLessonAction} className="mt-2 grid gap-2"><input name="lessonId" type="hidden" value={lesson.id} /><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={lesson.title} name="title" /><input name="content" type="hidden" value={lesson.content ?? ""} /><button className="inline-flex min-h-8 items-center justify-center rounded-md bg-market px-3 text-xs font-black text-on-market hover:bg-market/90 transition-colors" type="submit">Modifier</button></form><form action={deleteLessonAction}><input name="lessonId" type="hidden" value={lesson.id} /><ConfirmButton className="mt-2 inline-flex w-full min-h-8 items-center justify-center rounded-md border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger hover:bg-danger/20 transition-colors">Supprimer</ConfirmButton></form></details>
                 </div>
               ))}
-              {!module.lessons.length ? <p className="text-sm text-muted">Aucune lecon dans ce module.</p> : null}
+              {!module.lessons.length ? <p className="text-sm text-muted">Aucune leçon dans ce module.</p> : null}
             </div>
             <details className="mt-3"><summary className="cursor-pointer text-xs font-black">Modifier le module</summary><form action={updateModuleAction} className="mt-3 grid gap-2"><input name="moduleId" type="hidden" value={module.id} /><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={module.title} name="title" /><input className="min-h-9 rounded border border-line px-2 text-xs" defaultValue={module.description ?? ""} name="description" /><button className="inline-flex min-h-8 items-center justify-center rounded-md bg-market px-3 text-xs font-black text-on-market hover:bg-market/90 transition-colors" type="submit">Enregistrer</button></form><form action={deleteModuleAction} className="mt-2"><input name="moduleId" type="hidden" value={module.id} /><ConfirmButton className="inline-flex w-full min-h-8 items-center justify-center rounded-md border border-danger/30 bg-danger/10 px-3 text-xs font-black text-danger hover:bg-danger/20 transition-colors">Supprimer le module vide</ConfirmButton></form></details>
           </article>
@@ -100,7 +100,7 @@ export default async function TrainerCourseBuilderPage({
               <input name="enrollmentId" type="hidden" value={enrollment.id} />
               <input name="status" type="hidden" value={enrollment.status === "REVOKED" ? "ACTIVE" : "REVOKED"} />
               <button className="inline-flex min-h-9 items-center rounded-lg border border-line bg-background px-3 text-xs font-black" type="submit">
-                {enrollment.status === "REVOKED" ? "Reactiver" : "Retirer l'acces"}
+                {enrollment.status === "REVOKED" ? "Réactiver" : "Retirer l'accès"}
               </button>
             </form>
           </div>
@@ -114,28 +114,28 @@ export default async function TrainerCourseBuilderPage({
     <DashboardShell
       role={session.role}
       title={course.title}
-      description="Gestion de la formation en 4 etapes (Informations, Contenu, Quiz, Publication)."
+      description="Gestion de la formation en 4 étapes (Informations, Contenu, Quiz, Publication)."
     >
       <NoticeBanner
         message={
           notice === "course-status"
-            ? "Statut de la formation mis a jour."
+            ? "Statut de la formation mis à jour."
             : notice === "course-incomplete"
-              ? "Ajoute au moins une lecon complete : texte rempli, quiz configure ou fichier prive valide avant publication."
-              : notice === "module-not-empty" ? "Supprime ou deplace les lecons du module avant de supprimer ce module."
-                : notice === "lesson-tracked" ? "Cette lecon a deja une progression ou des tentatives ; elle ne peut pas etre supprimee."
-                  : notice === "module-updated" || notice === "lesson-updated" ? "Structure mise a jour."
-                    : notice === "module-deleted" || notice === "lesson-deleted" ? "Element supprime."
-                      : notice === "question-deleted" ? "Question supprimee."
-                        : notice === "question-tracked" ? "Ce quiz a deja ete tente, impossible de supprimer des questions."
+              ? "Ajoute au moins une leçon complète : texte rempli, quiz configuré ou fichier privé valide avant publication."
+              : notice === "module-not-empty" ? "Supprime ou déplace les leçons du module avant de supprimer ce module."
+                : notice === "lesson-tracked" ? "Cette leçon a déjà une progression ou des tentatives ; elle ne peut pas être supprimée."
+                  : notice === "module-updated" || notice === "lesson-updated" ? "Structure mise à jour."
+                    : notice === "module-deleted" || notice === "lesson-deleted" ? "Élément supprimé."
+                      : notice === "question-deleted" ? "Question supprimée."
+                        : notice === "question-tracked" ? "Ce quiz a déjà été tenté, impossible de supprimer des questions."
                           : notice === "enrollment-status"
-                            ? "Acces apprenant mis a jour et notification envoyee."
+                            ? "Accès apprenant mis à jour et notification envoyée."
                             : null
         }
       />
 
       <div className="mb-6 flex justify-end">
-        <ConfirmActionForm action={retireCourseAction} description="Sans apprenant, la formation sera supprimee. Avec un historique apprenant, elle sera archivee pour proteger les donnees." label="Retirer cette formation" title="Retirer la formation ?" values={{ courseId: course.id }} />
+        <ConfirmActionForm action={retireCourseAction} description="Sans apprenant, la formation sera supprimée. Avec un historique apprenant, elle sera archivée pour protéger les données." label="Retirer cette formation" title="Retirer la formation ?" values={{ courseId: course.id }} />
       </div>
 
       <CourseBuilderForms

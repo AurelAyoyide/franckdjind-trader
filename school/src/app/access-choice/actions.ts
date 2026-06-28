@@ -26,7 +26,7 @@ export async function requestAccessAction(
   if (!parsed.success) {
     return {
       ok: false,
-      message: "Complete les champs avant de preparer le message WhatsApp.",
+      message: "Complète les champs avant de préparer le message WhatsApp.",
       errors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -36,7 +36,7 @@ export async function requestAccessAction(
   if (!session) {
     return {
       ok: false,
-      message: "Connecte-toi avec ton compte apprenant avant de demander l'acces.",
+      message: "Connecte-toi avec ton compte apprenant avant de demander l'accès.",
     };
   }
 
@@ -53,7 +53,7 @@ export async function requestAccessAction(
   if (!learner) {
     return {
       ok: false,
-      message: "Cree d'abord ton compte puis valide ton email avant la demande.",
+      message: "Crée d'abord ton compte puis valide ton email avant la demande.",
       errors: { email: ["Compte introuvable"] },
     };
   }
@@ -61,7 +61,7 @@ export async function requestAccessAction(
   if (learner.status === AccountStatus.EMAIL_PENDING) {
     return {
       ok: false,
-      message: "Valide ton email avant de demander l'acces.",
+      message: "Valide ton email avant de demander l'accès.",
       errors: { email: ["Email non valide"] },
     };
   }
@@ -87,7 +87,7 @@ export async function requestAccessAction(
   if (parsed.data.courseId && !course) {
     return {
       ok: false,
-      message: "La formation selectionnee n'est plus disponible pour cette demande.",
+      message: "La formation sélectionnée n'est plus disponible pour cette demande.",
       errors: { courseId: ["Formation indisponible"] },
     };
   }
@@ -115,12 +115,12 @@ export async function requestAccessAction(
     return {
       ok: true,
       message: parsed.data.kind === "paid"
-        ? "Une demande payante est deja en attente. Rouvre WhatsApp pour finaliser ou verifier le paiement avec le formateur."
-        : "Une demande gratuite est deja en attente. Rouvre WhatsApp pour prevenir le formateur et accelerer l'activation.",
+        ? "Une demande payante est déjà en attente. Rouvre WhatsApp pour finaliser ou vérifier le paiement avec le formateur."
+        : "Une demande gratuite est déjà en attente. Rouvre WhatsApp pour prévenir le formateur et accélérer l'activation.",
       whatsappUrl: buildWhatsAppLink(message),
       whatsappInstruction: parsed.data.kind === "paid"
-        ? "Etape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandee."
-        : "Etape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton acces.",
+        ? "Étape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandée."
+        : "Étape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton accès.",
     };
   }
 
@@ -145,11 +145,11 @@ export async function requestAccessAction(
   return {
     ok: true,
     message: parsed.data.kind === "paid"
-      ? "Demande enregistree. Continue sur WhatsApp pour finaliser le paiement ou confirmer ta preuve avec le formateur."
-      : "Demande gratuite enregistree. Continue sur WhatsApp pour prevenir le formateur et demander l'activation de ton acces.",
+      ? "Demande enregistrée. Continue sur WhatsApp pour finaliser le paiement ou confirmer ta preuve avec le formateur."
+      : "Demande gratuite enregistrée. Continue sur WhatsApp pour prévenir le formateur et demander l'activation de ton accès.",
     whatsappUrl: buildWhatsAppLink(message),
     whatsappInstruction: parsed.data.kind === "paid"
-      ? "Etape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandee."
-      : "Etape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton acces.",
+      ? "Étape 2 : ouvre WhatsApp pour finaliser le paiement ou envoyer la preuve demandée."
+      : "Étape 2 : ouvre WhatsApp pour demander l'activation gratuite de ton accès.",
   };
 }

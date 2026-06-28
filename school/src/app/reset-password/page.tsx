@@ -17,8 +17,8 @@ export default async function ResetPasswordPage({
     <>
       <PageHero
         eyebrow={t("Nouveau mot de passe")}
-        title={t("Definir un nouveau mot de passe.")}
-        description={t("Choisissez un mot de passe solide, puis reconnectez-vous a votre espace.")}
+        title={t("Définir un nouveau mot de passe.")}
+        description={t("Choisissez un mot de passe solide, puis reconnectez-vous à votre espace.")}
       />
       <section className="site-shell py-12 md:py-16">
         {token ? (
@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({
         ) : (
           <div className="max-w-2xl rounded-lg border border-line bg-surface p-6">
             <h2 className="text-2xl font-black">{t("Lien manquant")}</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">{t("Demande un nouveau lien de reinitialisation.")}</p>
+            <p className="mt-3 text-sm leading-7 text-muted">{t("Demande un nouveau lien de réinitialisation.")}</p>
             <div className="mt-6">
               <ButtonLink href={localePath(locale, "/forgot-password")} showArrow>
                 {t("Demander un lien")}

@@ -12,31 +12,31 @@ import { getRequestLocale } from "@/lib/i18n-server";
 import { publicMetrics, siteConfig } from "@/lib/platform-content";
 
 const workflow = [
-  { title: "Creez votre compte", text: "Inscrivez-vous, puis confirmez votre adresse email." },
-  { title: "Demandez l'acces", text: "Selectionnez le parcours qui vous a ete propose." },
-  { title: "Suivez la formation", text: "Retrouvez vos lecons, quiz, documents et annonces au meme endroit." },
-  { title: "Obtenez le certificat", text: "Votre certificat est verifiable avec son code unique." },
+  { title: "Créez votre compte", text: "Inscrivez-vous, puis confirmez votre adresse email." },
+  { title: "Demandez l'accès", text: "Sélectionnez le parcours qui vous a été proposé." },
+  { title: "Suivez la formation", text: "Retrouvez vos leçons, quiz, documents et annonces au même endroit." },
+  { title: "Obtenez le certificat", text: "Votre certificat est vérifiable avec son code unique." },
 ];
 
 const highlights = [
   {
     icon: LockKeyhole,
-    title: "Acces protege",
-    text: "Votre espace affiche uniquement les ressources associees a votre parcours.",
+    title: "Accès protégé",
+    text: "Votre espace affiche uniquement les ressources associées à votre parcours.",
   },
   {
     icon: BookOpen,
-    title: "Parcours structure",
-    text: "Les lecons, quiz et documents sont regroupes dans un espace clair.",
+    title: "Parcours structuré",
+    text: "Les leçons, quiz et documents sont regroupés dans un espace clair.",
   },
   {
     icon: CalendarDays,
-    title: "Suivi personnalise",
+    title: "Suivi personnalisé",
     text: "Les informations utiles restent accessibles au bon moment, sans dispersion.",
   },
   {
     icon: BadgeCheck,
-    title: "Preuve verifiable",
+    title: "Preuve vérifiable",
     text: "Un code public permet de confirmer un certificat sans connexion.",
   },
 ];
@@ -63,17 +63,17 @@ export default async function HomePage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-3 rounded-lg border border-white/18 bg-black/55 px-3 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white shadow-[0_18px_45px_rgba(0,0,0,0.25)]">
               <span className="h-2 w-2 rounded-full bg-market" />
-              {t("Espace prive de formation")}
+              {t("Espace privé de formation")}
             </div>
             <h1 className="mt-7 text-5xl font-black leading-[0.98] tracking-tight text-white text-balance sm:text-6xl lg:text-7xl">
               School
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/78 md:text-lg">
-              {t("Un espace prive pour rejoindre votre formation, suivre votre progression et valoriser votre parcours.")}
+              {t("Un espace privé pour rejoindre votre formation, suivre votre progression et valoriser votre parcours.")}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <ButtonLink href={localePath(locale, "/register")} className="w-full sm:w-auto" showArrow>
-                {t("Creer votre compte")}
+                {t("Créez votre compte")}
               </ButtonLink>
               <ButtonLink href={localePath(locale, "/login")} className="w-full sm:w-auto" variant="hero">
                 {t("Se connecter")}
@@ -106,7 +106,7 @@ export default async function HomePage() {
             </h2>
           </div>
           <p className="text-base leading-8 text-muted">
-            {t("Votre parcours se construit en quatre etapes simples. Les modalites d'acces sont confirmees avec votre interlocuteur avant l'ouverture de votre espace.")}
+            {t("Votre parcours se construit en quatre étapes simples. Les modalités d'accès sont confirmées avec votre interlocuteur avant l'ouverture de votre espace.")}
           </p>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-4">
@@ -147,12 +147,12 @@ export default async function HomePage() {
             <MessageCircle className="h-5 w-5 text-market" aria-hidden="true" />
             <h2 className="mt-4 text-3xl font-black leading-tight md:text-5xl">{t("Pret a commencer ?")}</h2>
             <p className="mt-5 max-w-2xl text-base leading-8 text-muted">
-              {t("Creez votre compte, confirmez votre adresse email, puis accedez a votre espace pour poursuivre votre parcours.")}
+              {t("Créez votre compte, confirmez votre adresse email, puis accédez à votre espace pour poursuivre votre parcours.")}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
             <ButtonLink href={localePath(locale, "/register")} className="w-full" showArrow>
-              {t("Creer votre compte")}
+              {t("Créez votre compte")}
             </ButtonLink>
             <ButtonLink href={localePath(locale, "/login")} className="w-full" variant="secondary">
               {t("Se connecter")}

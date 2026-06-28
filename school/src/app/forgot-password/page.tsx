@@ -10,8 +10,8 @@ export default async function ForgotPasswordPage() {
   return (
     <>
       <PageHero
-        eyebrow={t("Mot de passe oublie")}
-        title={t("Retrouvez l'acces a votre compte.")}
+        eyebrow={t("Mot de passe oublié")}
+        title={t("Retrouvez l'accès à votre compte.")}
         description={t("Un lien temporaire vous permet de choisir un nouveau mot de passe en toute securite.")}
       />
       <section className="site-shell py-12 md:py-16">

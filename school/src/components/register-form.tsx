@@ -32,7 +32,7 @@ export function RegisterForm() {
       </div>
       <h2 className="text-2xl font-black">{t("Vos informations")}</h2>
       <p className="mt-3 text-sm leading-7 text-muted">
-        {t("Un lien de validation vous sera envoye par email avant l'ouverture de votre demande d'acces.")}
+        {t("Un lien de validation vous sera envoyé par email avant l'ouverture de votre demande d'accès.")}
       </p>
       <div className="grid gap-4 md:grid-cols-2">
         {fields.map((field) => (
@@ -78,7 +78,7 @@ export function RegisterForm() {
           </Link>{" "}
           {t("et la")} {" "}
           <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/privacy-policy")}>
-            {t("Politique de confidentialite").toLowerCase()}
+            {t("Politique de confidentialité").toLowerCase()}
           </Link>
           .
         </span>

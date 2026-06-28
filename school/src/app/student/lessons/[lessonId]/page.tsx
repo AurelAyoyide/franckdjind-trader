@@ -34,11 +34,11 @@ export default async function StudentLessonPage({
       title={lesson.title}
       description={
         lesson.kind === "VIDEO"
-          ? "La progression video est enregistree pendant la lecture."
-          : "Consulte la ressource, puis marque la lecon comme terminee pour continuer le parcours."
+          ? "La progression vidéo est enregistrée pendant la lecture."
+          : "Consulte la ressource, puis marque la leçon comme terminée pour continuer le parcours."
       }
     >
-      <NoticeBanner message={notice === "completed" ? "Lecon marquee comme terminee. Ta progression a ete mise a jour." : null} />
+      <NoticeBanner message={notice === "completed" ? "Leçon marquée comme terminée. Ta progression a été mise à jour." : null} />
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] items-start">
         {lesson.kind === "VIDEO" ? (
           <VideoLessonPlayer
@@ -51,9 +51,9 @@ export default async function StudentLessonPage({
         ) : lesson.kind === "DOCUMENT" ? (
           <section className="rounded-lg border border-line bg-surface p-6">
             <FileText className="h-7 w-7 text-cyan" aria-hidden="true" />
-            <h2 className="mt-5 text-2xl font-black">Document de la lecon</h2>
+            <h2 className="mt-5 text-2xl font-black">Document de la leçon</h2>
             <p className="mt-4 text-sm leading-7 text-muted">
-              Ouvre le document associe a cette lecon, puis reviens ici pour valider ta progression.
+              Ouvre le document associé à cette leçon, puis reviens ici pour valider ta progression.
             </p>
             {lesson.documentPath ? (
               <a
@@ -65,16 +65,16 @@ export default async function StudentLessonPage({
               </a>
             ) : (
               <p className="mt-6 rounded-lg border border-amber/30 bg-amber/10 p-3 text-sm font-semibold text-amber">
-                Aucun document n&apos;est encore associe a cette lecon.
+                Aucun document n&apos;est encore associé à cette leçon.
               </p>
             )}
           </section>
         ) : (
           <section className="rounded-lg border border-line bg-surface p-6">
             <FileText className="h-7 w-7 text-market" aria-hidden="true" />
-            <h2 className="mt-5 text-2xl font-black">Contenu de la lecon</h2>
+            <h2 className="mt-5 text-2xl font-black">Contenu de la leçon</h2>
             <div className="mt-4 whitespace-pre-line text-sm leading-8 text-muted">
-              {lesson.content || "Le contenu texte de cette lecon sera ajoute prochainement."}
+              {lesson.content || "Le contenu texte de cette leçon sera ajouté prochainement."}
             </div>
           </section>
         )}
@@ -83,7 +83,7 @@ export default async function StudentLessonPage({
           <StatusBadge tone="cyan">{lesson.kind}</StatusBadge>
           <h2 className="mt-5 text-2xl font-black">Progression</h2>
           <p className="mt-4 text-sm leading-7 text-muted">
-            Marque la lecon comme terminee quand tu as fini. La suite du parcours se debloque selon ta progression.
+            Marque la leçon comme terminée quand tu as fini. La suite du parcours se débloque selon ta progression.
           </p>
           <div className="mt-5 grid gap-3">
             {lesson.kind === "VIDEO" ? (
@@ -109,18 +109,18 @@ export default async function StudentLessonPage({
                 <input name="lessonId" type="hidden" value={lesson.id} />
                 <input name="nextLessonUrl" type="hidden" value={lesson.nextLessonUrl ?? ""} />
                 <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market hover:bg-market/90 transition-colors" type="submit">
-                  {lesson.completed ? "Lecon terminee" : "Marquer comme termine"}
+                  {lesson.completed ? "Leçon terminée" : "Marquer comme terminée"}
                 </button>
               </form>
             ) : (
               <p className="rounded-lg border border-cyan/30 bg-cyan/10 p-3 text-sm font-medium text-cyan">
-                Cette lecon se valide automatiquement apres 90 % de lecture.
+                Cette leçon se valide automatiquement après 90 % de lecture.
               </p>
             )}
             {(lesson.previousLessonUrl || lesson.nextLessonUrl) && (
               <div className="mt-2 flex items-center justify-between gap-3">
                 {lesson.previousLessonUrl ? (
-                  <ButtonLink className="flex-1 text-center" href={lesson.previousLessonUrl} variant="secondary">Precedent</ButtonLink>
+                  <ButtonLink className="flex-1 text-center" href={lesson.previousLessonUrl} variant="secondary">Précédent</ButtonLink>
                 ) : <div className="flex-1" />}
                 {lesson.nextLessonUrl ? (
                   <ButtonLink className="flex-1 text-center" href={lesson.nextLessonUrl} variant="secondary">Suivant</ButtonLink>

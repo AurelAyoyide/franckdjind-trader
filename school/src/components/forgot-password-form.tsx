@@ -29,7 +29,7 @@ export function ForgotPasswordForm() {
       <KeyRound className="h-5 w-5 text-market" aria-hidden="true" />
       <h2 className="mt-4 text-2xl font-black">{t("Recevoir un lien de connexion")}</h2>
       <p className="mt-3 text-sm leading-7 text-muted">
-        {t("Saisissez l'adresse email de votre compte. Si elle est reconnue, un lien temporaire sera prepare.")}
+        {t("Saisissez l'adresse email de votre compte. Si elle est reconnue, un lien temporaire sera préparé.")}
       </p>
       <label className="mt-5 block text-sm font-black" htmlFor="email">
         {t("Email du compte")}
@@ -56,7 +56,7 @@ export function ForgotPasswordForm() {
         disabled={pending}
         type="submit"
       >
-        {t(pending ? "Preparation..." : "Preparer le lien")}
+        {t(pending ? "Préparation...": "Preparer le lien")}
       </button>
       <p className="mt-5 text-center text-sm text-muted">
         {t("Vous connaissez votre mot de passe ?")} {" "}

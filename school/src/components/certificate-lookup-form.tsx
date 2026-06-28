@@ -28,7 +28,7 @@ export function CertificateLookupForm({ initialCode = "" }: { initialCode?: stri
         <h2 className="text-2xl font-black">{t("Verifier un certificat")}</h2>
       </div>
       <p className="mt-3 text-sm leading-7 text-muted">
-        {t("Entre le code present sur le certificat pour confirmer qu'il existe et qu'il n'a pas ete revoque.")}
+        {t("Entre le code présent sur le certificat pour confirmer qu'il existe et qu'il n'a pas été révoqué.")}
       </p>
       <label className="mt-6 block text-sm font-black" htmlFor="certificateCode">
         {t("Code certificat")}
@@ -43,7 +43,7 @@ export function CertificateLookupForm({ initialCode = "" }: { initialCode?: stri
           value={code}
         />
         <button
-          aria-label={t("Verifier le certificat")}
+          aria-label={t("Vérifier le certificat")}
           className="inline-flex w-12 items-center justify-center border-l border-line text-market transition hover:bg-market/10"
           title={t("Verifier")}
           type="submit"

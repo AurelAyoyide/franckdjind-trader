@@ -95,8 +95,8 @@ export async function approveTrainingRequestAction(formData: FormData) {
         userId: request.learnerId,
         senderId: session.userId,
         type: "INTERNAL",
-        title: "Acces formation active",
-        body: `Ton acces a la formation ${course.title} est maintenant actif.`,
+        title: "Accès formation activé",
+        body: `Ton accès à la formation ${course.title} est maintenant actif.`,
       },
     }),
     prisma.auditLog.create({
@@ -112,8 +112,8 @@ export async function approveTrainingRequestAction(formData: FormData) {
   await deliverLoggedEmail(prisma, {
     to: request.learner.email,
     userId: request.learnerId,
-    subject: "Acces formation active",
-    html: `<p>Bonjour ${escapeHtml(request.learner.firstName)},</p><p>Ton acces a la formation ${escapeHtml(course.title)} est maintenant actif.</p>`,
+    subject: "Accès formation activé",
+    html: `<p>Bonjour ${escapeHtml(request.learner.firstName)},</p><p>Ton accès à la formation ${escapeHtml(course.title)} est maintenant actif.</p>`,
   });
 
   revalidatePath("/trainer/requests");

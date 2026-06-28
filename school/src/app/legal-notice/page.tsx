@@ -23,36 +23,36 @@ export default async function LegalNoticePage() {
 
   return (
     <LegalDocument
-      eyebrow="Mentions legales"
-      title="Les informations essentielles sur l'editeur."
-      description="Ces mentions identifient l&apos;exploitant de la plateforme et les principales regles applicables a sa publication."
+      eyebrow="Mentions légales"
+      title="Les informations essentielles sur l'éditeur."
+      description="Ces mentions identifient l&apos;exploitant de la plateforme et les principales règles applicables à sa publication."
     >
-      <LegalSection title="Editeur de la plateforme">
+      <LegalSection title="Éditeur de la plateforme">
         <p>{details.legalPublisherName || details.platformName}</p>
-        <p>Adresse : {details.legalAddress || "Benin"}</p>
+        <p>Adresse : {details.legalAddress || "Bénin"}</p>
         {details.legalRegistrationNumber ? <p>Identification professionnelle : {details.legalRegistrationNumber}</p> : null}
         <LegalContact details={details} />
       </LegalSection>
 
-      <LegalSection title="Hebergement">
+      <LegalSection title="Hébergement">
         {details.hostingProvider ? (
           <p>{details.hostingProvider}</p>
         ) : (
           <p>
-            Les informations de l&apos;hebergeur de production seront publiees ici avant l&apos;ouverture publique de la plateforme.
+            Les informations de l&apos;hébergeur de production seront publiées ici avant l&apos;ouverture publique de la plateforme.
           </p>
         )}
       </LegalSection>
 
-      <LegalSection title="Propriete intellectuelle">
+      <LegalSection title="Propriété intellectuelle">
         <p>
-          La structure de la plateforme, son identite visuelle, ses textes, ses videos, ses documents et ses autres contenus sont proteges. Toute reproduction ou diffusion non autorisee est interdite, sauf accord ecrit de l&apos;editeur ou exception prevue par la loi.
+          La structure de la plateforme, son identité visuelle, ses textes, ses vidéos, ses documents et ses autres contenus sont protégés. Toute reproduction ou diffusion non autorisée est interdite, sauf accord écrit de l&apos;éditeur ou exception prévue par la loi.
         </p>
       </LegalSection>
 
       <LegalSection title="Information sur les contenus de trading">
         <p>
-          {details.platformName}{" "}est un espace de formation. Les contenus publies ne constituent pas un conseil financier personnalise, une sollicitation d&apos;investissement ou une garantie de resultat. Chaque utilisateur demeure responsable de ses decisions et de la gestion de son risque.
+          {details.platformName}{" "}est un espace de formation. Les contenus publiés ne constituent pas un conseil financier personnalisé, une sollicitation d&apos;investissement ou une garantie de résultat. Chaque utilisateur demeure responsable de ses décisions et de la gestion de son risque.
         </p>
       </LegalSection>
     </LegalDocument>

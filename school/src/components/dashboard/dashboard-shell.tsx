@@ -74,7 +74,7 @@ export async function DashboardShell({ role, title, description, children, actio
                   type="submit"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  {t("Deconnexion")}
+                  {t("Déconnexion")}
                 </button>
               </form>
             </div>
@@ -84,7 +84,7 @@ export async function DashboardShell({ role, title, description, children, actio
         <div>
           <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan">{t("Espace prive")}</p>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan">{t("Espace privé")}</p>
               <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight md:text-5xl break-words">{t(title)}</h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-muted break-words">{t(description)}</p>
             </div>

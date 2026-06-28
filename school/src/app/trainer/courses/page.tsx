@@ -29,8 +29,8 @@ export default async function TrainerCoursesPage({ searchParams }: { searchParam
     <DashboardShell
       role={session.role}
       title="Gestion des formations"
-      description="Creation, publication, archivage, modules, lecons, quiz et supports."
-      action={<ButtonLink href="/trainer/courses/new"><Plus className="h-4 w-4" /> Creer</ButtonLink>}
+      description="Création, publication, archivage, modules, leçons, quiz et supports."
+      action={<ButtonLink href="/trainer/courses/new"><Plus className="h-4 w-4" /> Créer</ButtonLink>}
     >
       <form method="get" className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
@@ -47,8 +47,8 @@ export default async function TrainerCoursesPage({ searchParams }: { searchParam
         >
           <option value="">Tous les statuts</option>
           <option value="DRAFT">Brouillon</option>
-          <option value="PUBLISHED">Publiee</option>
-          <option value="ARCHIVED">Archivee</option>
+          <option value="PUBLISHED">Publiée</option>
+          <option value="ARCHIVED">Archivée</option>
         </select>
         <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1]">
           Filtrer
@@ -70,8 +70,8 @@ export default async function TrainerCoursesPage({ searchParams }: { searchParam
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link className="rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-bold" href={`/trainer/courses/${course.id}`}>{course.modules.length} modules</Link>
-                <Link className="rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-bold" href={`/trainer/courses/${course.id}`}>{lessons} lecons</Link>
-                <Link className="rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-bold" href={`/trainer/courses/${course.id}`}>Gerer</Link>
+                <Link className="rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-bold" href={`/trainer/courses/${course.id}`}>{lessons} leçons</Link>
+                <Link className="rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-bold" href={`/trainer/courses/${course.id}`}>Gérer</Link>
               </div>
             </article>
           );
@@ -79,7 +79,7 @@ export default async function TrainerCoursesPage({ searchParams }: { searchParam
         {!pagedCourses.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-xl font-black">Aucune formation</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">Cree une premiere formation pour ouvrir les inscriptions.</p>
+            <p className="mt-3 text-sm leading-7 text-muted">Crée une première formation pour ouvrir les inscriptions.</p>
           </article>
         ) : null}
       </div>

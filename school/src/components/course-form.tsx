@@ -42,7 +42,7 @@ export function CourseForm() {
           </div>
         </label>
         <label className="text-sm font-black">
-          Duree estimee <span className="font-medium text-muted">(facultatif)</span>
+          Durée estimée <span className="font-medium text-muted">(facultatif)</span>
           <div className="mt-2 flex gap-2">
             <input className="min-h-12 min-w-0 flex-1 rounded-lg border border-line bg-background px-4 text-sm outline-none focus:border-market" min="1" name="durationValue" placeholder="Ex. 6" type="number" />
             <select className="min-h-12 rounded-lg border border-line bg-background px-3 text-sm" name="durationUnit">

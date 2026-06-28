@@ -73,7 +73,7 @@ export function MobileMenu({
                   type="submit"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  {t("Deconnexion")}
+                  {t("Déconnexion")}
                 </button>
               </form>
             </div>

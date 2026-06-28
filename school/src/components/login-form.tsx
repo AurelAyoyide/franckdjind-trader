@@ -23,7 +23,7 @@ export function LoginForm({ errorMessage, next, reset }: LoginFormProps) {
         <h2 className="text-2xl font-black">{t("Connexion")}</h2>
       </div>
       <p className="mt-3 text-sm leading-7 text-muted">
-        {t("Utilisez l'adresse email associee a votre compte pour acceder a votre espace prive.")}
+        {t("Utilisez l'adresse email associée à votre compte pour accéder à votre espace privé.")}
       </p>
       {errorMessage ? (
         <p className="mt-4 rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm font-semibold text-danger">
@@ -32,7 +32,7 @@ export function LoginForm({ errorMessage, next, reset }: LoginFormProps) {
       ) : null}
       {reset ? (
         <p className="mt-4 rounded-lg border border-market/30 bg-market/10 p-3 text-sm font-semibold text-market">
-          {t("Mot de passe mis a jour. Tu peux te connecter.")}
+          {t("Mot de passe mis à jour. Tu peux te connecter.")}
         </p>
       ) : null}
       <input name="next" type="hidden" value={next ?? ""} />
@@ -58,10 +58,10 @@ export function LoginForm({ errorMessage, next, reset }: LoginFormProps) {
       <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
         <label className="inline-flex items-center gap-3 font-semibold text-muted">
           <input className="h-4 w-4 accent-[var(--market)]" name="rememberMe" type="checkbox" />
-          <span>{t("Rester connecte")}</span>
+          <span>{t("Rester connecté")}</span>
         </label>
         <Link className="font-black text-market hover:text-market-strong" href={localePath(locale, "/forgot-password")}>
-          {t("Mot de passe oublie")}
+          {t("Mot de passe oublié")}
         </Link>
       </div>
       <button

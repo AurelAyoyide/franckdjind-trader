@@ -23,11 +23,11 @@ export function SiteFooter({ locale }: { locale: Locale }) {
             </span>
             <span>
               <span className="block text-sm font-black uppercase tracking-[0.18em]">{siteConfig.name}</span>
-              <span className="mt-1 block text-xs font-semibold text-muted">{translate(locale, "Formation privee et suivi apprenant")}</span>
+              <span className="mt-1 block text-xs font-semibold text-muted">{translate(locale, "Formation privée et suivi apprenant")}</span>
             </span>
           </Link>
           <p className="mt-5 max-w-sm text-sm leading-7 text-muted">
-            {translate(locale, "Une plateforme privee pour structurer les parcours, accompagner les apprenants et certifier les acquis.")}
+            {translate(locale, "Une plateforme privée pour structurer les parcours, accompagner les apprenants et certifier les acquis.")}
           </p>
         </div>
 
@@ -47,12 +47,12 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <div className="rounded-lg border border-line bg-surface p-4">
             <BadgeCheck className="h-5 w-5 text-market" aria-hidden="true" />
             <p className="mt-3 text-sm font-black">{translate(locale, "Certificat public")}</p>
-            <p className="mt-2 text-xs leading-6 text-muted">{translate(locale, "Verifiez la validite d'un certificat avec son code unique.")}</p>
+            <p className="mt-2 text-xs leading-6 text-muted">{translate(locale, "Vérifiez la validité d'un certificat avec son code unique.")}</p>
             <Link
               className="mt-3 inline-flex text-sm font-black text-market decoration-market decoration-2 underline-offset-4 transition hover:text-market-strong hover:underline"
               href={localePath(locale, "/certificates/verify")}
             >
-              {translate(locale, "Acceder a la verification")}
+              {translate(locale, "Accéder à la vérification")}
             </Link>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -81,8 +81,8 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       </div>
       <div className="border-t border-line py-4">
         <div className="site-shell flex flex-col gap-2 text-xs font-semibold text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} {siteConfig.name}. {translate(locale, "Tous droits reserves.")}</p>
-          <p>{translate(locale, "Les acces sont ouverts apres validation du parcours.")}</p>
+          <p>&copy; {new Date().getFullYear()} {siteConfig.name}. {translate(locale, "Tous droits réservés.")}</p>
+          <p>{translate(locale, "Les accès sont ouverts après validation du parcours.")}</p>
         </div>
       </div>
     </footer>

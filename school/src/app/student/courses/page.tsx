@@ -22,7 +22,7 @@ export default async function StudentCoursesPage({ searchParams }: { searchParam
     <DashboardShell
       role="student"
       title="Mes formations"
-      description="Les formations apparaissent ici uniquement apres attribution par le formateur."
+      description="Les formations apparaissent ici uniquement après attribution par le formateur."
       action={<ButtonLink href="/access-choice" showArrow>Demander une autre formation</ButtonLink>}
     >
       <div className="grid gap-5 md:grid-cols-3">
@@ -42,8 +42,8 @@ export default async function StudentCoursesPage({ searchParams }: { searchParam
         {!pagedCourses.total ? (
           <div className="rounded-lg border border-line bg-surface p-5">
             <BookOpen className="h-5 w-5 text-market" aria-hidden="true" />
-            <h2 className="mt-6 text-xl font-black">Aucune formation attribuee</h2>
-            <p className="mt-3 text-sm leading-7 text-muted">Demande un acces, puis le formateur l&apos;activera apres verification.</p>
+            <h2 className="mt-6 text-xl font-black">Aucune formation attribuée</h2>
+            <p className="mt-3 text-sm leading-7 text-muted">Demande un accès, puis le formateur l&apos;activera après vérification.</p>
           </div>
         ) : null}
       </div>

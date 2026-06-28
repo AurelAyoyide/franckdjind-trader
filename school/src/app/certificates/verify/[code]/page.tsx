@@ -24,9 +24,9 @@ export default async function VerifyCertificatePage({
   return (
     <>
       <PageHero
-        eyebrow={t("Verification certificat")}
+        eyebrow={t("Vérification certificat")}
         title={t(validCertificate ? "Certificat valide." : "Certificat introuvable.")}
-        description={t("La verification publique ne donne acces ni aux cours ni aux donnees privees de l'apprenant.")}
+        description={t("La vérification publique ne donne accès ni aux cours ni aux données privées de l'apprenant.")}
       />
       <section className="site-shell py-12 md:py-16">
         <div className="rounded-lg border border-line bg-surface p-6 md:p-8">
@@ -44,8 +44,8 @@ export default async function VerifyCertificatePage({
           ) : (
             <>
               <BadgeX className="h-7 w-7 text-danger" aria-hidden="true" />
-              <h2 className="mt-5 text-2xl font-black">{t("Aucun certificat ne correspond a ce code.")}</h2>
-              <p className="mt-4 text-sm leading-7 text-muted">{t("Verifie le code puis recommence la recherche.")}</p>
+              <h2 className="mt-5 text-2xl font-black">{t("Aucun certificat ne correspond à ce code.")}</h2>
+              <p className="mt-4 text-sm leading-7 text-muted">{t("Vérifie le code puis recommence la recherche.")}</p>
             </>
           )}
           <div className="mt-6">

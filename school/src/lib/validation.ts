@@ -2,13 +2,13 @@ import { z } from "zod";
 
 export const registrationSchema = z
   .object({
-    firstName: z.string().min(2, "Prenom trop court").trim(),
+    firstName: z.string().min(2, "Prénom trop court").trim(),
     lastName: z.string().min(2, "Nom trop court").trim(),
     email: z.string().email("Email invalide").trim().toLowerCase(),
-    phone: z.string().min(8, "Telephone WhatsApp invalide").trim(),
+    phone: z.string().min(8, "Téléphone WhatsApp invalide").trim(),
     password: z
       .string()
-      .min(8, "Minimum 8 caracteres")
+      .min(8, "Minimum 8 caractères")
       .regex(/[A-Za-z]/, "Au moins une lettre")
       .regex(/[0-9]/, "Au moins un chiffre"),
     confirmPassword: z.string().min(8, "Confirmation requise"),
@@ -35,7 +35,7 @@ export const resetPasswordSchema = z
     token: z.string().min(20, "Token invalide"),
     password: z
       .string()
-      .min(8, "Minimum 8 caracteres")
+      .min(8, "Minimum 8 caractères")
       .regex(/[A-Za-z]/, "Au moins une lettre")
       .regex(/[0-9]/, "Au moins un chiffre"),
     confirmPassword: z.string().min(8, "Confirmation requise"),
@@ -46,13 +46,13 @@ export const resetPasswordSchema = z
   });
 
 export const profileSchema = z.object({
-  firstName: z.string().min(2, "Prenom trop court").trim(),
+  firstName: z.string().min(2, "Prénom trop court").trim(),
   lastName: z.string().min(2, "Nom trop court").trim(),
   phone: z.string().min(8, "WhatsApp requis").trim(),
 });
 
 export const trainerAccountSchema = z.object({
-  firstName: z.string().min(2, "Prenom trop court").trim(),
+  firstName: z.string().min(2, "Prénom trop court").trim(),
   lastName: z.string().min(2, "Nom trop court").trim(),
   email: z.string().email("Email invalide").trim().toLowerCase(),
   phone: z.string().min(8, "WhatsApp requis").trim(),
@@ -99,7 +99,7 @@ export const moduleDeleteSchema = z.object({ moduleId: z.string().min(1) });
 
 export const lessonCreateSchema = z.object({
   moduleId: z.string().min(1),
-  title: z.string().min(3, "Titre de lecon requis").trim(),
+  title: z.string().min(3, "Titre de leçon requis").trim(),
   type: z.enum(["VIDEO", "TEXT", "DOCUMENT", "QUIZ"]),
   content: z.string().trim().optional(),
   videoPath: z.string().trim().optional(),
@@ -172,7 +172,7 @@ export const callScheduleSchema = z.object({
 });
 
 export const callBatchScheduleSchema = callScheduleSchema.omit({ learnerId: true }).extend({
-  learnerIds: z.array(z.string().min(1)).min(1, "Selectionne au moins un apprenant"),
+  learnerIds: z.array(z.string().min(1)).min(1, "Sélectionnez au moins un apprenant"),
 });
 
 export const callUpdateSchema = callScheduleSchema.extend({
@@ -225,12 +225,12 @@ export const notificationSchema = z.object({
 export const settingsSchema = z.object({
   platformName: z.string().min(2).max(80).trim(),
   platformLogoUrl: z.string().url("URL logo invalide").optional().or(z.literal("")),
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur hexadecimale attendue"),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Couleur hexadécimale attendue"),
   smtpHost: z.string().trim().optional(),
-  smtpFrom: z.string().email("Email expediteur invalide").optional().or(z.literal("")),
-  whatsappNumber: z.string().min(8, "Numero WhatsApp invalide").trim(),
+  smtpFrom: z.string().email("Email expéditeur invalide").optional().or(z.literal("")),
+  whatsappNumber: z.string().min(8, "Numéro WhatsApp invalide").trim(),
   legalPublisherName: z.string().min(2).max(160).trim(),
-  legalContactEmail: z.string().email("Email legal invalide").optional().or(z.literal("")),
+  legalContactEmail: z.string().email("Email légal invalide").optional().or(z.literal("")),
   legalAddress: z.string().min(2).max(240).trim(),
   legalRegistrationNumber: z.string().max(120).trim().optional(),
   hostingProvider: z.string().max(240).trim().optional(),
@@ -239,7 +239,7 @@ export const settingsSchema = z.object({
   remindersEnabled: z.enum(["true", "false"]),
   reminderCooldownDays: z.coerce.number().min(1).max(90),
   reminderMaxEmailsPerWeek: z.coerce.number().min(1).max(20),
-  certificatePrefix: z.string().min(2).max(12).regex(/^[A-Z0-9_-]+$/i, "Prefixe invalide").trim(),
+  certificatePrefix: z.string().min(2).max(12).regex(/^[A-Z0-9_-]+$/i, "Préfixe invalide").trim(),
   maxPrivateUploadMb: z.coerce.number().min(1).max(2048),
   securityMaxLoginAttempts: z.coerce.number().min(1).max(20),
   securityLoginWindowMinutes: z.coerce.number().min(1).max(120),

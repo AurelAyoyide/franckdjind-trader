@@ -33,7 +33,7 @@ export async function createLearnersWorkbook(learners: LearnerExportRow[]) {
     Email: learner.email,
     Progression: `${learner.progress}%`,
     Statut: learner.status,
-    "Derniere activite": formatDate(learner.lastSeen),
+    "Dernière activité": formatDate(learner.lastSeen),
   }));
 
   const workbook = new ExcelJS.Workbook();
@@ -49,7 +49,7 @@ export async function createProgressWorkbook(learners: ProgressExportRow[]) {
     Email: learner.email,
     Formation: learner.course ?? "Toutes formations",
     Progression: learner.progress,
-    "A relancer": learner.status === "A relancer" ? "Oui" : "Non",
+    "À relancer": learner.status === "A relancer" ? "Oui" : "Non",
   }));
 
   const workbook = new ExcelJS.Workbook();

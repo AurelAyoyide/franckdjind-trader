@@ -5,10 +5,10 @@ import { translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 
 const requirements = [
-  "Confirmez votre adresse email apres l'inscription",
-  "Deposez ensuite votre demande d'acces",
-  "Gardez vos coordonnees a jour pour le suivi",
-  "Connectez-vous avec la meme adresse email",
+  "Confirmez votre adresse email après l'inscription",
+  "Déposez ensuite votre demande d'accès",
+  "Gardez vos coordonnées à jour pour le suivi",
+  "Connectez-vous avec la même adresse email",
 ];
 
 export default async function RegisterPage() {
@@ -19,12 +19,12 @@ export default async function RegisterPage() {
     <>
       <PageHero
         eyebrow={locale === "en" ? "Register" : "Inscription"}
-        title={t("Creez votre compte.")}
-        description={t("Commencez votre parcours avec un compte personnel et securise.")}
+        title={t("Créez votre compte.")}
+        description={t("Commencez votre parcours avec un compte personnel et sécurisé.")}
       />
       <section className="site-shell grid gap-8 py-12 md:py-16 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-lg border border-line bg-surface p-6">
-          <h2 className="text-2xl font-black">{t("Les prochaines etapes")}</h2>
+          <h2 className="text-2xl font-black">{t("Les prochaines étapes")}</h2>
           <div className="mt-5 grid gap-3">
             {requirements.map((item) => (
               <div className="flex items-center gap-3 rounded-lg border border-line bg-foreground/[0.04] p-3" key={item}>

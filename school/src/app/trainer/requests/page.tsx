@@ -15,8 +15,8 @@ import { approveTrainingRequestAction, rejectTrainingRequestAction } from "@/app
 export const dynamic = "force-dynamic";
 
 const noticeMessages: Record<string, string> = {
-  approved: "Demande approuvee, acces attribue et apprenant notifie.",
-  rejected: "Demande refusee.",
+  approved: "Demande approuvée, accès attribué et apprenant notifié.",
+  rejected: "Demande refusée.",
 };
 
 export default async function TrainerRequestsPage({
@@ -43,7 +43,7 @@ export default async function TrainerRequestsPage({
   const pagedRequests = paginate(trainingRequests, parsePage(pageParam));
 
   return (
-    <DashboardShell role={session.role} title="Demandes de formation" description="Validation manuelle des demandes gratuites et verification des paiements hors plateforme pour les formations payantes.">
+    <DashboardShell role={session.role} title="Demandes de formation" description="Validation manuelle des demandes gratuites et vérification des paiements hors plateforme pour les formations payantes.">
       <NoticeBanner message={notice ? noticeMessages[notice] : null} />
 
       <form method="get" className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -61,8 +61,8 @@ export default async function TrainerRequestsPage({
         >
           <option value="">Tous les statuts</option>
           <option value="PENDING">En attente</option>
-          <option value="APPROVED">Demande approuvee</option>
-          <option value="REJECTED">Demande refusee</option>
+          <option value="APPROVED">Demande approuvée</option>
+          <option value="REJECTED">Demande refusée</option>
         </select>
         <button type="submit" className="h-11 rounded-lg bg-foreground/[0.06] px-5 text-sm font-black transition hover:bg-foreground/[0.1]">
           Filtrer
@@ -99,7 +99,7 @@ export default async function TrainerRequestsPage({
                 </div>
                 <div>
                   <span className="block text-xs font-bold text-muted uppercase tracking-wider">Formation cible</span>
-                  <span className="mt-1 block text-sm font-semibold">{request.course?.title ?? "A definir par vous"}</span>
+                  <span className="mt-1 block text-sm font-semibold">{request.course?.title ?? "À définir par vous"}</span>
                 </div>
               </div>
 
@@ -108,15 +108,15 @@ export default async function TrainerRequestsPage({
                   <p className="text-sm font-black text-amber-900 dark:text-amber-300">Action requise</p>
                   <p className="mt-1 text-xs font-medium text-amber-800/70 dark:text-amber-200/70 mb-4">
                     {request.type === "FREE"
-                      ? "Demande gratuite : verifiez simplement le compte et la formation souhaitee avant d'activer l'acces."
-                      : "Formation payante : assurez-vous que le paiement hors plateforme a bien ete recu avant d'attribuer definitivement l'acces a cet apprenant."}
+                      ? "Demande gratuite : vérifiez simplement le compte et la formation souhaitée avant d'activer l'accès."
+                      : "Formation payante : assurez-vous que le paiement hors plateforme a bien été reçu avant d'attribuer définitivement l'accès à cet apprenant."}
                   </p>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <form action={approveTrainingRequestAction} className="flex flex-1 flex-col sm:flex-row sm:items-end gap-3">
                       <input name="requestId" type="hidden" value={request.id} />
                       {!request.course ? (
                         <label className="flex-1 w-full relative">
-                          <span className="mb-2 block text-xs font-black text-foreground">Selectionner la formation precise</span>
+                          <span className="mb-2 block text-xs font-black text-foreground">Sélectionner la formation précise</span>
                           <select className="h-11 w-full rounded-lg border border-amber/30 bg-background px-3 text-sm focus:border-amber focus:ring-1 focus:ring-amber" name="courseId" required>
                             <option value="">-- Assigner --</option>
                             {publishedCourses.filter((c) => c.type === (request.type === "FREE" ? "FREE" : "PAID")).map((c) => (
@@ -126,7 +126,7 @@ export default async function TrainerRequestsPage({
                         </label>
                       ) : null}
                       <button className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-market px-6 text-sm font-black text-on-market shadow-market transition hover:bg-market-strong focus:outline-none focus:ring-2 focus:ring-market focus:ring-offset-2" type="submit">
-                        <CheckCircle2 className="h-4 w-4" /> Attribuer l&apos;acces
+                        <CheckCircle2 className="h-4 w-4" /> Attribuer l&apos;accès
                       </button>
                     </form>
                     <form action={rejectTrainingRequestAction}>
@@ -144,7 +144,7 @@ export default async function TrainerRequestsPage({
         {!pagedRequests.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-xl font-black">Aucune demande</h2>
-            <p className="mt-2 text-sm leading-7 text-muted">Les nouvelles demandes d&apos;acces apparaitront ici.</p>
+            <p className="mt-2 text-sm leading-7 text-muted">Les nouvelles demandes d&apos;accès apparaîtront ici.</p>
           </article>
         ) : null}
       </div>
