@@ -36,6 +36,7 @@ Copier `.env.example` vers `.env`, puis renseigner. Prisma CLI lit `.env` pour `
 
 - `DATABASE_URL` pour PostgreSQL.
 - `SESSION_SECRET` pour les futures sessions signees.
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` pour Google Analytics 4, au format `G-XXXXXXXXXX`. Laisser vide pour desactiver Analytics.
 - `PRIVATE_UPLOAD_DIR` pour les videos et documents non publics.
 - `MAX_PRIVATE_UPLOAD_MB` pour la taille maximale des fichiers prives.
 - `PLATFORM_NAME`, `PLATFORM_LOGO_URL`, `PLATFORM_PRIMARY_COLOR` pour l'identite plateforme.

@@ -34,6 +34,7 @@ Variables importantes :
 - `CONTACT_TO_EMAIL` : adresse de réception des messages et identifiant du compte administrateur créé par le seed.
 - `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` : activent l'envoi email des messages contact et la réinitialisation de mot de passe. `CONTACT_FROM_EMAIL` doit utiliser un domaine vérifié dans Resend.
 - `NEXT_IMAGE_REMOTE_HOSTS` : allowlist des domaines servis par `next/image`.
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` : identifiant Google Analytics 4 du blog, au format `G-XXXXXXXXXX`. Laisser vide pour desactiver Analytics.
 - `BLOG_UPLOAD_DIR` : dossier persistant des images importees par l'administration. Par defaut : `./public/uploads`.
 
 La migration legacy des comptes sans hash de mot de passe desactive ces comptes par securite. Le compte administrateur est ensuite préparé par le seed, puis son mot de passe est choisi depuis « Mot de passe oublié ».

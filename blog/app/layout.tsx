@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { FormSubmissionGuard } from "@/components/form-submission-guard";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -38,6 +39,7 @@ export default async function RootLayout({
       <body>
         <ThemeProvider>
           <LocaleDocument />
+          <GoogleAnalytics enabled={!isAdminRoute} />
           <NavigationFeedback />
           <FormSubmissionGuard />
           <SiteHeader />

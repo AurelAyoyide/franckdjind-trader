@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { EnglishTranslator } from "@/components/english-translator";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import { LocaleProvider } from "@/components/locale-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -76,6 +77,7 @@ export default async function RootLayout({
       </head>
       <body>
         <LocaleProvider locale={locale}>
+          <GoogleAnalytics />
           <EnglishTranslator locale={locale} />
           <ThemeProvider>
             <SiteHeader locale={locale} />
