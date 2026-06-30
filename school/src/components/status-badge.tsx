@@ -14,22 +14,19 @@ const tones = {
   muted: "border-line bg-foreground/[0.05] text-muted",
 };
 
-const getIconForText = (text: string) => {
+const getIconKeyForText = (text: string) => {
   const norm = text.toUpperCase();
-  if (norm === "PUBLISHED" || norm === "ACTIVE" || norm === "APPROVED" || norm === "VALIDE" || norm === "ACQUIS VERIFIES") return CheckCircle2;
-  if (norm === "PENDING" || norm === "IN PROGRESS") return Clock;
-  if (norm === "DRAFT") return Edit3;
-  if (norm === "ARCHIVED") return Archive;
-  if (norm === "REJECTED" || norm === "SUSPENDED" || norm === "DELETED" || norm === "REVOQUE") return XCircle;
-  if (norm === "FREE" || norm === "GRATUITE" || norm === "PAID" || norm === "PAYANTE") return Tag;
+  if (norm === "PUBLISHED" || norm === "ACTIVE" || norm === "APPROVED" || norm === "VALIDE" || norm === "ACQUIS VERIFIES") return "success";
+  if (norm === "PENDING" || norm === "IN PROGRESS") return "clock";
+  if (norm === "DRAFT") return "draft";
+  if (norm === "ARCHIVED") return "archive";
+  if (norm === "REJECTED" || norm === "SUSPENDED" || norm === "DELETED" || norm === "REVOQUE") return "danger";
+  if (norm === "FREE" || norm === "GRATUITE" || norm === "PAID" || norm === "PAYANTE") return "tag";
   return null;
 };
 
 export function StatusBadge({ children, tone = "muted" }: StatusBadgeProps) {
-  let Icon = null;
-  if (typeof children === "string") {
-    Icon = getIconForText(children);
-  }
+  const iconKey = typeof children === "string" ? getIconKeyForText(children) : null;
 
   return (
     <span
@@ -38,7 +35,12 @@ export function StatusBadge({ children, tone = "muted" }: StatusBadgeProps) {
         tones[tone],
       )}
     >
-      {Icon && <Icon className="h-3.5 w-3.5" />}
+      {iconKey === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+      {iconKey === "clock" ? <Clock className="h-3.5 w-3.5" /> : null}
+      {iconKey === "draft" ? <Edit3 className="h-3.5 w-3.5" /> : null}
+      {iconKey === "archive" ? <Archive className="h-3.5 w-3.5" /> : null}
+      {iconKey === "danger" ? <XCircle className="h-3.5 w-3.5" /> : null}
+      {iconKey === "tag" ? <Tag className="h-3.5 w-3.5" /> : null}
       <span>{children}</span>
     </span>
   );

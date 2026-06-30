@@ -85,14 +85,14 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
   const [lessonType, setLessonType] = useState<"TEXT" | "VIDEO" | "DOCUMENT" | "QUIZ">("TEXT");
   const [learnerSearch, setLearnerSearch] = useState("");
   const storageKey = `school-builder-step-${course.id}`;
-  const [step, setStep] = useState(1);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      setStep(Number(saved));
+  const [step, setStep] = useState(() => {
+    if (typeof window === "undefined") {
+      return 1;
     }
-  }, [storageKey]);
+
+    const saved = window.localStorage.getItem(storageKey);
+    return saved ? Number(saved) : 1;
+  });
 
   useEffect(() => {
     localStorage.setItem(storageKey, String(step));
@@ -305,7 +305,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               <div className="mt-6 flex items-start gap-3 rounded-lg border border-cyan/30 bg-cyan/10 p-4 text-cyan">
                 <Info className="mt-0.5 h-5 w-5 flex-shrink-0" />
                 <p className="text-sm font-medium leading-6">
-                  Aucune leçon de type "Quiz interactif" n'est en attente de configuration. Retournez à <strong>l'étape 2 (Modules & Leçons)</strong> pour ajouter la coquille de votre leçon, puis revenez ici concevoir ses questions !
+                  Aucune leçon de type &quot;Quiz interactif&quot; n&apos;est en attente de configuration. Retournez à <strong>l&apos;étape 2 (Modules & Leçons)</strong> pour ajouter la coquille de votre leçon, puis revenez ici concevoir ses questions !
                 </p>
               </div>
             ) : null}
@@ -358,7 +358,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
                       </form>
                     </div>
                   ))}
-                  {quiz.questions.length === 0 ? <p className="text-xs text-muted">Aucune question dans ce quiz pour l'instant.</p> : null}
+                  {quiz.questions.length === 0 ? <p className="text-xs text-muted">Aucune question dans ce quiz pour l&apos;instant.</p> : null}
                 </div>
               ))}
             </div>
@@ -383,7 +383,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               <form action={setCourseStatusAction} className="flex flex-col items-center justify-center gap-4 rounded-lg border hover:border-foreground/20 border-line bg-surface p-8 transition">
                 <input name="courseId" type="hidden" value={course.id} />
                 <input name="status" type="hidden" value="ARCHIVED" />
-                <p className="text-center text-sm font-medium text-muted">L'archivage desactive les nouveaux acces mais preserve l'historique de la formation.</p>
+                <p className="text-center text-sm font-medium text-muted">L&apos;archivage desactive les nouveaux acces mais preserve l&apos;historique de la formation.</p>
                 <button className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-line bg-foreground/[0.06] px-6 text-base font-black hover:bg-foreground/[0.08]" type="submit">
                   <Archive className="h-5 w-5" /> Archiver la formation
                 </button>
@@ -420,7 +420,7 @@ export function CourseBuilderForms({ course, modules, quizLessons, configuredQui
               <div className="mt-4 border-t border-line pt-4">
                 <form action={bulkAction}>
                   <input name="courseId" type="hidden" value={course.id} />
-                  <p className="text-xs font-medium text-muted leading-5">Inscrire d'un clic tous les apprenants de la plateforme qui ne sont pas encore inscrits a cette formation.</p>
+                  <p className="text-xs font-medium text-muted leading-5">Inscrire d&apos;un clic tous les apprenants de la plateforme qui ne sont pas encore inscrits a cette formation.</p>
                   <StateMessage state={bulkState} />
                   <button
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-market/40 bg-market/10 px-4 text-sm font-black text-market transition hover:bg-market/20 disabled:opacity-60"

@@ -23,6 +23,7 @@ function readTheme(): Theme {
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
   window.localStorage.setItem("school-theme", theme);
 }
 

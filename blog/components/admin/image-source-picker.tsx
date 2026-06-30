@@ -26,7 +26,14 @@ export function ImageSourcePicker({
   allowDefault = false
 }: ImageSourcePickerProps) {
   const defaultImage = "/hero-trading-desk.png";
-  const initialMode: SourceMode = allowLibrary && (media.some((item) => item.url === initialValue) || (allowDefault && initialValue === defaultImage)) ? "library" : initialValue ? "url" : allowLibrary && (allowDefault || media.length > 0) ? "library" : "upload";
+  const initialMode: SourceMode =
+    allowLibrary && (media.some((item) => item.url === initialValue) || (allowDefault && initialValue === defaultImage))
+      ? "library"
+      : initialValue
+        ? "url"
+        : allowLibrary && (allowDefault || media.length > 0)
+          ? "library"
+          : "upload";
   const [mode, setMode] = useState<SourceMode>(initialMode);
   const [selectedMedia, setSelectedMedia] = useState(initialMode === "library" ? initialValue || (allowDefault ? defaultImage : media[0]?.url || "") : "");
   const [externalUrl, setExternalUrl] = useState(initialMode === "url" ? initialValue : "");
@@ -40,15 +47,20 @@ export function ImageSourcePicker({
     hiddenInputRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
   }, [mode, value]);
 
+  function switchToLibrary() {
+    setSelectedMedia((current) => current || (allowDefault ? defaultImage : media[0]?.url || ""));
+    setMode("library");
+  }
+
   return (
     <fieldset className="rounded-lg border border-line bg-background p-4">
       <legend className="px-1 text-sm font-black text-foreground">{label}</legend>
       <input name={sourceName} ref={hiddenInputRef} type="hidden" value={value} />
       <input name={`${sourceName}Mode`} type="hidden" value={mode} />
       <div className="mt-2 grid gap-2 sm:grid-cols-3">
-        {allowLibrary ? <SourceButton active={mode === "library"} icon={<LibraryBig className="h-4 w-4" />} label="Médiathèque" onClick={() => setMode("library")} /> : null}
+        {allowLibrary ? <SourceButton active={mode === "library"} icon={<LibraryBig className="h-4 w-4" />} label="Médiathèque" onClick={switchToLibrary} /> : null}
         <SourceButton active={mode === "upload"} icon={<Upload className="h-4 w-4" />} label="Importer" onClick={() => setMode("upload")} />
-        <SourceButton active={mode === "url"} icon={<Link2 className="h-4 w-4" />} label="Lien externe" onClick={() => setMode("url")} />
+        <SourceButton active={mode === "url"} icon={<Link2 className="h-4 w-4" />} label="Lien ou chemin" onClick={() => setMode("url")} />
       </div>
 
       {mode === "library" && allowLibrary ? (
@@ -64,24 +76,31 @@ export function ImageSourcePicker({
       {mode === "upload" ? (
         <div className="mt-4 grid gap-2">
           <label className="text-sm font-semibold text-muted" htmlFor={`${id}-upload`}>Image depuis ton appareil</label>
-          <input accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif" className="min-h-12 rounded-md border border-dashed border-line bg-surface px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market" id={`${id}-upload`} name={fileName} onChange={(event) => {
-            const file = event.target.files?.[0];
-            setUploadPreview(file ? URL.createObjectURL(file) : "");
-          }} type="file" />
+          <input
+            accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif"
+            className="min-h-12 rounded-md border border-dashed border-line bg-surface px-4 py-3 text-foreground file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-market file:px-3 file:py-2 file:text-sm file:font-black file:text-on-market"
+            id={`${id}-upload`}
+            name={fileName}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              setUploadPreview(file ? URL.createObjectURL(file) : "");
+            }}
+            type="file"
+          />
         </div>
       ) : null}
 
       {mode === "url" ? (
         <div className="mt-4 grid gap-2">
-          <label className="text-sm font-semibold text-muted" htmlFor={`${id}-url`}>URL HTTPS de l&apos;image</label>
-          <input className="min-h-12 rounded-md border border-line bg-surface px-4 text-foreground outline-none focus:border-market" id={`${id}-url`} onChange={(event) => setExternalUrl(event.target.value)} placeholder="https://..." type="url" value={externalUrl} />
+          <label className="text-sm font-semibold text-muted" htmlFor={`${id}-url`}>URL HTTPS ou chemin interne de l&apos;image</label>
+          <input className="min-h-12 rounded-md border border-line bg-surface px-4 text-foreground outline-none focus:border-market" id={`${id}-url`} onChange={(event) => setExternalUrl(event.target.value)} placeholder="https://... ou /uploads/image.jpg" type="text" value={externalUrl} />
         </div>
       ) : null}
 
       {previewUrl && (previewUrl.startsWith("/") || previewUrl.startsWith("https://") || previewUrl.startsWith("blob:")) ? (
         <div className="mt-4 overflow-hidden rounded-lg border border-line bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element -- The picker previews a local upload or an admin-supplied image URL. */}
-          <img alt="Aperçu de l’image sélectionnée" className="aspect-[16/7] w-full object-cover" src={previewUrl} />
+          <img alt="Aperçu de l'image sélectionnée" className="aspect-[16/7] w-full object-cover" src={previewUrl} />
           <p className="border-t border-line px-3 py-2 text-xs font-semibold text-muted">Aperçu de l&apos;image qui sera utilisée.</p>
         </div>
       ) : null}

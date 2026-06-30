@@ -1,6 +1,6 @@
 "use server";
 
-import { CourseStatus, UserRole } from "@prisma/client";
+import { CourseStatus, DurationUnit, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getAuthorizedSession } from "@/lib/authorization";
 import { createUniqueCourseSlug } from "@/lib/slug";
@@ -61,7 +61,7 @@ export async function createCourseAction(
         priceAmount: parsed.data.priceAmount ?? null,
         priceCurrency: parsed.data.priceCurrency ?? null,
         durationValue: parsed.data.durationValue ?? null,
-        durationUnit: (parsed.data.durationUnit?.toUpperCase() as any) ?? null,
+        durationUnit: parsed.data.durationUnit ? DurationUnit[parsed.data.durationUnit] : null,
         description: parsed.data.description,
         status: CourseStatus.DRAFT,
         trainerId: session.userId,

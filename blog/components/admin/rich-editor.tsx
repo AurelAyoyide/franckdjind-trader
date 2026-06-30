@@ -18,15 +18,20 @@ import {
   Quote,
   Redo2,
   Strikethrough,
+  Upload,
   Undo2
 } from "lucide-react";
 import { markdownLikeToHtml } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 
+type MediaOption = { url: string; title: string };
+
 type RichEditorProps = {
   name: string;
   initialValue: string;
+  media?: MediaOption[];
   placeholder?: string;
+  uploadEndpoint?: string;
 };
 
 type EditorButtonProps = {
@@ -53,9 +58,11 @@ function EditorButton({ active, label, onClick, children }: EditorButtonProps) {
   );
 }
 
-export function RichEditor({ name, initialValue, placeholder }: RichEditorProps) {
+export function RichEditor({ name, initialValue, media = [], placeholder, uploadEndpoint = "/admin/media/upload" }: RichEditorProps) {
   const [html, setHtml] = useState(markdownLikeToHtml(initialValue));
+  const [uploadingImage, setUploadingImage] = useState(false);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -120,7 +127,43 @@ export function RichEditor({ name, initialValue, placeholder }: RichEditorProps)
     const url = window.prompt("URL de l'image", "/hero-trading-desk.png");
 
     if (url) {
-      editor.chain().focus().setImage({ src: url.trim(), alt: "" }).run();
+      insertImage(url.trim());
+    }
+  }
+
+  function insertImage(url: string) {
+    if (!editor || !url) {
+      return;
+    }
+
+    editor.chain().focus().setImage({ src: url, alt: "" }).run();
+  }
+
+  async function uploadImage(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("file", file);
+    setUploadingImage(true);
+
+    try {
+      const response = await fetch(uploadEndpoint, {
+        body: formData,
+        method: "POST"
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string; url?: string } | null;
+
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error ?? "Import image impossible.");
+      }
+
+      insertImage(payload.url);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Import image impossible.");
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -137,6 +180,17 @@ export function RichEditor({ name, initialValue, placeholder }: RichEditorProps)
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-surface">
       <input name={name} ref={hiddenInputRef} type="hidden" value={html} />
+      <input
+        ref={imageInputRef}
+        accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = "";
+          void uploadImage(file);
+        }}
+        type="file"
+      />
       <div className="flex flex-wrap gap-2 border-b border-line bg-surface-strong p-2">
         <EditorButton active={editor.isActive("bold")} label="Gras" onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />
@@ -165,9 +219,31 @@ export function RichEditor({ name, initialValue, placeholder }: RichEditorProps)
         <EditorButton active={editor.isActive("link")} label="Lien" onClick={setLink}>
           <LinkIcon className="h-4 w-4" />
         </EditorButton>
-        <EditorButton label="Image" onClick={addImage}>
+        <EditorButton label="Importer une image" onClick={() => imageInputRef.current?.click()}>
+          <Upload className="h-4 w-4" />
+        </EditorButton>
+        <EditorButton label="Image par URL" onClick={addImage}>
           <ImageIcon className="h-4 w-4" />
         </EditorButton>
+        {media.length ? (
+          <select
+            aria-label="Insérer une image de la médiathèque"
+            className="h-9 max-w-56 rounded-md border border-line bg-background px-2 text-xs font-semibold text-foreground outline-none transition focus:border-market"
+            disabled={uploadingImage}
+            onChange={(event) => {
+              insertImage(event.target.value);
+              event.target.value = "";
+            }}
+            value=""
+          >
+            <option value="">Médiathèque</option>
+            {media.map((item) => (
+              <option key={item.url} value={item.url}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <EditorButton label="Annuler" onClick={() => editor.chain().focus().undo().run()}>
           <Undo2 className="h-4 w-4" />
         </EditorButton>

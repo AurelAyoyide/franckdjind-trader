@@ -1,7 +1,5 @@
 "use server";
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -9,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getAdminResource } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
 import { createId, readData, writeData, type BlogData, type StoredArticle } from "@/lib/data-store";
+import { saveUploadedImage } from "@/lib/media-storage";
 import { canManagePostAuthor, canManageResource, canPublishPosts } from "@/lib/permissions";
 import { sanitizeRichHtml, markdownLikeToHtml } from "@/lib/sanitize";
 import {
@@ -61,80 +60,9 @@ function parseFieldValue(type: string, formData: FormData, name: string) {
   return String(formData.get(name) ?? "").trim();
 }
 
-function slugifyFileName(value: string) {
-  const extension = path.extname(value).toLowerCase();
-  const base = path
-    .basename(value, extension)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
-
-  return `${base || "media"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}${extension}`;
-}
-
 async function saveUploadedMedia(file: File) {
-  if (!file.size) {
-    return "";
-  }
-
-  const maxUploadBytes = 20 * 1024 * 1024;
-  const allowedTypes = new Map<string, string[]>([
-    ["image/jpeg", [".jpg", ".jpeg"]],
-    ["image/png", [".png"]],
-    ["image/webp", [".webp"]],
-    ["image/avif", [".avif"]]
-  ]);
-  const extension = path.extname(file.name).toLowerCase();
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const mimeType = detectImageMime(bytes);
-  const allowedExtensions = mimeType ? allowedTypes.get(mimeType) : undefined;
-
-  if (file.size > maxUploadBytes || !mimeType || !allowedExtensions?.includes(extension)) {
-    return "";
-  }
-
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadsDir, { recursive: true });
-  const fileName = slugifyFileName(file.name);
-  await fs.writeFile(path.join(uploadsDir, fileName), bytes);
-
-  return `/uploads/${fileName}`;
-}
-
-function detectImageMime(bytes: Buffer) {
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-    return "image/jpeg";
-  }
-
-  if (
-    bytes.length >= 8 &&
-    bytes[0] === 0x89 &&
-    bytes[1] === 0x50 &&
-    bytes[2] === 0x4e &&
-    bytes[3] === 0x47 &&
-    bytes[4] === 0x0d &&
-    bytes[5] === 0x0a &&
-    bytes[6] === 0x1a &&
-    bytes[7] === 0x0a
-  ) {
-    return "image/png";
-  }
-
-  if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" && bytes.subarray(8, 12).toString("ascii") === "WEBP") {
-    return "image/webp";
-  }
-
-  if (bytes.length >= 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp") {
-    const brand = bytes.subarray(8, 12).toString("ascii");
-    if (brand === "avif" || brand === "avis") {
-      return "image/avif";
-    }
-  }
-
-  return undefined;
+  const result = await saveUploadedImage(file);
+  return result.ok ? result.image.url : "";
 }
 
 function getCollection(data: BlogData, collection: keyof BlogData) {

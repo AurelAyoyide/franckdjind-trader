@@ -24,12 +24,12 @@ export function sanitizeRichHtml(value: string) {
     ],
     allowedAttributes: {
       a: ["href", "target", "rel"],
-      img: ["src", "alt", "title", "width", "height"]
+      img: ["src", "alt", "title", "width", "height", "loading"]
     },
     allowedSchemes: ["http", "https", "mailto"],
     allowedSchemesByTag: {
       a: ["http", "https", "mailto"],
-      img: ["http", "https"]
+      img: ["https"]
     },
     transformTags: {
       a: (_tagName, attribs) => ({
@@ -37,7 +37,18 @@ export function sanitizeRichHtml(value: string) {
         attribs: {
           ...attribs,
           rel: "noopener noreferrer",
-          target: attribs.href?.startsWith("/") ? "" : "_blank"
+          ...(attribs.href?.startsWith("/") ? {} : { target: "_blank" })
+        }
+      }),
+      img: (_tagName, attribs) => ({
+        tagName: "img",
+        attribs: {
+          alt: attribs.alt ?? "",
+          loading: "lazy",
+          src: attribs.src ?? "",
+          ...(attribs.title ? { title: attribs.title } : {}),
+          ...(attribs.width ? { width: attribs.width } : {}),
+          ...(attribs.height ? { height: attribs.height } : {})
         }
       })
     }

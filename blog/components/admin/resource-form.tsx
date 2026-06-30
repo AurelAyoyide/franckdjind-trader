@@ -109,7 +109,7 @@ export function ResourceForm({ config, item, choices }: ResourceFormProps) {
         }
 
         if (field.name === "url" && config.slug === "media") {
-          return <ImageSourcePicker allowDefault fileName="mediaFile" initialValue={fieldValue(item, field.name)} key={field.name} label={field.label} sourceName="url" />;
+          return <ImageSourcePicker allowDefault={false} allowLibrary={false} fileName="mediaFile" initialValue={fieldValue(item, field.name)} key={field.name} label={field.label} sourceName="url" />;
         }
 
         if (field.name === "imageUrl" && config.slug === "links") {
@@ -148,6 +148,7 @@ export function ResourceForm({ config, item, choices }: ResourceFormProps) {
             {field.name === "content" ? (
               <RichEditor
                 initialValue={fieldValue(item, field.name)}
+                media={choices?.media ?? []}
                 name={field.name}
                 placeholder={`Redige le contenu de ce ${config.singular}...`}
               />

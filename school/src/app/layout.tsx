@@ -10,13 +10,25 @@ import "./globals.css";
 const themeBootstrapScript = `
   try {
     const theme = window.localStorage.getItem("school-theme");
-    document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
+    const resolvedTheme = theme === "dark" ? "dark" : "light";
+    document.documentElement.dataset.theme = resolvedTheme;
+    document.documentElement.style.colorScheme = resolvedTheme;
   } catch {
     document.documentElement.dataset.theme = "light";
+    document.documentElement.style.colorScheme = "light";
   }
 `;
 
+function metadataBaseUrl() {
+  try {
+    return new URL(process.env.APP_URL ?? "http://localhost:3000");
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
+  metadataBase: metadataBaseUrl(),
   title: {
     default: "Bono School — Plateforme privée de formation",
     template: "%s | Bono School",

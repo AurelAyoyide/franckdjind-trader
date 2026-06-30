@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, RGB, StandardFonts, rgb } from "pdf-lib";
 import { randomUUID } from "node:crypto";
 import { EnrollmentStatus } from "@prisma/client";
 import * as QRCode from "qrcode";
@@ -54,7 +54,7 @@ export async function generateCertificatePdf(certificate: CertificatePdfInput) {
     borderWidth: 2,
   });
 
-  const drawCenteredText = (text: string, y: number, font: any, size: number, color: any) => {
+  const drawCenteredText = (text: string, y: number, font: PDFFont, size: number, color: RGB) => {
     const textWidth = font.widthOfTextAtSize(text, size);
     page.drawText(text, { x: (width - textWidth) / 2, y, size, font, color });
   };
@@ -97,7 +97,7 @@ export async function generateCertificatePdf(certificate: CertificatePdfInput) {
       height: qrSize,
     });
     drawCenteredText(`ID: ${certificate.code}`, 45, titleFont, 10, mutedColor);
-  } catch (error) {
+  } catch {
     drawCenteredText(`Vérification : ${verificationUrl}`, 80, bodyFont, 11, mutedColor);
     drawCenteredText(`ID: ${certificate.code}`, 60, titleFont, 11, mutedColor);
   }

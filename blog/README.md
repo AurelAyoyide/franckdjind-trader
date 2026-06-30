@@ -34,6 +34,7 @@ Variables importantes :
 - `CONTACT_TO_EMAIL` : adresse de réception des messages et identifiant du compte administrateur créé par le seed.
 - `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` : activent l'envoi email des messages contact et la réinitialisation de mot de passe. `CONTACT_FROM_EMAIL` doit utiliser un domaine vérifié dans Resend.
 - `NEXT_IMAGE_REMOTE_HOSTS` : allowlist des domaines servis par `next/image`.
+- `BLOG_UPLOAD_DIR` : dossier persistant des images importees par l'administration. Par defaut : `./public/uploads`.
 
 La migration legacy des comptes sans hash de mot de passe desactive ces comptes par securite. Le compte administrateur est ensuite préparé par le seed, puis son mot de passe est choisi depuis « Mot de passe oublié ».
 
@@ -46,7 +47,7 @@ Le projet est prevu pour tourner derriere un proxy inverse (Nginx ou Caddy) : Ne
 3. Validez et construisez : `npm run typecheck`, `npm run lint`, `npm run build`.
 4. Lancez `npm run start` avec un gestionnaire de processus (systemd ou PM2) et configurez le proxy HTTPS vers `http://127.0.0.1:3001`.
 
-Des modèles prêts à adapter sont disponibles dans `deploy/bonotrading.service.example` et `deploy/nginx-bonotrading.conf.example`. Conservez `public/uploads` sur un stockage persistant et incluez-le dans les sauvegardes du VPS, au même titre que PostgreSQL.
+Des modèles prêts à adapter sont disponibles dans `deploy/bonotrading.service.example` et `deploy/nginx-bonotrading.conf.example`. Conservez le dossier configuré par `BLOG_UPLOAD_DIR` sur un stockage persistant et incluez-le dans les sauvegardes du VPS, au même titre que PostgreSQL.
 
 Ne copiez jamais le fichier `.env` local sur le VPS sans remplacer ses valeurs par des secrets de production. Apres deploiement, testez le contact, la newsletter et la reinitialisation de mot de passe avec une vraie boite mail.
 

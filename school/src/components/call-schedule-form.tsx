@@ -52,7 +52,7 @@ export function CallScheduleForm({ learners }: { learners: LearnerOption[] }) {
               </option>
             ))}
           </select>
-          <span className="mt-2 block text-xs text-muted">Maintiens Ctrl/Cmd pour annuler la selection d'un apprenant specifique.</span>
+          <span className="mt-2 block text-xs text-muted">Maintiens Ctrl/Cmd pour annuler la selection d&apos;un apprenant specifique.</span>
           {state.errors?.learnerIds ? <span className="mt-2 block text-xs text-danger">{state.errors.learnerIds[0]}</span> : null}
         </div>
         <label className="text-sm font-black">

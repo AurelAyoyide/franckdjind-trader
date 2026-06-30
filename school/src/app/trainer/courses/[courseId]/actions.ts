@@ -2,10 +2,10 @@
 
 import { randomUUID } from "node:crypto";
 import { execFile as execFileCallback } from "node:child_process";
-import { mkdir, unlink, writeFile, stat } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { AccountStatus, CourseStatus, EnrollmentStatus, FileAssetType, LessonType, UserRole } from "@prisma/client";
+import { AccountStatus, CourseStatus, DurationUnit, EnrollmentStatus, FileAssetType, LessonType, Prisma, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthorizedSession } from "@/lib/authorization";
@@ -454,6 +454,65 @@ async function removePrivateLessonFile(relativePath: string) {
   }
 }
 
+async function validatePreuploadedLessonFile(fileName: string, type: LessonType) {
+  if (type !== LessonType.VIDEO && type !== LessonType.DOCUMENT) {
+    return { ok: false as const, message: "Aucun fichier privé n'est attendu pour ce type de leçon." };
+  }
+
+  if (path.basename(fileName) !== fileName) {
+    return { ok: false as const, message: "Fichier pré-uploadé invalide." };
+  }
+
+  const privateRoot = getPrivateUploadRoot();
+  const filePath = path.resolve(privateRoot, fileName);
+
+  if (filePath === privateRoot || !filePath.startsWith(`${privateRoot}${path.sep}`)) {
+    return { ok: false as const, message: "Chemin de fichier pré-uploadé non autorisé." };
+  }
+
+  const extension = getSafeExtension(fileName, type);
+
+  if (!extension) {
+    await removePrivateLessonFile(fileName);
+    return { ok: false as const, message: "Type de fichier non autorisé pour cette leçon." };
+  }
+
+  let fileStat;
+  try {
+    fileStat = await stat(/*turbopackIgnore: true*/ filePath);
+  } catch {
+    return { ok: false as const, message: "Fichier pré-uploadé introuvable." };
+  }
+
+  const maxMegabytes = await getNumberSetting("maxPrivateUploadMb");
+  const maxBytes = maxMegabytes * 1024 * 1024;
+
+  if (!fileStat.isFile() || fileStat.size <= 0) {
+    await removePrivateLessonFile(fileName);
+    return { ok: false as const, message: "Fichier pré-uploadé invalide." };
+  }
+
+  if (fileStat.size > maxBytes) {
+    await removePrivateLessonFile(fileName);
+    return { ok: false as const, message: `Fichier trop lourd. Limite: ${maxMegabytes} Mo.` };
+  }
+
+  const buffer = await readFile(/*turbopackIgnore: true*/ filePath);
+
+  if (!hasFileSignature(buffer, extension)) {
+    await removePrivateLessonFile(fileName);
+    return { ok: false as const, message: "Le contenu du fichier ne correspond pas au format annoncé." };
+  }
+
+  return {
+    ok: true as const,
+    relativePath: fileName,
+    mimeType: mimeTypeForExtension(extension),
+    size: fileStat.size,
+    durationSeconds: type === LessonType.VIDEO ? getVideoDurationSecondsFromBuffer(buffer, extension) : null,
+  };
+}
+
 export async function updateCourseAction(
   _state: BuilderActionState,
   formData: FormData,
@@ -490,7 +549,7 @@ export async function updateCourseAction(
       priceAmount: parsed.data.priceAmount ?? null,
       priceCurrency: parsed.data.priceCurrency ?? null,
       durationValue: parsed.data.durationValue ?? null,
-      durationUnit: (parsed.data.durationUnit?.toUpperCase() as any) ?? null,
+      durationUnit: parsed.data.durationUnit ? DurationUnit[parsed.data.durationUnit] : null,
       description: parsed.data.description,
     },
   });
@@ -712,20 +771,7 @@ export async function createLessonAction(
 
   let upload = null;
   if (uploadedFileName) {
-    const p = path.resolve(getPrivateUploadRoot(), uploadedFileName);
-    try {
-      const st = await stat(p);
-      const ext = path.extname(uploadedFileName).toLowerCase();
-      upload = {
-        ok: true as const,
-        relativePath: uploadedFileName,
-        mimeType: mimeTypeForExtension(ext as any) || "application/octet-stream",
-        size: st.size,
-        durationSeconds: null,
-      };
-    } catch {
-      return { ok: false, message: "Fichier pré-uploadé introuvable." };
-    }
+    upload = await validatePreuploadedLessonFile(uploadedFileName, lessonType);
   } else if (uploadedFile instanceof File && uploadedFile.size > 0) {
     upload = await savePrivateLessonFile(uploadedFile, lessonType);
   }
@@ -1091,7 +1137,7 @@ export async function bulkAssignLearnersAction(
     return { ok: false, message: "Tous les apprenants sont déjà inscrits à cette formation." };
   }
 
-  const operations: any[] = eligibleLearners.flatMap((learner) => [
+  const operations: Prisma.PrismaPromise<unknown>[] = eligibleLearners.flatMap((learner) => [
     prisma.enrollment.create({
       data: {
         learnerId: learner.id,

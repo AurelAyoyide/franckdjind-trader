@@ -1,12 +1,6 @@
 import {
   AccountStatus,
-  CommunityPostStatus,
-  CourseStatus,
-  CourseType,
-  LessonType,
-  LiveStatus,
   PrismaClient,
-  QuizQuestionType,
   UserRole,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";

@@ -1,4 +1,4 @@
-import { AccountStatus, CourseStatus, EnrollmentStatus, UserRole } from "@prisma/client";
+import { AccountStatus, CallStatus, CourseStatus, EnrollmentStatus, LiveStatus, TrainingRequestStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type TrainerDataScope = {
@@ -40,6 +40,10 @@ function percent(done: number, total: number) {
 
 function statusLabel(status: string) {
   return status.replaceAll("_", " ");
+}
+
+function enumValue<T extends Record<string, string>>(values: T, value?: string) {
+  return value && Object.values(values).includes(value) ? value as T[keyof T] : undefined;
 }
 
 function formatDuration(value?: number | null, unit?: string | null) {
@@ -438,7 +442,7 @@ export async function getTrainerLiveAnnouncements(
         : {
           OR: [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }],
         }),
-      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(enumValue(LiveStatus, filters?.status) ? { status: enumValue(LiveStatus, filters?.status) } : {}),
       ...(filters?.q ? {
         OR: [
           ...(scope.isAdmin ? [] : [{ creatorId: scope.userId }, { course: { trainerId: scope.userId } }]),
@@ -532,7 +536,7 @@ export async function getTrainerCourses(
     where: {
       ...courseScope(scope),
       ...(filters?.q ? { title: { contains: filters.q, mode: "insensitive" } } : {}),
-      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(enumValue(CourseStatus, filters?.status) ? { status: enumValue(CourseStatus, filters?.status) } : {}),
     },
     include: {
       modules: { include: { lessons: true } },
@@ -580,7 +584,7 @@ export async function getTrainingRequests(
   return prisma.trainingRequest.findMany({
     where: {
       ...requestScope(scope),
-      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(enumValue(TrainingRequestStatus, filters?.status) ? { status: enumValue(TrainingRequestStatus, filters?.status) } : {}),
       ...(filters?.q ? {
         learner: {
           OR: [
@@ -666,7 +670,7 @@ export async function getTrainerCalls(
   return prisma.callSchedule.findMany({
     where: {
       ...(scope && !scope.isAdmin ? { trainerId: scope.userId } : {}),
-      ...(filters?.status ? { status: filters.status as any } : {}),
+      ...(enumValue(CallStatus, filters?.status) ? { status: enumValue(CallStatus, filters?.status) } : {}),
       ...(filters?.q ? {
         OR: [
           { title: { contains: filters.q, mode: "insensitive" } },

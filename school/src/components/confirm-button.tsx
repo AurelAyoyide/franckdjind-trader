@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 
 export function ConfirmButton({
@@ -15,16 +15,6 @@ export function ConfirmButton({
 }) {
     const { pending } = useFormStatus();
     const [isOpen, setIsOpen] = useState(false);
-    const [wasPending, setWasPending] = useState(false);
-
-    useEffect(() => {
-        if (pending) {
-            setWasPending(true);
-        } else if (wasPending && !pending) {
-            setIsOpen(false);
-            setWasPending(false);
-        }
-    }, [pending, wasPending]);
 
     return (
         <>
@@ -70,6 +60,7 @@ export function ConfirmButton({
                                     type="submit"
                                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-danger py-3 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                                     disabled={pending}
+                                    onClick={() => setIsOpen(false)}
                                 >
                                     {pending ? (
                                         "..."
