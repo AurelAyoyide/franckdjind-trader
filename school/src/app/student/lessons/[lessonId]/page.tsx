@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Download, FileText, Play, ShieldCheck } from "lucide-react";
+import { Download, FileText, ShieldCheck } from "lucide-react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { NoticeBanner } from "@/components/notice-banner";
 import { StatusBadge } from "@/components/status-badge";
@@ -86,12 +86,6 @@ export default async function StudentLessonPage({
             Marque la leçon comme terminée quand tu as fini. La suite du parcours se débloque selon ta progression.
           </p>
           <div className="mt-5 grid gap-3">
-            {lesson.kind === "VIDEO" ? (
-              <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market" href={`/api/videos/${lesson.id}`}>
-                <Play className="h-4 w-4" aria-hidden="true" />
-                Ouvrir le flux video
-              </a>
-            ) : null}
             {lesson.kind === "DOCUMENT" && lesson.documentPath ? (
               <a
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-market px-4 text-sm font-black text-on-market shadow-market"

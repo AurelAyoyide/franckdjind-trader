@@ -61,6 +61,78 @@ function videoContentType(filePath: string) {
   return "video/mp4";
 }
 
+type AuditMetadata = Record<string, string | number | boolean | null>;
+
+function firstHeaderValue(value: string | null) {
+  return value?.split(",")[0]?.trim() || null;
+}
+
+function clippedHeader(value: string | null, maxLength = 240) {
+  if (!value) {
+    return null;
+  }
+
+  return value.length > maxLength ? value.slice(0, maxLength) : value;
+}
+
+function requestTraceMetadata(request: NextRequest, extra: AuditMetadata = {}) {
+  const metadata: AuditMetadata = { ...extra };
+  const ip =
+    firstHeaderValue(request.headers.get("cf-connecting-ip")) ??
+    firstHeaderValue(request.headers.get("x-real-ip")) ??
+    firstHeaderValue(request.headers.get("x-forwarded-for"));
+  const userAgent = clippedHeader(request.headers.get("user-agent"));
+  const referer = clippedHeader(request.headers.get("referer"), 500);
+  const secFetchSite = request.headers.get("sec-fetch-site");
+
+  if (ip) {
+    metadata.ip = ip;
+  }
+
+  if (userAgent) {
+    metadata.userAgent = userAgent;
+  }
+
+  if (referer) {
+    metadata.referer = referer;
+  }
+
+  if (secFetchSite) {
+    metadata.secFetchSite = secFetchSite;
+  }
+
+  return metadata;
+}
+
+function isCrossSiteRequest(request: NextRequest) {
+  return request.headers.get("sec-fetch-site") === "cross-site";
+}
+
+function protectedVideoHeaders({
+  filePath,
+  lessonId,
+  mimeType,
+  watermark,
+}: {
+  filePath: string;
+  lessonId: string;
+  mimeType: string;
+  watermark: string;
+}) {
+  return {
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "private, no-store, max-age=0",
+    "Content-Disposition": `inline; filename="${lessonId}${path.extname(filePath).toLowerCase()}"`,
+    "Content-Type": mimeType,
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "Pragma": "no-cache",
+    "Referrer-Policy": "same-origin",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Video-Watermark": watermark,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ lessonId: string }> },
@@ -73,10 +145,22 @@ export async function GET(
       data: {
         action: "VIDEO_ACCESS_DENIED",
         target: lessonId,
-        metadata: { reason: "NO_SESSION" },
+        metadata: requestTraceMetadata(request, { reason: "NO_SESSION" }),
       },
     });
     return NextResponse.json({ error: "Authentification requise" }, { status: 401 });
+  }
+
+  if (isCrossSiteRequest(request)) {
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "VIDEO_ACCESS_DENIED",
+        target: lessonId,
+        metadata: requestTraceMetadata(request, { reason: "CROSS_SITE_REQUEST" }),
+      },
+    });
+    return NextResponse.json({ error: "Flux video non autorise" }, { status: 403 });
   }
 
   const [user, lesson] = await Promise.all([
@@ -109,6 +193,14 @@ export async function GET(
   ]);
 
   if (!user) {
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "VIDEO_ACCESS_DENIED",
+        target: lessonId,
+        metadata: requestTraceMetadata(request, { reason: "UNKNOWN_ACCOUNT" }),
+      },
+    });
     return NextResponse.json({ error: "Compte non autorise" }, { status: 403 });
   }
 
@@ -134,7 +226,7 @@ export async function GET(
           actorId: session.userId,
           action: "VIDEO_ACCESS_DENIED",
           target: lessonId,
-          metadata: { reason: "LOCKED_LESSON" },
+          metadata: requestTraceMetadata(request, { reason: "LOCKED_LESSON" }),
         },
       });
       return NextResponse.json({ error: "Lecon verrouillee" }, { status: 403 });
@@ -152,7 +244,7 @@ export async function GET(
         actorId: session.userId,
         action: "VIDEO_ACCESS_DENIED",
         target: lessonId,
-        metadata: { reason: "NO_ENROLLMENT" },
+        metadata: requestTraceMetadata(request, { reason: "NO_ENROLLMENT" }),
       },
     });
     return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
@@ -168,6 +260,14 @@ export async function GET(
   const resolved = resolvePrivateFile(filePath);
 
   if (!resolved) {
+    await prisma.auditLog.create({
+      data: {
+        actorId: session.userId,
+        action: "VIDEO_ACCESS_DENIED",
+        target: lessonId,
+        metadata: requestTraceMetadata(request, { reason: "INVALID_PATH" }),
+      },
+    });
     return NextResponse.json({ error: "Chemin video non autorise" }, { status: 403 });
   }
 
@@ -180,6 +280,12 @@ export async function GET(
 
   const range = parseRange(request.headers.get("range"), fileStat.size);
   const mimeType = videoContentType(filePath);
+  const headers = protectedVideoHeaders({
+    filePath,
+    lessonId,
+    mimeType,
+    watermark: user.email,
+  });
 
   if (!range || range.start === 0) {
     await prisma.auditLog.create({
@@ -187,7 +293,11 @@ export async function GET(
         actorId: session.userId,
         action: "VIDEO_ACCESSED",
         target: lessonId,
-        metadata: { range: range ? `${range.start}-${range.end}` : "full" },
+        metadata: requestTraceMetadata(request, {
+          bytes: fileStat.size,
+          range: range ? `${range.start}-${range.end}` : "full",
+          watermark: user.email,
+        }),
       },
     });
   }
@@ -197,11 +307,9 @@ export async function GET(
     return new Response(Readable.toWeb(stream) as ReadableStream, {
       status: 206,
       headers: {
-        "Accept-Ranges": "bytes",
+        ...headers,
         "Content-Length": String(range.end - range.start + 1),
         "Content-Range": `bytes ${range.start}-${range.end}/${fileStat.size}`,
-        "Content-Type": mimeType,
-        "X-Video-Watermark": user.email,
       },
     });
   }
@@ -209,10 +317,8 @@ export async function GET(
   const stream = createReadStream(/*turbopackIgnore: true*/ resolved);
   return new Response(Readable.toWeb(stream) as ReadableStream, {
     headers: {
-      "Accept-Ranges": "bytes",
+      ...headers,
       "Content-Length": String(fileStat.size),
-      "Content-Type": mimeType,
-      "X-Video-Watermark": user.email,
     },
   });
 }

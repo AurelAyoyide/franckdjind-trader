@@ -7,6 +7,22 @@ import { paginate, parsePage } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
+function formatMetadata(metadata: unknown) {
+  if (!metadata) {
+    return null;
+  }
+
+  if (typeof metadata === "string") {
+    return metadata;
+  }
+
+  try {
+    return JSON.stringify(metadata, null, 2);
+  } catch {
+    return null;
+  }
+}
+
 export default async function AdminLogsPage({
   searchParams,
 }: {
@@ -40,13 +56,24 @@ export default async function AdminLogsPage({
         </button>
       </form>
       <div className="grid gap-3">
-        {pagedLogs.items.map((log) => (
-          <article className="rounded-lg border border-line bg-surface p-5" key={log.id}>
-            <h2 className="text-lg font-black">{log.action}</h2>
-            <p className="mt-2 text-sm text-muted">{log.actor ? fullName(log.actor) : "Systeme"} - {log.target}</p>
-            <p className="mt-2 font-mono text-xs text-muted">{formatDate(log.createdAt)}</p>
-          </article>
-        ))}
+        {pagedLogs.items.map((log) => {
+          const metadata = formatMetadata(log.metadata);
+
+          return (
+            <article className="rounded-lg border border-line bg-surface p-5" key={log.id}>
+              <h2 className="text-lg font-black">{log.action}</h2>
+              <p className="mt-2 text-sm text-muted">
+                {log.actor ? `${fullName(log.actor)} (${log.actor.email})` : "Systeme"} - {log.target}
+              </p>
+              <p className="mt-2 font-mono text-xs text-muted">{formatDate(log.createdAt)}</p>
+              {metadata ? (
+                <pre className="mt-3 max-h-52 overflow-auto rounded-lg border border-line bg-background p-3 text-xs leading-6 text-muted">
+                  {metadata}
+                </pre>
+              ) : null}
+            </article>
+          );
+        })}
         {!pagedLogs.total ? (
           <article className="rounded-lg border border-line bg-surface p-5">
             <h2 className="text-lg font-black">Aucun log</h2>
