@@ -22,6 +22,7 @@ import {
   Undo2
 } from "lucide-react";
 import { markdownLikeToHtml } from "@/lib/rich-text";
+import { formatUploadLimit, maxImageUploadBytes } from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
 
 type MediaOption = { url: string; title: string };
@@ -141,6 +142,11 @@ export function RichEditor({ name, initialValue, media = [], placeholder, upload
 
   async function uploadImage(file: File | undefined) {
     if (!file) {
+      return;
+    }
+
+    if (file.size > maxImageUploadBytes) {
+      window.alert(`Image trop lourde. Choisis une image de ${formatUploadLimit()} maximum.`);
       return;
     }
 

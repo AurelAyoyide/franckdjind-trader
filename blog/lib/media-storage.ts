@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { maxImageUploadBytes, formatUploadLimit } from "@/lib/upload-limits";
 
 const allowedImageTypes = new Map<string, string[]>([
   ["image/jpeg", [".jpg", ".jpeg"]],
@@ -7,8 +8,6 @@ const allowedImageTypes = new Map<string, string[]>([
   ["image/webp", [".webp"]],
   ["image/avif", [".avif"]]
 ]);
-
-export const maxImageUploadBytes = 5 * 1024 * 1024;
 
 export type SavedImage = {
   fileName: string;
@@ -114,7 +113,7 @@ export async function saveUploadedImage(file: File): Promise<
   }
 
   if (file.size > maxImageUploadBytes) {
-    return { ok: false, message: "Image trop lourde. Limite: 5 Mo." };
+    return { ok: false, message: `Image trop lourde. Limite: ${formatUploadLimit()}.` };
   }
 
   const extension = path.extname(file.name).toLowerCase();

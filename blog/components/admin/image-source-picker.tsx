@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { ImagePlus, Link2, LibraryBig, Upload } from "lucide-react";
+import { formatUploadLimit, maxImageUploadBytes } from "@/lib/upload-limits";
 
 type ImageOption = { url: string; title: string };
 type ImageSourcePickerProps = {
@@ -38,6 +39,7 @@ export function ImageSourcePicker({
   const [selectedMedia, setSelectedMedia] = useState(initialMode === "library" ? initialValue || (allowDefault ? defaultImage : media[0]?.url || "") : "");
   const [externalUrl, setExternalUrl] = useState(initialMode === "url" ? initialValue : "");
   const [uploadPreview, setUploadPreview] = useState("");
+  const [uploadError, setUploadError] = useState("");
   const id = useId();
   const value = mode === "library" ? selectedMedia : mode === "url" ? externalUrl : "";
   const previewUrl = mode === "upload" ? uploadPreview : value;
@@ -83,10 +85,21 @@ export function ImageSourcePicker({
             name={fileName}
             onChange={(event) => {
               const file = event.target.files?.[0];
+              setUploadError("");
+
+              if (file && file.size > maxImageUploadBytes) {
+                event.target.value = "";
+                setUploadPreview("");
+                setUploadError(`Image trop lourde. Limite: ${formatUploadLimit()}.`);
+                return;
+              }
+
               setUploadPreview(file ? URL.createObjectURL(file) : "");
             }}
             type="file"
           />
+          <p className="text-xs leading-5 text-muted-strong">Formats acceptes : JPG, PNG, WebP, AVIF. Taille maximum : {formatUploadLimit()}.</p>
+          {uploadError ? <p className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-semibold text-danger">{uploadError}</p> : null}
         </div>
       ) : null}
 
