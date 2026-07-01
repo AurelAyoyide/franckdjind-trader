@@ -7,11 +7,11 @@ const remoteImageHosts = (process.env.NEXT_IMAGE_REMOTE_HOSTS ?? "")
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https:",
+  "connect-src 'self' https: https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com",
   "media-src 'self' https:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -20,6 +20,11 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb"
+    }
+  },
   poweredByHeader: false,
   images: {
     remotePatterns: remoteImageHosts.map((hostname) => ({

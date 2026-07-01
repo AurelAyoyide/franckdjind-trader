@@ -6,12 +6,12 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV !== "production" ? "'unsafe-eval'" : ""}`.trim(),
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com ${process.env.NODE_ENV !== "production" ? "'unsafe-eval'" : ""}`.trim(),
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com",
   "media-src 'self' https:",
 ].join("; ");
 
