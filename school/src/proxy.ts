@@ -20,6 +20,13 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-school-pathname", normalizedPath);
   requestHeaders.set("x-school-search", normalizedSearch);
 
+  if (pathLocale.locale !== "en" && normalizedPath === "/") {
+    const destination = request.nextUrl.clone();
+    destination.pathname = "/home.html";
+    destination.search = normalizedSearch;
+    return NextResponse.rewrite(destination, { request: { headers: requestHeaders } });
+  }
+
   if (pathLocale.locale !== "en") {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }

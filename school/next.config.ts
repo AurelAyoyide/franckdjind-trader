@@ -15,6 +15,33 @@ const contentSecurityPolicy = [
   "media-src 'self' https:",
 ].join("; ");
 
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
+];
+
+const privateRobotsHeader = {
+  key: "X-Robots-Tag",
+  value: "noindex, nofollow, noarchive, nosnippet",
+};
+
+const privateIsolationHeaders = [
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "Origin-Agent-Cluster", value: "?1" },
+];
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -25,27 +52,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
-        headers: [
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet" },
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
-          { key: "Origin-Agent-Cluster", value: "?1" },
-          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
-          { key: "Content-Security-Policy", value: contentSecurityPolicy },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
-          },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains",
-          },
-        ],
+        source: "/:path*",
+        headers: securityHeaders,
       },
+      ...["/admin/:path*", "/trainer/:path*", "/student/:path*", "/api/:path*"].map((source) => ({
+        source,
+        headers: [privateRobotsHeader, ...privateIsolationHeaders],
+      })),
     ];
   },
 };

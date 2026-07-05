@@ -19,6 +19,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     getRequestPathname(),
     getRequestSearch(),
   ]);
+  const themeLabel = translate(locale, "Changer le theme");
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-background/86 backdrop-blur-xl">
@@ -51,7 +52,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <ThemeToggle />
+          <ThemeToggle label={themeLabel} />
           <LanguageSwitch currentPathname={currentPathname} currentSearch={currentSearch} locale={locale} />
           {session ? (
             <>
@@ -65,7 +66,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                   type="submit"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  {translate(locale, "Déconnexion")}
+                  {translate(locale, "Deconnexion")}
                 </button>
               </form>
             </>
@@ -82,7 +83,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           )}
         </div>
 
-        <MobileMenu currentPathname={currentPathname} currentSearch={currentSearch} session={session ? { role: session.role } : null} />
+        <MobileMenu
+          currentPathname={currentPathname}
+          currentSearch={currentSearch}
+          locale={locale}
+          session={session ? { role: session.role } : null}
+        />
       </div>
     </header>
   );

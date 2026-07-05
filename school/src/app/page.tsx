@@ -53,6 +53,8 @@ export default async function HomePage() {
           alt=""
           fill
           priority
+          fetchPriority="high"
+          decoding="sync"
           sizes="100vw"
           className="absolute inset-0 -z-20 object-cover"
         />

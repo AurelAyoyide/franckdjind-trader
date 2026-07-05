@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/page-hero";
 import { CertificateLookupForm } from "@/components/certificate-lookup-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 
@@ -16,7 +17,9 @@ export default async function CertificateLookupPage() {
       />
       <section className="site-shell py-12 md:py-16">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <CertificateLookupForm />
+          <LocaleProvider locale={locale}>
+            <CertificateLookupForm />
+          </LocaleProvider>
           <div className="rounded-lg border border-line bg-surface p-6">
             <h2 className="text-2xl font-black">{t("Ce que tu peux confirmer")}</h2>
             <div className="mt-5 grid gap-3 text-sm font-semibold text-muted">

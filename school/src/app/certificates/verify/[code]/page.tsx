@@ -1,5 +1,6 @@
 import { BadgeCheck, BadgeX } from "lucide-react";
 import { CertificateLookupForm } from "@/components/certificate-lookup-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { PageHero } from "@/components/page-hero";
 import { StatusBadge } from "@/components/status-badge";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -53,7 +54,9 @@ export default async function VerifyCertificatePage({
           </div>
         </div>
         <div className="mt-6">
-          <CertificateLookupForm initialCode={code} />
+          <LocaleProvider locale={locale}>
+            <CertificateLookupForm initialCode={code} />
+          </LocaleProvider>
         </div>
       </section>
     </>

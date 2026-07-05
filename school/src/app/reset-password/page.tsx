@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/page-hero";
 import { ResetPasswordForm } from "@/components/reset-password-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { ButtonLink } from "@/components/ui/button-link";
 import { localePath, translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -22,7 +23,9 @@ export default async function ResetPasswordPage({
       />
       <section className="site-shell py-12 md:py-16">
         {token ? (
-          <ResetPasswordForm token={token} />
+          <LocaleProvider locale={locale}>
+            <ResetPasswordForm token={token} />
+          </LocaleProvider>
         ) : (
           <div className="max-w-2xl rounded-lg border border-line bg-surface p-6">
             <h2 className="text-2xl font-black">{t("Lien manquant")}</h2>

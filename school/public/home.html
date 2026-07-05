@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bono School - Plateforme privee de formation</title>
+    <meta
+      name="description"
+      content="Plateforme privee de formation en ligne pour apprenants, formateurs et administrateurs."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://school.bonotrading.com/" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <meta property="og:title" content="Bono School - Plateforme privee de formation" />
+    <meta
+      property="og:description"
+      content="Un espace prive pour rejoindre votre formation, suivre votre progression et verifier vos certificats."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://school.bonotrading.com/" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7faf7;
+        --soft: #eef4ef;
+        --surface: #ffffff;
+        --ink: #07100b;
+        --muted: #5f6d65;
+        --line: #d8e4dc;
+        --market: #087f54;
+        --market-strong: #065f3f;
+        --cyan: #0f6f86;
+        --amber: #9a5f00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 32px));
+        margin-inline: auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: rgba(247, 250, 247, 0.94);
+        backdrop-filter: blur(14px);
+      }
+
+      .nav {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(8, 127, 84, 0.12);
+        color: var(--market);
+        font-weight: 900;
+      }
+
+      .brand-name {
+        display: block;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .brand-sub {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .nav-actions {
+        display: none;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .hero {
+        position: relative;
+        isolation: isolate;
+        min-height: 76svh;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(90deg, rgba(5, 7, 6, 0.98), rgba(5, 7, 6, 0.88) 52%, rgba(5, 7, 6, 0.42)),
+          #07100b;
+        color: #ffffff;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        display: none;
+        background: url("/hero-trading-desk-1280.webp") center / cover no-repeat;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        z-index: -1;
+        height: 140px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+      }
+
+      .hero-inner {
+        min-height: 76svh;
+        display: flex;
+        align-items: center;
+        padding-block: 64px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 8px 12px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #17c985;
+      }
+
+      h1 {
+        margin: 28px 0 0;
+        max-width: 760px;
+        font-size: clamp(48px, 14vw, 92px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 660px;
+        margin: 24px 0 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 17px;
+        line-height: 1.8;
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 0 18px;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        background: var(--market);
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background: var(--market-strong);
+      }
+
+      .btn-light {
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        background: #ffffff;
+        color: #07100b;
+      }
+
+      .btn-muted {
+        border: 1px solid var(--line);
+        background: rgba(7, 16, 11, 0.05);
+        color: var(--ink);
+      }
+
+      .metrics {
+        border-bottom: 1px solid var(--line);
+        background: var(--soft);
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+      }
+
+      .metric {
+        min-height: 108px;
+        border-inline: 1px solid var(--line);
+        padding: 24px 16px;
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--market);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 28px;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .section {
+        padding-block: 64px;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 24px;
+      }
+
+      .kicker {
+        margin: 0;
+        color: var(--market);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 12px 0 0;
+        max-width: 720px;
+        font-size: clamp(32px, 8vw, 56px);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .muted {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.8;
+      }
+
+      .cards {
+        display: grid;
+        gap: 16px;
+        margin-top: 40px;
+      }
+
+      .card {
+        min-height: 172px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 22px;
+      }
+
+      .card small {
+        color: var(--amber);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-weight: 900;
+      }
+
+      .card h3 {
+        margin: 20px 0 0;
+        font-size: 21px;
+        line-height: 1.15;
+      }
+
+      .card p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .final {
+        border-top: 1px solid var(--line);
+        background: var(--soft);
+      }
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 24px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      footer .shell {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      @media (min-width: 640px) {
+        .actions {
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+
+        .btn {
+          width: auto;
+        }
+      }
+
+      @media (min-width: 720px) {
+        .nav-actions {
+          display: flex;
+        }
+
+        .hero::before {
+          display: block;
+        }
+
+        .metric-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .section-head {
+          grid-template-columns: 0.9fr 1.1fr;
+          align-items: end;
+        }
+
+        .cards {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        footer .shell {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="shell nav">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">B</span>
+          <span>
+            <span class="brand-name">Bono School</span>
+            <span class="brand-sub">Formation privee</span>
+          </span>
+        </a>
+        <nav class="nav-actions" aria-label="Navigation principale">
+          <a class="btn btn-muted" href="/certificates/verify">Verifier certificat</a>
+          <a class="btn btn-muted" href="/login">Connexion</a>
+          <a class="btn btn-primary" href="/register">Creer un compte</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="shell hero-inner">
+          <div>
+            <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Espace prive de formation</p>
+            <h1>School</h1>
+            <p class="lead">
+              Un espace prive pour rejoindre votre formation, suivre votre progression et valoriser votre parcours.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="/register">Creer votre compte</a>
+              <a class="btn btn-light" href="/login">Se connecter</a>
+              <a class="btn btn-light" href="/certificates/verify">Verifier un certificat</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Points cles">
+        <div class="shell metric-grid">
+          <div class="metric"><strong>1</strong><span>Compte valide</span></div>
+          <div class="metric"><strong>24/7</strong><span>Acces en ligne</span></div>
+          <div class="metric"><strong>100%</strong><span>Suivi parcours</span></div>
+          <div class="metric"><strong>Code</strong><span>Certificat public</span></div>
+        </div>
+      </section>
+
+      <section class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Parcours</p>
+            <h2>De l'inscription au certificat, le chemin reste lisible.</h2>
+          </div>
+          <p class="muted">
+            Votre parcours se construit en quatre etapes simples. Les modalites d'acces sont confirmees avec votre
+            interlocuteur avant l'ouverture de votre espace.
+          </p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <small>01</small>
+            <h3>Creez votre compte</h3>
+            <p>Inscrivez-vous, puis confirmez votre adresse email.</p>
+          </article>
+          <article class="card">
+            <small>02</small>
+            <h3>Demandez l'acces</h3>
+            <p>Selectionnez le parcours qui vous a ete propose.</p>
+          </article>
+          <article class="card">
+            <small>03</small>
+            <h3>Suivez la formation</h3>
+            <p>Retrouvez vos lecons, quiz, documents et annonces au meme endroit.</p>
+          </article>
+          <article class="card">
+            <small>04</small>
+            <h3>Obtenez le certificat</h3>
+            <p>Votre certificat est verifiable avec son code unique.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="final section">
+        <div class="shell section-head">
+          <div>
+            <p class="kicker">Ce qui compte</p>
+            <h2>Pret a commencer ?</h2>
+          </div>
+          <div>
+            <p class="muted">
+              Creez votre compte, confirmez votre adresse email, puis accedez a votre espace pour poursuivre votre
+              parcours.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="/register">Creer votre compte</a>
+              <a class="btn btn-muted" href="/login">Se connecter</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell">
+        <span>&copy; 2026 Bono School. Tous droits reserves.</span>
+        <span>Les acces sont ouverts apres validation du parcours.</span>
+      </div>
+    </footer>
+  </body>
+</html>

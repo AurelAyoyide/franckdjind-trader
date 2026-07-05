@@ -8,15 +8,15 @@
   --surface-strong: #f2f5ee;
   --foreground: #101512;
   --muted: #506159;
-  --muted-strong: #728078;
+  --muted-strong: #5f6d65;
   --line: rgba(16, 21, 18, 0.12);
   --line-strong: rgba(16, 21, 18, 0.22);
-  --market: #17c985;
-  --market-strong: #087f54;
-  --on-market: #03130c;
-  --cyan: #1688a2;
-  --amber: #b67513;
-  --danger: #ff6b5f;
+  --market: #087f54;
+  --market-strong: #065f3f;
+  --on-market: #ffffff;
+  --cyan: #0f6f86;
+  --amber: #9a5f00;
+  --danger: #c73024;
   --max-width: 1180px;
 }
 
@@ -151,6 +151,14 @@ button[data-pending="true"] {
 
 .shadow-market {
   box-shadow: 0 18px 60px rgba(23, 201, 133, 0.16);
+}
+
+.text-on-market {
+  color: var(--on-market);
+}
+
+.file\:text-on-market::file-selector-button {
+  color: var(--on-market);
 }
 
 .text-balance {

@@ -1,6 +1,7 @@
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { LoginForm } from "@/components/login-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 
@@ -46,7 +47,9 @@ export default async function LoginPage({
             </div>
           </div>
 
-          <LoginForm errorMessage={errorMessage} next={next} reset={reset} />
+          <LocaleProvider locale={locale}>
+            <LoginForm errorMessage={errorMessage} next={next} reset={reset} />
+          </LocaleProvider>
         </div>
       </section>
     </>

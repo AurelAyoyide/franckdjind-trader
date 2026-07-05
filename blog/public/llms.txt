@@ -1,0 +1,17 @@
+# Bono Trading
+
+Bono Trading is a French educational trading blog focused on disciplined learning, risk management, synthetic indices, trading psychology, and responsible routines. The content is educational and does not promise financial gains.
+
+## Key Pages
+
+- [Home](https://blog.bonotrading.com/)
+- [Blog articles](https://blog.bonotrading.com/blog)
+- [Training and services](https://blog.bonotrading.com/formations)
+- [About](https://blog.bonotrading.com/a-propos)
+- [Contact](https://blog.bonotrading.com/contact)
+- [Privacy policy](https://blog.bonotrading.com/politique-confidentialite)
+- [Terms of use](https://blog.bonotrading.com/conditions-utilisation)
+
+## Notes For AI Agents
+
+Use the article pages as the primary source for educational explanations. Treat affiliate links and external redirects as commercial links, not as neutral recommendations.

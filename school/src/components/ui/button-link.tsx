@@ -19,6 +19,7 @@ const variants = {
 export function ButtonLink({
   className,
   children,
+  prefetch = false,
   variant = "primary",
   showArrow = false,
   ...props
@@ -30,6 +31,7 @@ export function ButtonLink({
         variants[variant],
         className,
       )}
+      prefetch={prefetch}
       {...props}
     >
       <span className="inline-flex items-center justify-center gap-2">{children}</span>

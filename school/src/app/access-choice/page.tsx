@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/page-hero";
 import { AccessChoiceForm } from "@/components/access-choice-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { requirePageSession } from "@/lib/authorization";
 import { translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -32,14 +33,16 @@ export default async function AccessChoicePage() {
         description={t("Sélectionnez le parcours qui vous a été proposé. Votre demande sera ensuite examinée avant l'ouverture de l'accès.")}
       />
       <section className="site-shell py-12 md:py-16">
-        <AccessChoiceForm
-          account={{
-            name: profile ? `${profile.firstName} ${profile.lastName}`.trim() : session.name,
-            email: profile?.email ?? session.email,
-            phone: profile?.phone ?? "",
-          }}
-          courses={courses}
-        />
+        <LocaleProvider locale={locale}>
+          <AccessChoiceForm
+            account={{
+              name: profile ? `${profile.firstName} ${profile.lastName}`.trim() : session.name,
+              email: profile?.email ?? session.email,
+              phone: profile?.phone ?? "",
+            }}
+            courses={courses}
+          />
+        </LocaleProvider>
       </section>
     </>
   );

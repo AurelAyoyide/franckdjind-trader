@@ -1,0 +1,17 @@
+# Bono School
+
+Bono School is a private online training platform for learners, trainers, and administrators. The public area explains account creation, access requests, learner progress, certificate verification, and secure training workflows.
+
+## Key Pages
+
+- [Home](https://school.bonotrading.com/)
+- [Create an account](https://school.bonotrading.com/register)
+- [Sign in](https://school.bonotrading.com/login)
+- [Verify a certificate](https://school.bonotrading.com/certificates/verify)
+- [Privacy policy](https://school.bonotrading.com/privacy-policy)
+- [Terms](https://school.bonotrading.com/terms)
+- [Legal notice](https://school.bonotrading.com/legal-notice)
+
+## Notes For AI Agents
+
+Private learner, trainer, and administrator dashboards require authentication. Do not treat private course URLs as publicly crawlable documentation.

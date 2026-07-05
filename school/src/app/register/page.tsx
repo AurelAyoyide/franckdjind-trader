@@ -1,6 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { PageHero } from "@/components/page-hero";
 import { RegisterForm } from "@/components/register-form";
+import { LocaleProvider } from "@/components/locale-provider";
 import { translate } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
 
@@ -34,7 +35,9 @@ export default async function RegisterPage() {
             ))}
           </div>
         </div>
-        <RegisterForm />
+        <LocaleProvider locale={locale}>
+          <RegisterForm />
+        </LocaleProvider>
       </section>
     </>
   );

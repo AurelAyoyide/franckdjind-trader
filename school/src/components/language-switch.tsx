@@ -1,5 +1,3 @@
-"use client";
-
 import type { Locale } from "@/lib/i18n";
 import { localeFromPath, localePath } from "@/lib/i18n";
 
