@@ -26,10 +26,10 @@ export function SiteFooterContent({ categories, email }: { categories: FooterCat
             </div>
             <p className="mt-5 max-w-sm text-sm leading-7 text-muted">{copy.footerDescription}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link className="inline-flex items-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-semibold text-muted hover:text-foreground" href={siteConfig.telegramPath}>
+              <a className="inline-flex items-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-semibold text-muted hover:text-foreground" href={siteConfig.telegramPath}>
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
                 Telegram
-              </Link>
+              </a>
               <Link className="inline-flex items-center gap-2 rounded-lg border border-line bg-foreground/[0.06] px-3 py-2 text-sm font-semibold text-muted hover:text-foreground" href={`mailto:${email}`}>
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 Email

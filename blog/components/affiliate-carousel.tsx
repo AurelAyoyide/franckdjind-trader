@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight, ExternalLink, Image as ImageIcon, Sparkles } from "lucide-react";
 import type { StoredActionLink } from "@/lib/data-store";
 
@@ -49,9 +48,9 @@ export function AffiliateCarousel({ links, title = "Opportunités partenaires", 
             <h3 className="mt-3 max-w-xl text-2xl font-black leading-tight text-balance md:text-3xl">{activeLink.label}</h3>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">{activeLink.description || "Découvre cette offre partenaire et vérifie ses conditions avant toute décision."}</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-black text-on-market transition hover:brightness-95" href={`/go/${activeLink.slug}`} style={{ backgroundColor: color }}>
+              <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-sm font-black text-on-market transition hover:brightness-95" href={`/go/${activeLink.slug}`} style={{ backgroundColor: color }}>
                 {activeLink.ctaLabel || "Découvrir l’offre"}<ExternalLink className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              </a>
               {links.length > 1 ? <div className="flex items-center gap-2"><button aria-label="Publicité précédente" className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-background/80 text-muted transition hover:text-foreground" onClick={() => move(-1)} type="button"><ChevronLeft className="h-4 w-4" /></button><button aria-label="Publicité suivante" className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-background/80 text-muted transition hover:text-foreground" onClick={() => move(1)} type="button"><ChevronRight className="h-4 w-4" /></button></div> : null}
             </div>
           </div>
