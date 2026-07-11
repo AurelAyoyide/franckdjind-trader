@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { Pagination } from "@/components/pagination";
 import { PageHero } from "@/components/page-hero";
 import { RichContent } from "@/components/rich-content";
 import { ButtonLink } from "@/components/ui/button-link";
 import { siteConfig } from "@/lib/content";
-import { getPublicData } from "@/lib/data-store";
+import { getPublicServices } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -24,7 +24,7 @@ function pageHref(page: number) {
 
 export default async function FormationsPage({ searchParams }: ServicesPageProps) {
   const { page = "1" } = await searchParams;
-  const { services } = await getPublicData();
+  const services = await getPublicServices();
   const currentPage = Math.max(1, Number(page) || 1);
   const pageCount = Math.max(1, Math.ceil(services.length / pageSize));
   const safePage = Math.min(currentPage, pageCount);
@@ -71,19 +71,12 @@ export default async function FormationsPage({ searchParams }: ServicesPageProps
           ))}
         </div>
 
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination des services">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-              <Link
-                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
-                href={pageHref(pageNumber)}
-                key={pageNumber}
-              >
-                {pageNumber}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Pagination des services"
+          currentPage={safePage}
+          hrefForPage={pageHref}
+          pageCount={pageCount}
+        />
 
         <div className="mt-8 rounded-lg border border-line bg-background-soft p-6 md:p-8">
           <h2 className="text-2xl font-black">Canaux directs</h2>

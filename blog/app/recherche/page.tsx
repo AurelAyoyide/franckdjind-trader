@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArticleCard } from "@/components/article-card";
+import { Pagination } from "@/components/pagination";
 import { PageHero } from "@/components/page-hero";
-import { getPublicData } from "@/lib/data-store";
+import { getPublicSearchListing } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -40,19 +40,11 @@ export const metadata: Metadata = buildMetadata({
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q = "", page = "1" } = await searchParams;
   const currentPage = Math.max(1, Number(page) || 1);
-  const { posts } = await getPublicData();
-  const normalized = q.trim().toLowerCase();
-  const results = normalized
-    ? posts.filter((article) =>
-        [article.title, article.excerpt, article.content, article.category.title, ...article.tags.map((tag) => tag.title)]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalized)
-      )
-    : posts;
-  const pageCount = Math.max(1, Math.ceil(results.length / pageSize));
-  const safePage = Math.min(currentPage, pageCount);
-  const paginated = results.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const { posts, total, pageCount, safePage } = await getPublicSearchListing({
+    q,
+    page: currentPage,
+    pageSize
+  });
 
   return (
     <>
@@ -77,7 +69,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         <div className="mt-6 flex flex-col gap-2 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <p className="font-semibold">
-            {results.length} resultat{results.length > 1 ? "s" : ""}
+            {total} resultat{total > 1 ? "s" : ""}
           </p>
           {q ? (
             <Link className="font-semibold text-market underline-offset-4 hover:underline" href="/recherche">
@@ -86,9 +78,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ) : null}
         </div>
 
-        {paginated.length ? (
+        {posts.length ? (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {paginated.map((article) => (
+            {posts.map((article) => (
               <ArticleCard article={article} key={article.slug} />
             ))}
           </div>
@@ -101,22 +93,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </div>
         )}
 
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination de la recherche">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-              <Link
-                className={cn(
-                  "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground",
-                  pageNumber === safePage && "border-market bg-market text-on-market"
-                )}
-                href={pageHref(pageNumber, q)}
-                key={pageNumber}
-              >
-                {pageNumber}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Pagination de la recherche"
+          currentPage={safePage}
+          hrefForPage={(pageNumber) => pageHref(pageNumber, q)}
+          pageCount={pageCount}
+        />
       </section>
     </>
   );

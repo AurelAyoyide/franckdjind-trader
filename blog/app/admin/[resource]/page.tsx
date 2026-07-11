@@ -3,12 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Download, Eye, Pencil, Plus, Search } from "lucide-react";
 import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
+import { Pagination } from "@/components/pagination";
 import { getAdminResource, getResourceTitle } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
 import { readData } from "@/lib/data-store";
 import { canManagePostAuthor, canManageResource, canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
 type AdminResourcePageProps = {
   params: Promise<{
@@ -197,22 +197,13 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
         </div>
       </div>
 
-      {pageCount > 1 ? (
-        <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label={`Pagination ${config.label}`}>
-          {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-            <Link
-              className={cn(
-                "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground",
-                pageNumber === safePage && "border-market bg-market text-on-market"
-              )}
-              href={pageHref(config.slug, pageNumber, q)}
-              key={pageNumber}
-            >
-              {pageNumber}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <Pagination
+        ariaLabel={`Pagination ${config.label}`}
+        className="mt-8"
+        currentPage={safePage}
+        hrefForPage={(pageNumber) => pageHref(config.slug, pageNumber, q)}
+        pageCount={pageCount}
+      />
     </section>
   );
 }

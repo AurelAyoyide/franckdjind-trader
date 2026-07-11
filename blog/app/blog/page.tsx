@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { ArticleCard } from "@/components/article-card";
+import { Pagination } from "@/components/pagination";
 import { PageHero } from "@/components/page-hero";
-import { getPublicData } from "@/lib/data-store";
+import { getPublicBlogListing } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = buildMetadata({
   title: "Blog trading",
@@ -51,23 +51,13 @@ function pageHref(page: number, q: string, category: string, tag: string) {
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const { q = "", categorie = "", tag = "", page = "1" } = await searchParams;
   const currentPage = Math.max(1, Number(page) || 1);
-  const { posts: articles, categories, tags } = await getPublicData();
-  const normalized = q.trim().toLowerCase();
-  const filtered = articles.filter((article) => {
-    const matchesCategory = categorie ? article.category.slug === categorie : true;
-    const matchesTag = tag ? article.tags.some((articleTag) => articleTag.slug === tag) : true;
-    const matchesSearch = normalized
-      ? [article.title, article.excerpt, article.content, article.category.title, ...article.tags.map((tag) => tag.title)]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalized)
-      : true;
-
-    return matchesCategory && matchesTag && matchesSearch;
+  const { posts: articles, categories, tags, total, pageCount, safePage } = await getPublicBlogListing({
+    q,
+    categorySlug: categorie,
+    tagSlug: tag,
+    page: currentPage,
+    pageSize
   });
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(currentPage, pageCount);
-  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <>
@@ -118,7 +108,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
         <div className="mt-4 flex flex-col gap-2 text-sm text-muted md:flex-row md:items-center md:justify-between">
           <p>
-            {filtered.length} article{filtered.length > 1 ? "s" : ""} trouve{filtered.length > 1 ? "s" : ""}
+            {total} article{total > 1 ? "s" : ""} trouve{total > 1 ? "s" : ""}
           </p>
           {(q || categorie || tag) ? (
             <Link className="font-semibold text-market underline-offset-4 hover:underline" href="/blog">
@@ -127,9 +117,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           ) : null}
         </div>
 
-        {paginated.length ? (
+        {articles.length ? (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {paginated.map((article, index) => (
+            {articles.map((article, index) => (
               <ArticleCard article={article} key={article.slug} priority={index === 0} />
             ))}
           </div>
@@ -142,22 +132,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           </div>
         )}
 
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination du blog">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-              <Link
-                className={cn(
-                  "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground",
-                  pageNumber === safePage && "border-market bg-market text-on-market"
-                )}
-                href={pageHref(pageNumber, q, categorie, tag)}
-                key={pageNumber}
-              >
-                {pageNumber}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Pagination du blog"
+          currentPage={safePage}
+          hrefForPage={(pageNumber) => pageHref(pageNumber, q, categorie, tag)}
+          pageCount={pageCount}
+        />
       </section>
     </>
   );

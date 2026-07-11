@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { submitTestimonialAction } from "@/app/temoignages/actions";
+import { Pagination } from "@/components/pagination";
 import { PageHero } from "@/components/page-hero";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { RatingSelector } from "@/components/rating-selector";
 import { TestimonialsGrid } from "@/components/testimonials-grid";
-import { getPublicData } from "@/lib/data-store";
+import { getPublicTestimonials } from "@/lib/data-store";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -30,7 +30,7 @@ function pageHref(page: number) {
 
 export default async function TestimonialsPage({ searchParams }: TestimonialsPageProps) {
   const { status, page = "1" } = await searchParams;
-  const { testimonials } = await getPublicData();
+  const testimonials = await getPublicTestimonials();
   const currentPage = Math.max(1, Number(page) || 1);
   const pageCount = Math.max(1, Math.ceil(testimonials.length / pageSize));
   const safePage = Math.min(currentPage, pageCount);
@@ -55,19 +55,12 @@ export default async function TestimonialsPage({ searchParams }: TestimonialsPag
             </p>
           </div>
         )}
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination des témoignages">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
-              <Link
-                className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
-                href={pageHref(pageNumber)}
-                key={pageNumber}
-              >
-                {pageNumber}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Pagination des temoignages"
+          currentPage={safePage}
+          hrefForPage={pageHref}
+          pageCount={pageCount}
+        />
       </section>
       <section id="donner-avis" className="site-shell pb-16 md:pb-24">
         <div className="rounded-lg border border-line bg-surface p-6 md:p-8">

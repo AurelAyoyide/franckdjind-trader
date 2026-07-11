@@ -20,6 +20,7 @@ import { AffiliateCarousel } from "@/components/affiliate-carousel";
 import { ArticleCard } from "@/components/article-card";
 import { DisclaimerBanner } from "@/components/disclaimer-banner";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { Pagination } from "@/components/pagination";
 import { PageHero } from "@/components/page-hero";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { RatingSelector } from "@/components/rating-selector";
@@ -36,7 +37,7 @@ import { englishCategoryLabels } from "@/lib/localization";
 import { getPublicData, readData } from "@/lib/data-store";
 import { escapeJsonForHtml } from "@/lib/security";
 import { buildMetadata } from "@/lib/seo";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 type EnglishPageProps = {
@@ -484,7 +485,7 @@ function EnglishBlog({ posts, categories, tags, page, q, categorie, tag }: { pos
         ) : (
           <div className="mt-8 rounded-lg border border-line bg-surface p-8 text-center"><h2 className="text-2xl font-black">No article found.</h2><p className="mt-3 text-sm leading-7 text-muted">Try another keyword or go back to all articles.</p></div>
         )}
-        {pageCount > 1 ? <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Blog pagination">{Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => <Link className={cn("inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground", p === safePage && "border-market bg-market text-on-market")} href={pageHref(p)} key={p}>{p}</Link>)}</nav> : null}
+        <Pagination ariaLabel="Blog pagination" currentPage={safePage} hrefForPage={pageHref} labels={{ previous: "Previous page", next: "Next page", page: "Page" }} pageCount={pageCount} />
       </section>
     </>
   );
@@ -502,7 +503,7 @@ function EnglishCategoryPage({ category, articles, page }: { category: PublicDat
       <section className="site-shell py-12 md:py-16">
         <p className="text-sm font-semibold text-muted">{articles.length} article{articles.length > 1 ? "s" : ""} in this category</p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((a) => <EnglishArticleCard article={a} key={a.slug} />)}</div>
-        {pageCount > 1 ? <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Category pagination">{Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => <Link className={cn("inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground", p === safePage && "border-market bg-market text-on-market")} href={pageHref(p)} key={p}>{p}</Link>)}</nav> : null}
+        <Pagination ariaLabel="Category pagination" currentPage={safePage} hrefForPage={pageHref} labels={{ previous: "Previous page", next: "Next page", page: "Page" }} pageCount={pageCount} />
       </section>
     </>
   );
@@ -520,7 +521,7 @@ function EnglishTagPage({ tag, articles, page }: { tag: PublicData["tags"][numbe
       <section className="site-shell py-12 md:py-16">
         <p className="text-sm font-semibold text-muted">{articles.length} article{articles.length > 1 ? "s" : ""} linked to this tag</p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((a) => <EnglishArticleCard article={a} key={a.slug} />)}</div>
-        {pageCount > 1 ? <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Tag pagination">{Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => <Link className={cn("inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground", p === safePage && "border-market bg-market text-on-market")} href={pageHref(p)} key={p}>{p}</Link>)}</nav> : null}
+        <Pagination ariaLabel="Tag pagination" currentPage={safePage} hrefForPage={pageHref} labels={{ previous: "Previous page", next: "Next page", page: "Page" }} pageCount={pageCount} />
       </section>
     </>
   );
@@ -588,7 +589,7 @@ function EnglishSearch({ initialQuery, posts, page }: { initialQuery: string; po
   };
   return <><PageHero eyebrow="Search" title="Find the right content quickly." description="A simple search to find articles by topic, category or intention." /><section className="site-shell py-12 md:py-16"><form className="flex flex-col gap-3 rounded-lg border border-line bg-surface p-3 sm:flex-row" action="/en/recherche"><input className="min-h-12 flex-1 rounded-md border border-line bg-background px-4 text-base outline-none transition placeholder:text-muted-strong focus:border-market" defaultValue={initialQuery} name="q" placeholder="Risk management, routine, volatility..." type="search" /><button className="min-h-12 rounded-md bg-market px-5 text-sm font-black text-on-market transition hover:bg-market-strong" type="submit">Search</button></form><div className="mt-6 flex flex-col gap-2 text-sm text-muted md:flex-row md:items-center md:justify-between"><p className="font-semibold">{results.length} result{results.length > 1 ? "s" : ""}</p>{initialQuery ? <Link className="font-semibold text-market underline-offset-4 hover:underline" href="/en/recherche">Reset search</Link> : null}</div>
     {items.length ? <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((post) => <EnglishArticleCard article={post} key={post.slug} />)}</div> : <div className="mt-8 rounded-lg border border-line bg-surface p-8 text-center"><h2 className="text-2xl font-black">No result.</h2><p className="mt-3 text-sm leading-7 text-muted">Try another keyword or view all articles.</p></div>}
-    {pageCount > 1 ? <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Search pagination">{Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => <Link className={cn("inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-black text-muted transition hover:border-line-strong hover:text-foreground", pageNumber === safePage && "border-market bg-market text-on-market")} href={pageHref(pageNumber)} key={pageNumber}>{pageNumber}</Link>)}</nav> : null}
+    <Pagination ariaLabel="Search pagination" currentPage={safePage} hrefForPage={pageHref} labels={{ previous: "Previous page", next: "Next page", page: "Page" }} pageCount={pageCount} />
   </section></>;
 }
 
@@ -685,22 +686,13 @@ function EnglishTraining({ services, page }: { services: PublicData["services"];
           ))}
         </div>
 
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Services pagination">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => {
-              const href = pageNumber > 1 ? `/en/formations?page=${pageNumber}` : "/en/formations";
-              return (
-                <Link
-                  className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
-                  href={href}
-                  key={pageNumber}
-                >
-                  {pageNumber}
-                </Link>
-              );
-            })}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Services pagination"
+          currentPage={safePage}
+          hrefForPage={(pageNumber) => pageNumber > 1 ? `/en/formations?page=${pageNumber}` : "/en/formations"}
+          labels={{ previous: "Previous page", next: "Next page", page: "Page" }}
+          pageCount={pageCount}
+        />
 
         <div className="mt-8 rounded-lg border border-line bg-background-soft p-6 md:p-8">
           <h2 className="text-2xl font-black">Direct channels</h2>
@@ -746,22 +738,13 @@ function EnglishTestimonials({ testimonials, page, status }: { testimonials: Pub
             </p>
           </div>
         )}
-        {pageCount > 1 ? (
-          <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Testimonials pagination">
-            {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => {
-              const href = pageNumber > 1 ? `/en/temoignages?page=${pageNumber}` : "/en/temoignages";
-              return (
-                <Link
-                  className={`inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-line px-3 text-sm font-black transition ${pageNumber === safePage ? "border-market bg-market text-on-market" : "bg-surface text-muted hover:border-line-strong hover:text-foreground"}`}
-                  href={href}
-                  key={pageNumber}
-                >
-                  {pageNumber}
-                </Link>
-              );
-            })}
-          </nav>
-        ) : null}
+        <Pagination
+          ariaLabel="Testimonials pagination"
+          currentPage={safePage}
+          hrefForPage={(pageNumber) => pageNumber > 1 ? `/en/temoignages?page=${pageNumber}` : "/en/temoignages"}
+          labels={{ previous: "Previous page", next: "Next page", page: "Page" }}
+          pageCount={pageCount}
+        />
       </section>
       <section id="donner-avis" className="site-shell pb-16 md:pb-24">
         <div className="rounded-lg border border-line bg-surface p-6 md:p-8">
@@ -900,5 +883,3 @@ function StaticEnglishPage({ eyebrow, title, sections }: { eyebrow: string; titl
 function EnglishDisclaimer() { return <StaticEnglishPage eyebrow="Disclaimer" title="Trading involves a real risk of capital loss." sections={[["Educational content", "Articles, services and examples are educational. They are not personalised financial, legal or tax advice."], ["No promise of results", "Past, simulated or individual performance never guarantees future results. Outcomes depend on markets, capital, costs, experience and the ability to follow a plan."], ["Your decisions", "Assess your knowledge, financial situation and risk tolerance before acting. Never trade money you need for essential expenses."], ["Affiliate disclosure", "Some links may be affiliate links. Their terms, fees and availability belong to the relevant third party and should be checked before use."]]} />; }
 function EnglishPrivacy() { return <StaticEnglishPage eyebrow="Privacy" title="Only useful data should be collected and protected." sections={[["Data collected", "The contact form may collect your name, email address, subject and message in order to respond to your request."], ["Purpose", "Data is used to answer requests, administer authorised accounts, prevent abuse and manage newsletter subscriptions when consent has been provided. It is never sold."], ["Retention and security", "Messages are retained for a reasonable period and technical logs may be kept to protect forms and investigate errors. Access is limited to authorised people and necessary technical providers."], ["Your rights", "You can ask to access, correct or delete your data through the contact form by identifying the email address concerned."]]} />; }
 function EnglishTerms() { return <StaticEnglishPage eyebrow="Terms" title="A clear framework for using this site and its content." sections={[["Use of content", "Content is provided for information and education. Commercial reuse requires prior permission."], ["Responsible use", "Visitors must not interfere with the site, bypass protections, submit misleading information or use forms for spam. Administration access is reserved for authorised accounts."], ["Liability", "Visitors remain responsible for their trading decisions, risk management and the suitability of information for their own circumstances."], ["External links", "External destinations are provided for convenience. Users should review their terms and risks before acting."], ["Updates", "These terms may change to reflect changes to the service, security or applicable obligations. The version published on this page applies."]]} />; }
-
-

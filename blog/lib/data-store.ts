@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
+import type { Prisma } from "@prisma/client";
 import { unstable_noStore as noStore } from "next/cache";
 import { cache } from "react";
 import {
@@ -188,6 +189,43 @@ export type BlogData = {
 };
 
 const defaultImage = "/hero-trading-desk.png";
+const publicPostCardSelect = {
+  id: true,
+  title: true,
+  slug: true,
+  excerpt: true,
+  content: true,
+  featured: true,
+  publishedAt: true,
+  updatedAt: true,
+  authorLabel: true,
+  author: { select: { email: true, name: true } },
+  category: { select: { id: true, name: true, slug: true, description: true } },
+  coverMedia: { select: { url: true } },
+  tags: { select: { tag: { select: { id: true, name: true, slug: true } } } }
+} satisfies Prisma.PostSelect;
+const publicCategorySelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  seoMetadata: { select: { title: true, description: true } }
+} satisfies Prisma.CategorySelect;
+const publicTagSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  seoMetadata: { select: { title: true, description: true } }
+} satisfies Prisma.TagSelect;
+const publicPostOrderBy: Prisma.PostOrderByWithRelationInput[] = [
+  { featured: "desc" },
+  { publishedAt: "desc" },
+  { createdAt: "desc" }
+];
+type PublicPostCardRecord = Prisma.PostGetPayload<{ select: typeof publicPostCardSelect }>;
+type PublicCategoryRecord = Prisma.CategoryGetPayload<{ select: typeof publicCategorySelect }>;
+type PublicTagRecord = Prisma.TagGetPayload<{ select: typeof publicTagSelect }>;
 const roleLabels = {
   ADMIN: "Administrateur",
   EDITOR: "Editeur",
@@ -230,6 +268,92 @@ function dateOrNull(value: string | undefined) {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function publicPostWhere(filters: Prisma.PostWhereInput[] = []): Prisma.PostWhereInput {
+  return {
+    AND: [
+      {
+        status: "PUBLISHED",
+        deletedAt: null,
+        OR: [{ publishedAt: null }, { publishedAt: { lte: new Date() } }]
+      },
+      ...filters
+    ]
+  };
+}
+
+function publicPostSearchFilter(query: string): Prisma.PostWhereInput | undefined {
+  const normalized = query.trim();
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalized, mode: "insensitive" } },
+      { excerpt: { contains: normalized, mode: "insensitive" } },
+      { content: { contains: normalized, mode: "insensitive" } },
+      { category: { name: { contains: normalized, mode: "insensitive" } } },
+      { tags: { some: { tag: { name: { contains: normalized, mode: "insensitive" } } } } }
+    ]
+  };
+}
+
+function paginationState(page: number, pageSize: number, total: number) {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+
+  return {
+    pageCount,
+    safePage,
+    skip: (safePage - 1) * pageSize,
+    take: pageSize
+  };
+}
+
+function mapPublicCategory(category: PublicCategoryRecord): StoredCategory {
+  return {
+    id: category.id,
+    title: category.name,
+    slug: category.slug,
+    description: category.description ?? "",
+    seoTitle: category.seoMetadata?.title ?? undefined,
+    seoDescription: category.seoMetadata?.description ?? undefined
+  };
+}
+
+function mapPublicTag(tag: PublicTagRecord): StoredTag {
+  return {
+    id: tag.id,
+    title: tag.name,
+    slug: tag.slug,
+    description: tag.description ?? undefined,
+    seoTitle: tag.seoMetadata?.title ?? undefined,
+    seoDescription: tag.seoMetadata?.description ?? undefined
+  };
+}
+
+function mapPublicPostCard(post: PublicPostCardRecord): Article {
+  const imageUrl = post.coverMedia?.url ?? defaultImage;
+
+  return {
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt ?? "",
+    publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
+    updatedAt: post.updatedAt.toISOString().slice(0, 10),
+    readTime: estimateReadTime(post.content),
+    featured: post.featured,
+    image: isSafeMediaUrl(imageUrl) ? imageUrl : defaultImage,
+    author: post.authorLabel ?? post.author.name ?? post.author.email,
+    category: post.category
+      ? { title: post.category.name, slug: post.category.slug, description: post.category.description ?? "" }
+      : { title: "Non classe", slug: "non-classe", description: "" },
+    tags: post.tags.map(({ tag }) => ({ title: tag.name, slug: tag.slug })),
+    sections: []
+  };
 }
 
 function toStringValue(value: unknown) {
@@ -1060,6 +1184,269 @@ async function loadPublicData() {
 // One page render often calls this from both its page and the shared footer.
 // React.cache deduplicates that work without serving stale editorial content.
 export const getPublicData = cache(loadPublicData);
+
+async function publicPostCardsPage(where: Prisma.PostWhereInput, page: number, pageSize: number) {
+  const total = await prisma.post.count({ where });
+  const { pageCount, safePage, skip, take } = paginationState(page, pageSize, total);
+  const posts = total
+    ? await prisma.post.findMany({
+        where,
+        select: publicPostCardSelect,
+        orderBy: publicPostOrderBy,
+        skip,
+        take
+      })
+    : [];
+
+  return {
+    posts: posts.map(mapPublicPostCard),
+    total,
+    pageCount,
+    safePage
+  };
+}
+
+async function loadPublicFooterCategories() {
+  noStore();
+  assertDatabaseConfigured();
+
+  const categories = await prisma.category.findMany({
+    select: publicCategorySelect,
+    where: { deletedAt: null },
+    orderBy: { name: "asc" }
+  });
+
+  return categories.map(mapPublicCategory);
+}
+
+async function loadPublicBlogListing({
+  q = "",
+  categorySlug = "",
+  tagSlug = "",
+  page,
+  pageSize
+}: {
+  q?: string;
+  categorySlug?: string;
+  tagSlug?: string;
+  page: number;
+  pageSize: number;
+}) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const filters: Prisma.PostWhereInput[] = [];
+  const searchFilter = publicPostSearchFilter(q);
+
+  if (categorySlug) {
+    filters.push({ category: { slug: categorySlug, deletedAt: null } });
+  }
+
+  if (tagSlug) {
+    filters.push({ tags: { some: { tag: { slug: tagSlug } } } });
+  }
+
+  if (searchFilter) {
+    filters.push(searchFilter);
+  }
+
+  const where = publicPostWhere(filters);
+  const [categories, tags, postPage] = await Promise.all([
+    prisma.category.findMany({
+      select: publicCategorySelect,
+      where: { deletedAt: null },
+      orderBy: { name: "asc" }
+    }),
+    prisma.tag.findMany({
+      select: publicTagSelect,
+      orderBy: { name: "asc" }
+    }),
+    publicPostCardsPage(where, page, pageSize)
+  ]);
+
+  return {
+    ...postPage,
+    categories: categories.map(mapPublicCategory),
+    tags: tags.map(mapPublicTag)
+  };
+}
+
+async function loadPublicSearchListing({
+  q = "",
+  page,
+  pageSize
+}: {
+  q?: string;
+  page: number;
+  pageSize: number;
+}) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const searchFilter = publicPostSearchFilter(q);
+  const where = publicPostWhere(searchFilter ? [searchFilter] : []);
+
+  return publicPostCardsPage(where, page, pageSize);
+}
+
+async function loadPublicCategorySummary(slug: string) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const category = await prisma.category.findFirst({
+    select: publicCategorySelect,
+    where: { slug, deletedAt: null }
+  });
+
+  return category ? mapPublicCategory(category) : undefined;
+}
+
+async function loadPublicCategoryListing({
+  slug,
+  page,
+  pageSize
+}: {
+  slug: string;
+  page: number;
+  pageSize: number;
+}) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const category = await prisma.category.findFirst({
+    select: publicCategorySelect,
+    where: { slug, deletedAt: null }
+  });
+
+  if (!category) {
+    return {
+      category: undefined,
+      posts: [],
+      total: 0,
+      pageCount: 1,
+      safePage: 1
+    };
+  }
+
+  const postPage = await publicPostCardsPage(publicPostWhere([{ categoryId: category.id }]), page, pageSize);
+
+  return {
+    ...postPage,
+    category: mapPublicCategory(category)
+  };
+}
+
+async function loadPublicTagSummary(slug: string) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const tag = await prisma.tag.findUnique({
+    select: publicTagSelect,
+    where: { slug }
+  });
+
+  if (!tag) {
+    return undefined;
+  }
+
+  const postCount = await prisma.post.count({
+    where: publicPostWhere([{ tags: { some: { tagId: tag.id } } }])
+  });
+
+  return {
+    ...mapPublicTag(tag),
+    postCount
+  };
+}
+
+async function loadPublicTagListing({
+  slug,
+  page,
+  pageSize
+}: {
+  slug: string;
+  page: number;
+  pageSize: number;
+}) {
+  noStore();
+  assertDatabaseConfigured();
+
+  const tag = await prisma.tag.findUnique({
+    select: publicTagSelect,
+    where: { slug }
+  });
+
+  if (!tag) {
+    return {
+      tag: undefined,
+      posts: [],
+      total: 0,
+      pageCount: 1,
+      safePage: 1
+    };
+  }
+
+  const postPage = await publicPostCardsPage(publicPostWhere([{ tags: { some: { tagId: tag.id } } }]), page, pageSize);
+
+  return {
+    ...postPage,
+    tag: mapPublicTag(tag)
+  };
+}
+
+async function loadPublicServices() {
+  noStore();
+  assertDatabaseConfigured();
+
+  const services = await prisma.service.findMany({
+    where: { published: true },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }]
+  });
+
+  return services.map((service) => ({
+    id: service.id,
+    title: service.title,
+    slug: service.slug,
+    description: service.description,
+    content: service.content ?? "",
+    priceLabel: service.priceLabel ?? "",
+    ctaLabel: service.ctaLabel ?? "",
+    ctaUrl: isSafeActionUrl(service.ctaUrl ?? "") ? service.ctaUrl ?? "/contact" : "/contact",
+    order: service.order,
+    published: true
+  }));
+}
+
+async function loadPublicTestimonials() {
+  noStore();
+  assertDatabaseConfigured();
+
+  const testimonials = await prisma.testimonial.findMany({
+    where: { published: true },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }]
+  });
+
+  return testimonials.map((testimonial) => ({
+    id: testimonial.id,
+    name: testimonial.name,
+    role: testimonial.role ?? "",
+    quote: testimonial.quote,
+    rating: testimonial.rating ?? 5,
+    published: true,
+    order: testimonial.order,
+    createdAt: iso(testimonial.createdAt)
+  }));
+}
+
+export const getPublicFooterCategories = cache(loadPublicFooterCategories);
+export const getPublicBlogListing = cache(loadPublicBlogListing);
+export const getPublicSearchListing = cache(loadPublicSearchListing);
+export const getPublicCategorySummary = cache(loadPublicCategorySummary);
+export const getPublicCategoryListing = cache(loadPublicCategoryListing);
+export const getPublicTagSummary = cache(loadPublicTagSummary);
+export const getPublicTagListing = cache(loadPublicTagListing);
+export const getPublicServices = cache(loadPublicServices);
+export const getPublicTestimonials = cache(loadPublicTestimonials);
 
 export async function getActionLink(slug: string) {
   assertDatabaseConfigured();
