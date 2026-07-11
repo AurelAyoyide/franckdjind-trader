@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+
+const NAVIGATION_TIMEOUT_MS = 12000;
 
 function isInternalNavigation(event: MouseEvent) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
@@ -29,31 +31,61 @@ function isInternalNavigation(event: MouseEvent) {
 
 export function NavigationFeedback() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams.toString();
   const [isNavigating, setIsNavigating] = useState(false);
-  const navigationInFlight = useRef(false);
+  const timeoutRef = useRef<number | null>(null);
+
+  const clearNavigationTimeout = useCallback(() => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  const stopNavigation = useCallback(() => {
+    clearNavigationTimeout();
+    setIsNavigating(false);
+  }, [clearNavigationTimeout]);
+
+  const startNavigation = useCallback(() => {
+    clearNavigationTimeout();
+    setIsNavigating(true);
+    timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = null;
+      setIsNavigating(false);
+    }, NAVIGATION_TIMEOUT_MS);
+  }, [clearNavigationTimeout]);
 
   useEffect(() => {
-    navigationInFlight.current = false;
-    setIsNavigating(false);
-  }, [pathname]);
+    stopNavigation();
+  }, [pathname, search, stopNavigation]);
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       if (isInternalNavigation(event)) {
-        if (navigationInFlight.current) {
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
-
-        navigationInFlight.current = true;
-        setIsNavigating(true);
+        startNavigation();
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        stopNavigation();
       }
     };
 
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
-  }, []);
+    window.addEventListener("pageshow", stopNavigation);
+    window.addEventListener("popstate", stopNavigation);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+      window.removeEventListener("pageshow", stopNavigation);
+      window.removeEventListener("popstate", stopNavigation);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearNavigationTimeout();
+    };
+  }, [clearNavigationTimeout, startNavigation, stopNavigation]);
 
   return (
     <div
