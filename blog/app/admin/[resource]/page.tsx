@@ -4,10 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { Download, Eye, Pencil, Plus, Search } from "lucide-react";
 import { DeleteConfirmation } from "@/components/admin/delete-confirmation";
 import { Pagination } from "@/components/pagination";
+import { getAdminResourceList } from "@/lib/admin-list-data";
 import { getAdminResource, getResourceTitle } from "@/lib/admin-resources";
 import { getAdminSession } from "@/lib/auth";
-import { readData } from "@/lib/data-store";
-import { canManagePostAuthor, canManageResource, canViewAdminResource } from "@/lib/permissions";
+import { canManageResource, canViewAdminResource } from "@/lib/permissions";
 import { buildMetadata } from "@/lib/seo";
 
 type AdminResourcePageProps = {
@@ -38,23 +38,6 @@ function pageHref(resource: string, page: number, q: string) {
   return query ? `/admin/${resource}?${query}` : `/admin/${resource}`;
 }
 
-function searchableText(item: Record<string, unknown>) {
-  return Object.values(item)
-    .map((value) => {
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        return String(value);
-      }
-
-      if (value && typeof value === "object") {
-        return JSON.stringify(value);
-      }
-
-      return "";
-    })
-    .join(" ")
-    .toLowerCase();
-}
-
 export async function generateMetadata({ params }: AdminResourcePageProps): Promise<Metadata> {
   const { resource } = await params;
   const config = getAdminResource(resource);
@@ -81,18 +64,14 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
     redirect("/admin");
   }
 
-  const data = await readData();
-  const items = (data[config.collection] as Array<Record<string, unknown>>).filter(
-    (item) => config.slug !== "posts" || canManagePostAuthor(session, item.author)
-  );
-  const normalized = q.trim().toLowerCase();
-  const filtered = normalized
-    ? items.filter((item) => searchableText(item).includes(normalized))
-    : items;
   const currentPage = Math.max(1, Number(page) || 1);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(currentPage, pageCount);
-  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const { items, total, pageCount, safePage } = await getAdminResourceList({
+    config,
+    q,
+    page: currentPage,
+    pageSize,
+    session
+  });
 
   return (
     <section>
@@ -142,7 +121,7 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
 
       <div className="mt-4 flex flex-col gap-2 text-sm text-muted md:flex-row md:items-center md:justify-between">
         <p className="font-semibold">
-          {filtered.length} element{filtered.length > 1 ? "s" : ""}
+          {total} element{total > 1 ? "s" : ""}
         </p>
         {q ? (
           <Link className="font-semibold text-market underline-offset-4 hover:underline" href={`/admin/${config.slug}`}>
@@ -153,8 +132,8 @@ export default async function AdminResourcePage({ params, searchParams }: AdminR
 
       <div className="mt-5 overflow-hidden rounded-lg border border-line bg-surface">
         <div className="grid gap-px bg-line">
-          {paginated.length ? (
-            paginated.map((item) => (
+          {items.length ? (
+            items.map((item) => (
               <div className="grid gap-4 bg-surface p-4 md:grid-cols-[1fr_auto] md:items-center" key={String(item.id)}>
                 <div>
                   <h2 className="text-lg font-black">{getResourceTitle(item, config)}</h2>
