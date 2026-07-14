@@ -85,16 +85,29 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getRequestLocale();
-  const Analytics = analyticsEnabled ? (await import("@/components/google-analytics")).GoogleAnalytics : null;
   const Translator = locale === "en" ? (await import("@/components/english-translator")).EnglishTranslator : null;
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        {analyticsEnabled ? (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${analyticsId}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${analyticsId}');
+                `,
+              }}
+            />
+          </>
+        ) : null}
       </head>
       <body>
-        {Analytics ? <Analytics /> : null}
         {Translator ? <Translator locale={locale} /> : null}
         <SiteHeader locale={locale} />
         <main>{children}</main>
