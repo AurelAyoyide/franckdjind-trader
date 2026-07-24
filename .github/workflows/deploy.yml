@@ -43,7 +43,26 @@ jobs:
               docker compose -f docker-compose.school.yml up -d --force-recreate school-app
             fi
 
-            curl -fsS https://blog.bonotrading.com >/dev/null
-            curl -fsS https://school.bonotrading.com >/dev/null
+            echo "Attente du démarrage des applications..."
+
+            check_url() {
+              URL="$1"
+
+              for i in $(seq 1 20); do
+                if curl -fsS "$URL" >/dev/null; then
+                  echo "$URL répond correctement."
+                  return 0
+                fi
+
+                echo "Tentative $i/20 pour $URL..."
+                sleep 5
+              done
+
+              echo "Échec : $URL ne répond toujours pas."
+              return 1
+            }
+
+            check_url "https://blog.bonotrading.com"
+            check_url "https://school.bonotrading.com"
 
             echo "Déploiement terminé."
