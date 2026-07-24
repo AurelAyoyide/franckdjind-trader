@@ -1,0 +1,49 @@
+name: Deploy BonoTrading
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            cd /var/www/bonotrading
+
+            BEFORE=$(git -C repo rev-parse HEAD)
+
+            git -C repo pull origin main
+
+            AFTER=$(git -C repo rev-parse HEAD)
+
+            CHANGED=$(git -C repo diff --name-only "$BEFORE" "$AFTER")
+
+            echo "$CHANGED"
+
+            if echo "$CHANGED" | grep -q '^blog/'; then
+              echo "Deploy Blog"
+              docker compose -f docker-compose.blog.yml build blog-app
+              docker compose -f docker-compose.blog.yml up -d --force-recreate blog-app
+            fi
+
+            if echo "$CHANGED" | grep -q '^school/'; then
+              echo "Deploy School"
+              docker compose -f docker-compose.school.yml build school-app
+              docker compose -f docker-compose.school.yml up -d --force-recreate school-app
+            fi
+
+            curl -fsS https://blog.bonotrading.com >/dev/null
+            curl -fsS https://school.bonotrading.com >/dev/null
+
+            echo "Déploiement terminé."
