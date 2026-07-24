@@ -27,20 +27,32 @@ function resolvePrivateFile(filePath: string) {
   return resolved;
 }
 
+const MAX_VIDEO_CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB optimal chunk for instant buffering
+
 function parseRange(rangeHeader: string | null, size: number) {
   if (!rangeHeader) {
-    return null;
+    const end = Math.min(MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
+    return { start: 0, end };
   }
 
   const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
   if (!match) {
-    return null;
+    const end = Math.min(MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
+    return { start: 0, end };
   }
 
   const start = match[1] ? Number(match[1]) : 0;
-  const end = match[2] ? Number(match[2]) : size - 1;
+  let end = match[2] ? Number(match[2]) : size - 1;
 
-  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || end >= size) {
+  if (!Number.isFinite(start) || start >= size) {
+    return null;
+  }
+
+  if (!match[2] || (end - start + 1) > MAX_VIDEO_CHUNK_SIZE) {
+    end = Math.min(start + MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
+  }
+
+  if (!Number.isFinite(end) || start > end || end >= size) {
     return null;
   }
 
@@ -119,11 +131,10 @@ function protectedVideoHeaders({
 }) {
   return {
     "Accept-Ranges": "bytes",
-    "Cache-Control": "private, no-store, max-age=0",
+    "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
     "Content-Disposition": `inline; filename="${lessonId}${path.extname(filePath).toLowerCase()}"`,
     "Content-Type": mimeType,
     "Cross-Origin-Resource-Policy": "same-origin",
-    "Pragma": "no-cache",
     "Referrer-Policy": "same-origin",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",

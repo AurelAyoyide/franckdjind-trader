@@ -63,7 +63,7 @@ export function VideoLessonPlayer({
           onPause={(event) => syncProgress(event.currentTarget)}
           onTimeUpdate={(event) => syncProgress(event.currentTarget)}
           playsInline
-          preload="metadata"
+          preload="auto"
           src={`/api/videos/${lessonId}`}
           title={title}
         />
