@@ -112,12 +112,10 @@ function protectedVideoHeaders({
   filePath,
   lessonId,
   mimeType,
-  watermark,
 }: {
   filePath: string;
   lessonId: string;
   mimeType: string;
-  watermark: string;
 }) {
   return {
     "Accept-Ranges": "bytes",
@@ -129,7 +127,6 @@ function protectedVideoHeaders({
     "Referrer-Policy": "same-origin",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "SAMEORIGIN",
-    "X-Video-Watermark": watermark,
   };
 }
 
@@ -284,7 +281,6 @@ export async function GET(
     filePath,
     lessonId,
     mimeType,
-    watermark: user.email,
   });
 
   if (!range || range.start === 0) {

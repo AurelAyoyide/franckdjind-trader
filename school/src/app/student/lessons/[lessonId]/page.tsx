@@ -45,7 +45,6 @@ export default async function StudentLessonPage({
             initialPosition={lesson.videoPosition}
             lessonId={lesson.id}
             title={lesson.title}
-            watermark={session.email ?? "apprenant"}
             nextLessonUrl={lesson.nextLessonUrl}
           />
         ) : lesson.kind === "DOCUMENT" ? (
