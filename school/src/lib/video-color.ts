@@ -1,28 +1,21 @@
 import { execFile as execFileCallback } from "node:child_process";
-import { rename, unlink } from "node:fs/promises";
+import { access, rename, unlink, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 
 const execFile = promisify(execFileCallback);
+const TRANSCODE_VERSION = "apple-bt709-v1";
 
 export async function normalizeVideoColorMetadata(filePath: string, extension: string) {
   if (extension !== ".mp4" && extension !== ".mov") {
     return;
   }
 
-  const { stdout } = await execFile(
-    process.env.FFPROBE_PATH ?? "ffprobe",
-    ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name", "-of", "default=noprint_wrappers=1:nokey=1", filePath],
-    { timeout: 30_000 },
-  );
-  const codec = stdout.trim();
-  const metadataFilter = codec === "h264"
-    ? "h264_metadata=video_full_range_flag=0:colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1"
-    : codec === "hevc"
-      ? "hevc_metadata=video_full_range_flag=0:colour_primaries=1:transfer_characteristics=1:matrix_coefficients=1"
-      : null;
-
-  if (!metadataFilter) {
+  const markerPath = `${filePath}.${TRANSCODE_VERSION}`;
+  try {
+    await access(markerPath);
     return;
+  } catch {
+    // La vidéo n'a pas encore été convertie avec ce profil.
   }
 
   const normalizedPath = `${filePath}.normalized${extension}`;
@@ -34,17 +27,29 @@ export async function normalizeVideoColorMetadata(filePath: string, extension: s
         "-v", "error",
         "-y",
         "-i", filePath,
-        "-map", "0",
-        "-c", "copy",
-        "-bsf:v", metadataFilter,
-        "-movflags", "+faststart",
+        "-map", "0:v:0",
+        "-map", "0:a?",
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "18",
+        "-profile:v", "high",
+        "-pix_fmt", "yuv420p",
+        "-color_range", "tv",
+        "-colorspace", "bt709",
+        "-color_trc", "bt709",
+        "-color_primaries", "bt709",
+        "-tag:v", "avc1",
+        "-c:a", "aac",
+        "-b:a", "192k",
+        "-movflags", "+faststart+write_colr",
         normalizedPath,
       ],
-      { timeout: 120_000 },
+      { timeout: 30 * 60_000 },
     );
 
     await unlink(filePath);
     await rename(normalizedPath, filePath);
+    await writeFile(markerPath, `${TRANSCODE_VERSION}\n`, "utf8");
   } catch (error) {
     await unlink(normalizedPath).catch(() => undefined);
     throw error;
