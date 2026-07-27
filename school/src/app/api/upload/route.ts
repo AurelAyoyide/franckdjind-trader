@@ -5,6 +5,7 @@ import { LessonType, UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthorizedSession } from "@/lib/authorization";
 import { getNumberSetting } from "@/lib/settings";
+import { normalizeVideoColorMetadata } from "@/lib/video-color";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -173,6 +174,18 @@ export async function POST(req: NextRequest) {
 
     await fs.mkdir(/*turbopackIgnore: true*/ safePath.root, { recursive: true });
     await fs.writeFile(/*turbopackIgnore: true*/ safePath.destination, bytes);
+
+    if (lessonType === LessonType.VIDEO) {
+      try {
+        await normalizeVideoColorMetadata(safePath.destination, extension);
+      } catch {
+        await fs.unlink(safePath.destination).catch(() => undefined);
+        return NextResponse.json(
+          { error: "Impossible de normaliser les couleurs de la vidéo. Vérifie que FFmpeg est installé sur le serveur." },
+          { status: 500 },
+        );
+      }
+    }
 
     return NextResponse.json({
       fileName,

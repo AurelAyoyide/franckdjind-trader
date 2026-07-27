@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "admin:bootstrap": "tsx prisma/bootstrap-admin.ts"
+    "admin:bootstrap": "tsx prisma/bootstrap-admin.ts",
+    "videos:normalize-colors": "tsx scripts/normalize-video-colors.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.19.3",

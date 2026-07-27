@@ -13,6 +13,7 @@ import { deliverLoggedEmail, escapeHtml } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { getNumberSetting } from "@/lib/settings";
 import { notifyUser } from "@/lib/notifications";
+import { normalizeVideoColorMetadata } from "@/lib/video-color";
 import {
   courseStatusSchema,
   enrollmentStatusSchema,
@@ -429,6 +430,18 @@ async function savePrivateLessonFile(file: File, type: LessonType) {
   }
 
   await writeFile(/*turbopackIgnore: true*/ destination, buffer);
+
+  if (type === LessonType.VIDEO) {
+    try {
+      await normalizeVideoColorMetadata(destination, extension);
+    } catch {
+      await unlink(destination).catch(() => undefined);
+      return {
+        ok: false as const,
+        message: "Impossible de normaliser les couleurs de la vidéo. Vérifie que FFmpeg est installé sur le serveur.",
+      };
+    }
+  }
 
   return {
     ok: true as const,

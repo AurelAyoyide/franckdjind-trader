@@ -27,32 +27,20 @@ function resolvePrivateFile(filePath: string) {
   return resolved;
 }
 
-const MAX_VIDEO_CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB optimal chunk for instant buffering
-
 function parseRange(rangeHeader: string | null, size: number) {
   if (!rangeHeader) {
-    const end = Math.min(MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
-    return { start: 0, end };
+    return null;
   }
 
   const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
   if (!match) {
-    const end = Math.min(MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
-    return { start: 0, end };
-  }
-
-  const start = match[1] ? Number(match[1]) : 0;
-  let end = match[2] ? Number(match[2]) : size - 1;
-
-  if (!Number.isFinite(start) || start >= size) {
     return null;
   }
 
-  if (!match[2] || (end - start + 1) > MAX_VIDEO_CHUNK_SIZE) {
-    end = Math.min(start + MAX_VIDEO_CHUNK_SIZE - 1, size - 1);
-  }
+  const start = match[1] ? Number(match[1]) : 0;
+  const end = match[2] ? Number(match[2]) : size - 1;
 
-  if (!Number.isFinite(end) || start > end || end >= size) {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || end >= size) {
     return null;
   }
 
