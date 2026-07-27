@@ -23,12 +23,14 @@ jobs:
 
             BEFORE=$(git -C repo rev-parse HEAD)
 
-            git -C repo pull origin main
+            git -C repo fetch origin main
+            git -C repo reset --hard origin/main
 
             AFTER=$(git -C repo rev-parse HEAD)
 
             CHANGED=$(git -C repo diff --name-only "$BEFORE" "$AFTER")
 
+            echo "Fichiers modifiés :"
             echo "$CHANGED"
 
             if echo "$CHANGED" | grep -q '^blog/'; then
