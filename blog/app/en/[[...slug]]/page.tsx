@@ -61,7 +61,8 @@ export default async function EnglishPage({ params, searchParams }: EnglishPageP
   const query = await searchParams;
   const page = Math.max(1, Number(query.page) || 1);
   const path = slug.join("/");
-  const data = await getEnglishPublicData();
+  const articleSlug = path.startsWith("blog/") ? path.slice("blog/".length) : undefined;
+  const data = await getEnglishPublicData(articleSlug);
 
   if (!path) {
     return <EnglishHome data={data} status={query.status} />;

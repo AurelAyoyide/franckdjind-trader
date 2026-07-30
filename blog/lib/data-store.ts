@@ -17,8 +17,11 @@ import {
 import { prisma } from "@/lib/prisma";
 import { isSafeActionUrl, isSafeMediaUrl } from "@/lib/security";
 import { estimateReadTime } from "@/lib/utils";
-import { englishArticle } from "@/lib/english-content";
-import { translateArticleToEnglish } from "@/lib/translation";
+import { englishArticleCopy } from "@/lib/english-content";
+import {
+  translateArticleContentToEnglish,
+  translateArticleSummariesToEnglish,
+} from "@/lib/translation";
 
 export type StoredStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
 
@@ -1200,46 +1203,50 @@ async function loadPublicData() {
 // React.cache deduplicates that work without serving stale editorial content.
 export const getPublicData = cache(loadPublicData);
 
-async function localizeArticleOnDemand(
-  article: Awaited<ReturnType<typeof loadPublicData>>["posts"][number],
-) {
-  if (article.titleEn?.trim() && article.excerptEn?.trim() && article.contentEn?.trim()) {
-    return article;
-  }
+export async function getEnglishPublicData(articleSlug?: string) {
+  const data = await getPublicData();
+  const posts = [...data.posts];
+  const machineIndexes: number[] = [];
+  const summaryChanges = new Map<number, { titleEn: string; excerptEn: string }>();
 
-  const legacyCopy = englishArticle(article);
-  const hasLegacyCopy =
-    legacyCopy.title !== article.title ||
-    legacyCopy.excerpt !== article.excerpt ||
-    legacyCopy.content !== article.content;
+  posts.forEach((article, index) => {
+    if (article.titleEn?.trim() && article.excerptEn?.trim()) return;
+    const legacy = englishArticleCopy[article.slug];
+    if (legacy) {
+      summaryChanges.set(index, { titleEn: legacy.title, excerptEn: legacy.excerpt });
+    } else {
+      machineIndexes.push(index);
+    }
+  });
 
   try {
-    const translation = hasLegacyCopy
-      ? {
-          titleEn: legacyCopy.title,
-          excerptEn: legacyCopy.excerpt,
-          contentEn: legacyCopy.content,
-        }
-      : await translateArticleToEnglish(article);
-
-    await prisma.post.update({
-      where: { id: article.id },
-      data: translation,
+    const machineTranslations = await translateArticleSummariesToEnglish(
+      machineIndexes.map((index) => posts[index]),
+    );
+    machineIndexes.forEach((index, position) => {
+      summaryChanges.set(index, machineTranslations[position]);
     });
 
-    return { ...article, ...translation };
+    await Promise.all([...summaryChanges].map(async ([index, translation]) => {
+      await prisma.post.update({ where: { id: posts[index].id }, data: translation });
+      posts[index] = { ...posts[index], ...translation };
+    }));
   } catch (error) {
-    console.error(`Unable to translate article ${article.slug}:`, error);
-    return article;
+    console.error("Unable to translate English article summaries:", error);
   }
-}
 
-export async function getEnglishPublicData() {
-  const data = await getPublicData();
-  const posts = [];
-
-  for (const article of data.posts) {
-    posts.push(await localizeArticleOnDemand(article));
+  const articleIndex = articleSlug ? posts.findIndex((article) => article.slug === articleSlug) : -1;
+  if (articleIndex >= 0 && !posts[articleIndex].contentEn?.trim()) {
+    const article = posts[articleIndex];
+    try {
+      const contentEn =
+        englishArticleCopy[article.slug]?.content ||
+        await translateArticleContentToEnglish(article.content);
+      await prisma.post.update({ where: { id: article.id }, data: { contentEn } });
+      posts[articleIndex] = { ...article, contentEn };
+    } catch (error) {
+      console.error(`Unable to translate article ${article.slug}:`, error);
+    }
   }
 
   return { ...data, posts };
