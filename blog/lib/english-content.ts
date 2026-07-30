@@ -62,10 +62,20 @@ export const englishArticleCopy: Record<string, EnglishArticleCopy> = {
   }
 };
 
-export function englishArticle(article: { slug: string; title: string; excerpt: string; content: string }) {
-  return englishArticleCopy[article.slug] ?? {
-    title: article.title,
-    excerpt: article.excerpt,
-    content: article.content
+export function englishArticle(article: {
+  slug: string;
+  title: string;
+  titleEn?: string;
+  excerpt: string;
+  excerptEn?: string;
+  content: string;
+  contentEn?: string;
+}) {
+  const legacyCopy = englishArticleCopy[article.slug];
+
+  return {
+    title: article.titleEn?.trim() || legacyCopy?.title || article.title,
+    excerpt: article.excerptEn?.trim() || legacyCopy?.excerpt || article.excerpt,
+    content: article.contentEn?.trim() || legacyCopy?.content || article.content,
   };
 }

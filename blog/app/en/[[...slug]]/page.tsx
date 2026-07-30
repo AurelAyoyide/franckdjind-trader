@@ -34,7 +34,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { siteConfig, articleJsonLd } from "@/lib/content";
 import { englishArticle } from "@/lib/english-content";
 import { englishCategoryLabels } from "@/lib/localization";
-import { getPublicData, readData } from "@/lib/data-store";
+import { getEnglishPublicData, getPublicData, readData } from "@/lib/data-store";
 import { escapeJsonForHtml } from "@/lib/security";
 import { buildMetadata } from "@/lib/seo";
 import { formatDate } from "@/lib/utils";
@@ -61,7 +61,7 @@ export default async function EnglishPage({ params, searchParams }: EnglishPageP
   const query = await searchParams;
   const page = Math.max(1, Number(query.page) || 1);
   const path = slug.join("/");
-  const data = await getPublicData();
+  const data = await getEnglishPublicData();
 
   if (!path) {
     return <EnglishHome data={data} status={query.status} />;

@@ -17,6 +17,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { isSafeActionUrl, isSafeMediaUrl } from "@/lib/security";
 import { estimateReadTime } from "@/lib/utils";
+import { englishArticle } from "@/lib/english-content";
+import { translateArticleToEnglish } from "@/lib/translation";
 
 export type StoredStatus = "DRAFT" | "REVIEW" | "PUBLISHED" | "ARCHIVED";
 
@@ -192,9 +194,12 @@ const defaultImage = "/hero-trading-desk.png";
 const publicPostCardSelect = {
   id: true,
   title: true,
+  titleEn: true,
   slug: true,
   excerpt: true,
+  excerptEn: true,
   content: true,
+  contentEn: true,
   featured: true,
   publishedAt: true,
   updatedAt: true,
@@ -335,13 +340,17 @@ function mapPublicTag(tag: PublicTagRecord): StoredTag {
   };
 }
 
-function mapPublicPostCard(post: PublicPostCardRecord): Article {
+function mapPublicPostCard(post: PublicPostCardRecord) {
   const imageUrl = post.coverMedia?.url ?? defaultImage;
 
   return {
     title: post.title,
+    titleEn: post.titleEn ?? undefined,
     slug: post.slug,
     excerpt: post.excerpt ?? "",
+    excerptEn: post.excerptEn ?? undefined,
+    content: post.content,
+    contentEn: post.contentEn ?? undefined,
     publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
     updatedAt: post.updatedAt.toISOString().slice(0, 10),
     readTime: estimateReadTime(post.content),
@@ -877,9 +886,12 @@ export async function writeData(data: BlogData, options: { prune?: boolean; pres
       const seo = seoData(input);
       const baseData = {
         title: input.title,
+        titleEn: input.titleEn || null,
         slug: input.slug,
         excerpt: input.excerpt || null,
+        excerptEn: input.excerptEn || null,
         content: input.content,
+        contentEn: input.contentEn || null,
         status: input.status,
         featured: Boolean(input.featured),
         publishedAt: dateOrNull(input.publishedAt),
@@ -1103,9 +1115,12 @@ async function loadPublicData() {
     posts: posts.map((post) => ({
       id: post.id,
       title: post.title,
+      titleEn: post.titleEn ?? undefined,
       slug: post.slug,
       excerpt: post.excerpt ?? "",
+      excerptEn: post.excerptEn ?? undefined,
       content: post.content,
+      contentEn: post.contentEn ?? undefined,
       status: post.status,
       author: post.authorLabel ?? post.author.name ?? post.author.email,
       publishedAt: post.publishedAt?.toISOString().slice(0, 10) ?? "",
@@ -1184,6 +1199,51 @@ async function loadPublicData() {
 // One page render often calls this from both its page and the shared footer.
 // React.cache deduplicates that work without serving stale editorial content.
 export const getPublicData = cache(loadPublicData);
+
+async function localizeArticleOnDemand(
+  article: Awaited<ReturnType<typeof loadPublicData>>["posts"][number],
+) {
+  if (article.titleEn?.trim() && article.excerptEn?.trim() && article.contentEn?.trim()) {
+    return article;
+  }
+
+  const legacyCopy = englishArticle(article);
+  const hasLegacyCopy =
+    legacyCopy.title !== article.title ||
+    legacyCopy.excerpt !== article.excerpt ||
+    legacyCopy.content !== article.content;
+
+  try {
+    const translation = hasLegacyCopy
+      ? {
+          titleEn: legacyCopy.title,
+          excerptEn: legacyCopy.excerpt,
+          contentEn: legacyCopy.content,
+        }
+      : await translateArticleToEnglish(article);
+
+    await prisma.post.update({
+      where: { id: article.id },
+      data: translation,
+    });
+
+    return { ...article, ...translation };
+  } catch (error) {
+    console.error(`Unable to translate article ${article.slug}:`, error);
+    return article;
+  }
+}
+
+export async function getEnglishPublicData() {
+  const data = await getPublicData();
+  const posts = [];
+
+  for (const article of data.posts) {
+    posts.push(await localizeArticleOnDemand(article));
+  }
+
+  return { ...data, posts };
+}
 
 async function publicPostCardsPage(where: Prisma.PostWhereInput, page: number, pageSize: number) {
   const total = await prisma.post.count({ where });

@@ -21,6 +21,7 @@ import {
   normalizeSlug
 } from "@/lib/security";
 import { estimateReadTime, stripHtml, truncateText } from "@/lib/utils";
+import { translateArticleToEnglish } from "@/lib/translation";
 
 function markdownToSections(content: string) {
   const chunks = content
@@ -305,6 +306,32 @@ export async function saveResourceAction(formData: FormData) {
   }
 
   applyAutomaticFields({ resource, item: nextItem, current, data, session, isNew: existingIndex < 0 });
+
+  if (resource === "posts") {
+    const frenchChanged =
+      String(nextItem.title ?? "") !== String(current.title ?? "") ||
+      String(nextItem.excerpt ?? "") !== String(current.excerpt ?? "") ||
+      String(nextItem.content ?? "") !== String(current.content ?? "");
+    const translationMissing =
+      !String(current.titleEn ?? "").trim() ||
+      !String(current.excerptEn ?? "").trim() ||
+      !String(current.contentEn ?? "").trim();
+
+    if (frenchChanged || translationMissing) {
+      try {
+        Object.assign(nextItem, await translateArticleToEnglish({
+          title: String(nextItem.title ?? ""),
+          excerpt: String(nextItem.excerpt ?? ""),
+          content: String(nextItem.content ?? ""),
+        }));
+      } catch (error) {
+        console.error("Automatic English article translation failed:", error);
+        nextItem.titleEn = undefined;
+        nextItem.excerptEn = undefined;
+        nextItem.contentEn = undefined;
+      }
+    }
+  }
 
   if (typeof nextItem.slug === "string" && nextItem.slug) {
     const hasDuplicateSlug = collection.some((entry) => entry.id !== nextItem.id && entry.slug === nextItem.slug);
