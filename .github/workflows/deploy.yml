@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,26 +25,36 @@ jobs:
 
             cd /var/www/bonotrading
 
-            BEFORE=$(git -C repo rev-parse HEAD)
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
 
-            git -C repo pull origin main
+            git -C repo fetch origin main
+            git -C repo merge --ff-only "$AFTER"
 
-            AFTER=$(git -C repo rev-parse HEAD)
+            CURRENT=$(git -C repo rev-parse HEAD)
+            echo "Commit demandé : $AFTER"
+            echo "Commit présent sur le VPS : $CURRENT"
 
             CHANGED=$(git -C repo diff --name-only "$BEFORE" "$AFTER")
 
+            echo "Fichiers du push :"
             echo "$CHANGED"
 
-            if echo "$CHANGED" | grep -q '^blog/'; then
+            if echo "$CHANGED" | grep -Eq '^blog/|^\.github/workflows/deploy\.yml$'; then
               echo "Deploy Blog"
               docker compose -f docker-compose.blog.yml build blog-app
               docker compose -f docker-compose.blog.yml up -d --force-recreate blog-app
             fi
 
-            if echo "$CHANGED" | grep -q '^school/'; then
+            if echo "$CHANGED" | grep -Eq '^school/|^\.github/workflows/deploy\.yml$'; then
               echo "Deploy School"
               docker compose -f docker-compose.school.yml build school-app
               docker compose -f docker-compose.school.yml up -d --force-recreate school-app
+
+              SCHOOL_CONTAINER=$(docker compose -f docker-compose.school.yml ps -q school-app)
+              test -n "$SCHOOL_CONTAINER"
+              echo "Conteneur School : $SCHOOL_CONTAINER"
+              docker inspect --format='School démarré à {{.State.StartedAt}} avec l’image {{.Image}}' "$SCHOOL_CONTAINER"
             fi
 
             echo "Attente du démarrage des applications..."
