@@ -737,8 +737,17 @@ export async function deleteLessonAction(formData: FormData) {
   const session = await requireBuilderSession(); const parsed = lessonDeleteSchema.safeParse({ lessonId: formData.get("lessonId") }); if (!session || !parsed.success) return;
   const lesson = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId }, include: { module: { include: { course: true } }, progress: { select: { id: true } }, quiz: { include: { attempts: { select: { id: true } } } }, fileAssets: { select: { path: true } } } });
   if (!lesson || (session.role !== "admin" && lesson.module.course.trainerId !== session.userId)) return;
-  if (lesson.progress.length || lesson.quiz?.attempts.length) redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-tracked`);
+  const hasLearnerHistory = lesson.progress.length > 0 || Boolean(lesson.quiz?.attempts.length);
+  if (hasLearnerHistory && lesson.module.course.status !== CourseStatus.DRAFT) {
+    redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-tracked`);
+  }
   await prisma.$transaction(async (transaction) => {
+    if (lesson.module.course.status === CourseStatus.DRAFT) {
+      await transaction.lessonProgress.deleteMany({ where: { lessonId: lesson.id } });
+      if (lesson.quiz) {
+        await transaction.quizAttempt.deleteMany({ where: { quizId: lesson.quiz.id } });
+      }
+    }
     await transaction.fileAsset.deleteMany({ where: { lessonId: lesson.id } });
     if (lesson.quiz) {
       await transaction.quiz.delete({ where: { id: lesson.quiz.id } });
