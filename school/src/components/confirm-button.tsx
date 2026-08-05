@@ -57,10 +57,19 @@ export function ConfirmButton({
                                     Annuler
                                 </button>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-danger py-3 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                                     disabled={pending}
-                                    onClick={() => setIsOpen(false)}
+                                    onClick={(event) => {
+                                        const form = event.currentTarget.form;
+
+                                        if (!form) {
+                                            return;
+                                        }
+
+                                        form.requestSubmit();
+                                        setIsOpen(false);
+                                    }}
                                 >
                                     {pending ? (
                                         "..."

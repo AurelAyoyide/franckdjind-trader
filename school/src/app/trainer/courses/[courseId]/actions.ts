@@ -735,10 +735,18 @@ export async function updateLessonAction(formData: FormData) {
 }
 export async function deleteLessonAction(formData: FormData) {
   const session = await requireBuilderSession(); const parsed = lessonDeleteSchema.safeParse({ lessonId: formData.get("lessonId") }); if (!session || !parsed.success) return;
-  const lesson = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId }, include: { module: { include: { course: true } }, progress: { select: { id: true } }, quiz: { include: { attempts: { select: { id: true } } } } } });
+  const lesson = await prisma.lesson.findUnique({ where: { id: parsed.data.lessonId }, include: { module: { include: { course: true } }, progress: { select: { id: true } }, quiz: { include: { attempts: { select: { id: true } } } }, fileAssets: { select: { path: true } } } });
   if (!lesson || (session.role !== "admin" && lesson.module.course.trainerId !== session.userId)) return;
   if (lesson.progress.length || lesson.quiz?.attempts.length) redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-tracked`);
-  await prisma.lesson.delete({ where: { id: lesson.id } }); revalidatePath(`/trainer/courses/${lesson.module.courseId}`); redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-deleted`);
+  await prisma.$transaction(async (transaction) => {
+    await transaction.fileAsset.deleteMany({ where: { lessonId: lesson.id } });
+    if (lesson.quiz) {
+      await transaction.quiz.delete({ where: { id: lesson.quiz.id } });
+    }
+    await transaction.lesson.delete({ where: { id: lesson.id } });
+  });
+  await Promise.all(lesson.fileAssets.map((asset) => removePrivateLessonFile(asset.path)));
+  revalidatePath(`/trainer/courses/${lesson.module.courseId}`); redirect(`/trainer/courses/${lesson.module.courseId}?notice=lesson-deleted`);
 }
 
 export async function createLessonAction(
