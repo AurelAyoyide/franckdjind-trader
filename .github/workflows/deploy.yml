@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: production-deploy
@@ -20,55 +21,84 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 30m
           script: |
-            set -e
+            set -eu
 
-            cd /var/www/bonotrading
+            ROOT="/var/www/bonotrading"
+            REPO="$ROOT/repo"
+            TARGET_COMMIT="${{ github.sha }}"
 
-            BEFORE="${{ github.event.before }}"
-            AFTER="${{ github.sha }}"
+            cd "$ROOT"
 
-            git -C repo fetch origin main
-            git -C repo merge --ff-only "$AFTER"
+            echo "Récupération du commit $TARGET_COMMIT..."
+            git -C "$REPO" fetch --prune origin main
 
-            CURRENT=$(git -C repo rev-parse HEAD)
-            echo "Commit demandé : $AFTER"
-            echo "Commit présent sur le VPS : $CURRENT"
+            OLD_COMMIT=$(git -C "$REPO" rev-parse HEAD)
+            echo "Ancien commit VPS : $OLD_COMMIT"
+            echo "Nouveau commit     : $TARGET_COMMIT"
 
-            CHANGED=$(git -C repo diff --name-only "$BEFORE" "$AFTER")
+            DEPLOY_BLOG=false
+            DEPLOY_SCHOOL=false
 
-            echo "Fichiers du push :"
-            echo "$CHANGED"
+            if git -C "$REPO" cat-file -e "${OLD_COMMIT}^{commit}" 2>/dev/null \
+              && git -C "$REPO" cat-file -e "${TARGET_COMMIT}^{commit}" 2>/dev/null; then
 
-            if echo "$CHANGED" | grep -Eq '^blog/|^\.github/workflows/deploy\.yml$'; then
-              echo "Deploy Blog"
-              docker compose -f docker-compose.blog.yml build blog-app
-              docker compose -f docker-compose.blog.yml up -d --force-recreate blog-app
+              CHANGED=$(git -C "$REPO" diff --name-only "$OLD_COMMIT" "$TARGET_COMMIT" || true)
+
+              echo "Fichiers modifiés :"
+              printf '%s\n' "$CHANGED"
+
+              if printf '%s\n' "$CHANGED" | grep -Eq '^blog/|^docker-compose\.blog\.yml$|^caddy/|^\.github/workflows/deploy\.yml$'; then
+                DEPLOY_BLOG=true
+              fi
+
+              if printf '%s\n' "$CHANGED" | grep -Eq '^school/|^docker-compose\.school\.yml$|^caddy/|^\.github/workflows/deploy\.yml$'; then
+                DEPLOY_SCHOOL=true
+              fi
+            else
+              echo "Comparaison impossible : déploiement complet par sécurité."
+              DEPLOY_BLOG=true
+              DEPLOY_SCHOOL=true
             fi
 
-            if echo "$CHANGED" | grep -Eq '^school/|^\.github/workflows/deploy\.yml$'; then
-              echo "Deploy School"
+            echo "Alignement du VPS sur GitHub..."
+            git -C "$REPO" reset --hard "$TARGET_COMMIT"
+
+            if [ "$DEPLOY_BLOG" = true ]; then
+              echo "=== Déploiement Blog ==="
+              docker compose -f docker-compose.blog.yml build blog-app
+              docker compose -f docker-compose.blog.yml up -d --force-recreate blog-app
+            else
+              echo "Aucune modification Blog détectée."
+            fi
+
+            if [ "$DEPLOY_SCHOOL" = true ]; then
+              echo "=== Déploiement School ==="
               docker compose -f docker-compose.school.yml build school-app
               docker compose -f docker-compose.school.yml up -d --force-recreate school-app
 
               SCHOOL_CONTAINER=$(docker compose -f docker-compose.school.yml ps -q school-app)
               test -n "$SCHOOL_CONTAINER"
-              echo "Conteneur School : $SCHOOL_CONTAINER"
-              docker inspect --format='School démarré à {{.State.StartedAt}} avec l’image {{.Image}}' "$SCHOOL_CONTAINER"
-            fi
 
-            echo "Attente du démarrage des applications..."
+              docker inspect \
+                --format='School démarré à {{.State.StartedAt}} avec l’image {{.Image}}' \
+                "$SCHOOL_CONTAINER"
+            else
+              echo "Aucune modification School détectée."
+            fi
 
             check_url() {
               URL="$1"
 
-              for i in $(seq 1 20); do
-                if curl -fsS "$URL" >/dev/null; then
+              for i in $(seq 1 30); do
+                if curl --connect-timeout 10 --max-time 20 -fsS "$URL" >/dev/null; then
                   echo "$URL répond correctement."
                   return 0
                 fi
 
-                echo "Tentative $i/20 pour $URL..."
+                echo "Attente de $URL — tentative $i/30..."
                 sleep 5
               done
 
@@ -76,7 +106,12 @@ jobs:
               return 1
             }
 
-            check_url "https://blog.bonotrading.com"
-            check_url "https://school.bonotrading.com"
+            if [ "$DEPLOY_BLOG" = true ]; then
+              check_url "https://blog.bonotrading.com"
+            fi
 
-            echo "Déploiement terminé."
+            if [ "$DEPLOY_SCHOOL" = true ]; then
+              check_url "https://school.bonotrading.com"
+            fi
+
+            echo "Déploiement terminé avec succès."
