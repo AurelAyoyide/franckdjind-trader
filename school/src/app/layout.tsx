@@ -59,7 +59,14 @@ export const metadata: Metadata = {
     title: "Bono School - Plateforme privee de formation",
     description: "Plateforme privee de formation en ligne pour apprenants, formateurs et administrateurs.",
     siteName: "Bono School",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Bono School" }],
+    images: [
+      {
+        url: "/bono-school-share-2026.png",
+        width: 1200,
+        height: 630,
+        alt: "Bono School - Apprendre, trader, réussir",
+      },
+    ],
     locale: "fr_FR",
     type: "website",
   },
@@ -67,7 +74,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bono School - Plateforme privee de formation",
     description: "Plateforme privee de formation en ligne pour apprenants, formateurs et administrateurs.",
-    images: ["/og-image.png"],
+    images: ["/bono-school-share-2026.png"],
   },
   robots: {
     index: true,
